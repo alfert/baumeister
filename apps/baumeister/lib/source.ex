@@ -19,9 +19,9 @@ defmodule Baumeister.Source do
     GenServer.call(__MODULE__, :keys)
   end
 
-  @spec add(key, value) :: :ok
-  def add(key, config) do
-    GenServer.cast(__MODULE__, {:add, key, config})
+  @spec put(key, value) :: :ok
+  def put(key, config) do
+    GenServer.cast(__MODULE__, {:put, key, config})
   end
 
   @spec remove(key) :: :ok
@@ -57,7 +57,7 @@ defmodule Baumeister.Source do
     {:reply, Map.fetch(state, key), state}
   end
 
-  def handle_cast({:add, key, config}, state) do
+  def handle_cast({:put, key, config}, state) do
     new_state = Map.put(state, key, config)
     {:noreply, new_state}
   end
