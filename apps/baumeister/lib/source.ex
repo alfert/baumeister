@@ -38,6 +38,14 @@ defmodule Baumeister.Source do
     GenServer.call(__MODULE__, {:config, key})
   end
 
+  def stop() do
+    GenServer.stop(__MODULE__, :normal)
+  end
+
+  def remove_all() do
+    GenServer.cast(__MODULE__, :remove_all)
+  end
+
   ###################################################
   ##
   ## Callbacks
@@ -63,6 +71,9 @@ defmodule Baumeister.Source do
   end
   def handle_cast({:remove, key}, state) do
     {:noreply, Map.delete(state, key)}
+  end
+  def handle_cast(:remove_all, state) do
+    {:noreply, %{}}
   end
 
 
