@@ -2,6 +2,8 @@
 
 Baumeister is a build management system, inspired by Jenkins, Travis CI and BuildBot.
 
+[![Build Status](https://travis-ci.org/alfert/baumeister.svg?branch=master)](https://travis-ci.org/alfert/bbaumeister)
+
 ## Design
 
 * Central service is the Baumeister Service, which manages the overall process
@@ -18,5 +20,15 @@ Baumeister is a build management system, inspired by Jenkins, Travis CI and Buil
   events.
 * Similarly, the build results (i.e. log files, ...) will be made available.
 * Standard reporting and user interface is a Baumeister Web application based on
-  Phoenix. 
-##
+  Phoenix.
+
+## Contributing
+
+Please use the GitHub issue tracker for
+
+* bug reports and for
+* submitting pull requests
+
+## License
+
+Baumeister is provided under the Apache 2.0 License.
