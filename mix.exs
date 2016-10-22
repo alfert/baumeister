@@ -1,4 +1,4 @@
-defmodule Baumeister.Mixfile do
+defmodule BaumeisterUmbrella.Mixfile do
   use Mix.Project
 
   def project do
