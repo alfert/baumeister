@@ -10,6 +10,7 @@ defmodule Baumeister do
     children = [
       # Starts a worker by calling: Baumeister.Worker.start_link(arg1, arg2, arg3)
       # worker(Baumeister.Worker, [arg1, arg2, arg3]),
+      supervisor(Task.Supervisor, [], name: Baumeister.ObserverSupervisor),
       worker(Baumeister.Config, [Application.get_env(:baumeister, :persistence)])
     ]
 
