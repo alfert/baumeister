@@ -72,7 +72,7 @@ defmodule Baumeister.Config do
   def handle_cast({:remove, key}, state) do
     {:noreply, Map.delete(state, key)}
   end
-  def handle_cast(:remove_all, state) do
+  def handle_cast(:remove_all, _state) do
     {:noreply, %{}}
   end
 
