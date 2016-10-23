@@ -1,4 +1,4 @@
-defmodule Baumeister.Source do
+defmodule Baumeister.Config do
   @moduledoc """
   This is the storage of all current source configurations.
   Adding or removing a source to a running Baumeister system changes

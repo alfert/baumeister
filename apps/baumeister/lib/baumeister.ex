@@ -10,7 +10,7 @@ defmodule Baumeister do
     children = [
       # Starts a worker by calling: Baumeister.Worker.start_link(arg1, arg2, arg3)
       # worker(Baumeister.Worker, [arg1, arg2, arg3]),
-      worker(Baumeister.Source, [Application.get_env(:baumeister, :persistence)])
+      worker(Baumeister.Config, [Application.get_env(:baumeister, :persistence)])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
