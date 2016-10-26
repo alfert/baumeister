@@ -70,7 +70,7 @@ defmodule Baumeister.Observer do
     {:noreply, %__MODULE__{s | observer_pid: pid}}
   end
   def handle_cast({:execute, url, baumeister_file}, state) do
-    {:ok, job} = Baumeister.parse(baumeister_file)
+    {:ok, job} = Baumeister.parse!(baumeister_file)
     Baumeister.execute(url, job)
     # This works only, if `run()` is asynchronous
     Baumeister.Observer.run(self)
