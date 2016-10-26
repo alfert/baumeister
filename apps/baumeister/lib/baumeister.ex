@@ -75,6 +75,11 @@ defmodule Baumeister do
     BaumeisterFile.assign!(map)
   end
 
+  @doc """
+  Executes the commands defined in the BaumeisterFile on a node that
+  fits to the settings (e.g. OS) and on which the repository at the
+  URL will be checked out.
+  """
   @spec execute(String.t, BaumeisterFile.t) :: :ok
   def execute(_url, _job) do
     :ok
