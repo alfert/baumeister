@@ -65,11 +65,12 @@ defmodule Baumeister do
   internal representation. In case of an invalid file, an exception
   is raised.
 
-    iex> Baumeister.parse! ~S(%{"command" => "hey"})
+    iex> Baumeister.parse!("command: hey")
     %Baumeister.BaumeisterFile{command: "hey"}
   """
   def parse!(contents) do
-    {map, _bindings} = Code.eval_string(contents, [], [])
+    map = YamlElixir.read_from_string(contents)
+    # {map, _bindings} = Code.eval_string(contents, [], [])
     if not is_map(map), do: raise BaumeisterFile.InvalidSyntax,
       message: "Must be a mapping with strings as keys!"
     BaumeisterFile.assign!(map)
