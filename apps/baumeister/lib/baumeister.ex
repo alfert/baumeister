@@ -37,7 +37,8 @@ defmodule Baumeister do
         end
       end)
     end
-  end
+
+  end # of Baumeister.BaumeisterFile
 
   use Application
 
