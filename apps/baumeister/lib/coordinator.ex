@@ -24,6 +24,10 @@ defmodule Baumeister.Coordinator do
   require Logger
   use Elixometer
 
+  # Metrics
+  @nb_of_workers "baumeister.nb_of_registered_workers"
+  @start_workers "baumeister.nb_of_started_workers"
+
   ##############################################################################
   ##
   ## API
@@ -48,8 +52,8 @@ defmodule Baumeister.Coordinator do
   @doc """
   Unregisters a worker
   """
-  @spec register(pid | tuple) :: :ok | {:error, any}
-  def register(worker) do
+  @spec unregister(pid | tuple) :: :ok | {:error, any}
+  def unregister(worker) do
     GenServer.call(name(), {:unregister, worker})
   end
 
