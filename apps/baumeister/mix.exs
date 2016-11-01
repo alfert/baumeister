@@ -18,7 +18,7 @@ defmodule Baumeister.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :yaml_elixir],
+    [applications: [:logger, :yaml_elixir, :elixometer],
      mod: {Baumeister, []}]
   end
 
@@ -38,7 +38,13 @@ defmodule Baumeister.Mixfile do
   defp deps do
     [
       {:propcheck, "~> 0.0.1", only: :test},
-      { :yaml_elixir, "~> 1.2.1" }
+      { :yaml_elixir, "~> 1.2.1" },
+      {:elixometer, "~> 1.2"},
+      #lager 3.2.1 is needed for erl19 because of
+      # https://github.com/basho/lager/pull/321
+      {:lager, ">= 3.2.1", override: true},
+      {:credo, "~> 0.5.0", only: :dev},
+      {:dialyze, "~> 0.2.1", only: :dev}
     ]
   end
 end
