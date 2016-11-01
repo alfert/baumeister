@@ -23,13 +23,16 @@ defmodule Baumeister do
     """
     def assign!(map) do
       bmf = %__MODULE__{}
-      valid_keys = Map.keys(bmf)
-      |> Enum.map(&(Atom.to_string(&1)))
-      |> MapSet.new
+      valid_keys =
+        bmf
+        |> Map.keys()
+        |> Enum.map(&(Atom.to_string(&1)))
+        |> MapSet.new()
 
-      map |> Map.keys
+      map
+      |> Map.keys
       |> Enum.reduce(bmf, fn(key, acc) ->
-        if (Set.member?(valid_keys, key)) do
+        if Set.member?(valid_keys, key) do
           atom_key = String.to_atom(key)
           Map.put(acc, atom_key, Map.fetch!(map, key))
         else
