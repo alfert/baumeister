@@ -10,14 +10,28 @@ defmodule Baumeister.Worker do
   defstruct [:coordinator]
 
   use GenServer
+  require Logger
+
+  ##############################################################################
+  ##
+  ## API
+  ##
+  ##############################################################################
 
   def start_link() do
-    coordinator = Application.get_env(:baumeister, :coordinator, Coordinator.name())
+    Logger.info "Starting Worker"
+    coordinator = Coordinator.name()
     GenServer.start_link(__MODULE__, [coordinator])
   end
 
+  ##############################################################################
+  ##
+  ## Callbacks and internals
+  ##
+  ##############################################################################
 
   def init([coordinator]) do
+    Logger.info "Initializing Worker"
     state = %__MODULE__{coordinator: coordinator}
     {:ok, state}
   end

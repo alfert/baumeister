@@ -58,6 +58,14 @@ defmodule Baumeister.Coordinator do
     GenServer.call(name(), {:unregister, worker})
   end
 
+  @doc """
+  Returns the list of worker specs
+  """
+  @spec workers() :: [WorkerSpec.t]
+  def workers() do
+    GenServer.call(name(), :workers)
+  end
+
   ##############################################################################
   ##
   ## Internal Functions & Callbacks
@@ -65,6 +73,7 @@ defmodule Baumeister.Coordinator do
   ##############################################################################
 
   def init([]) do
+    Logger.info "Initialize the Coordinator"
     {:ok, %__MODULE__{}}
   end
 
@@ -76,6 +85,9 @@ defmodule Baumeister.Coordinator do
   def handle_call({:unregister, worker}, _from, state) do
     Logger.info "Unregister worker #{inspect worker}"
     {:reply, :ok, do_unregister(worker, state)}
+  end
+  def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do
+    {:reply, workers |> Map.keys(), state}
   end
 
   # Handle the monitoring messages from Workers
