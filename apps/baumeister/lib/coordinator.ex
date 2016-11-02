@@ -37,8 +37,9 @@ defmodule Baumeister.Coordinator do
   @doc "The name of the Coordinator Server"
   def name(), do: __MODULE__
 
-  def start_link() do
-    GenServer.start_link(__MODULE__, [])
+  def start_link(opts \\ []) do
+    Logger.info "Start the coordinator server"
+    GenServer.start_link(__MODULE__, [], opts)
   end
 
   @doc """
