@@ -20,7 +20,8 @@ defmodule Baumeister.WorkerTest do
     assert is_pid(worker)
     assert Process.alive?(worker)
     all_workers = Coordinator.workers()
-    assert Enum.member?(all_workers, worker)
+    Logger.debug "all workers: #{inspect all_workers}"
+    assert Enum.any?(all_workers, fn(w) -> w.pid == worker end)
     Process.exit(worker, :normal)
     remaining_workers = Coordinator.workers()
     assert not Enum.member?(remaining_workers, worker)

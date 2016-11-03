@@ -14,9 +14,10 @@ defmodule Baumeister.Coordinator do
     Data about a worker
     """
     @type t :: %__MODULE__{
+      pid: nil | pid,
       monitor_ref: nil | reference
     }
-    defstruct monitor_ref: nil
+    defstruct pid: nil, monitor_ref: nil
  end
 
 
@@ -87,7 +88,7 @@ defmodule Baumeister.Coordinator do
     {:reply, :ok, do_unregister(worker, state)}
   end
   def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do
-    {:reply, workers |> Map.keys(), state}
+    {:reply, workers |> Map.values(), state}
   end
 
   # Handle the monitoring messages from Workers
@@ -124,7 +125,7 @@ defmodule Baumeister.Coordinator do
   """
   def do_register(worker, state = %__MODULE__{workers: workers, monitors: monitors}) do
     monitor = Process.monitor(worker)
-    new_workers = Map.put(workers, worker, %WorkerSpec{monitor_ref: monitor})
+    new_workers = Map.put(workers, worker, %WorkerSpec{monitor_ref: monitor, pid: worker})
     new_monitors = Map.put(monitors, monitor, worker)
     worker_no = new_workers |> Enum.count
     update_gauge(@nb_of_workers, worker_no)
