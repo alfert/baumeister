@@ -93,7 +93,7 @@ defmodule Baumeister.Coordinator do
 
   # Handle the monitoring messages from Workers
   def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
-    {:no_reply, do_crashed_worker(ref, state)}
+    {:noreply, do_crashed_worker(ref, state)}
   end
   def handle_info(msg, state) do
     Logger.debug "Coordinator: got unknown info message: #{inspect msg}"
