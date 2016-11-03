@@ -32,12 +32,17 @@ defmodule Baumeister.WorkerTest do
     {:ok, worker} = Worker.start_link()
     assert Process.alive?(worker)
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
+    ref_worker = Process.monitor(worker)
 
     Logger.info "env is: #{inspect env}"
+    Logger.debug "Registered workers: #{inspect Coordinator.workers}"
+    Logger.debug "Killing Coordinator"
     Process.exit(env[:coordinator], :kill)
 
+    # Coordinator is down
     assert_receive({:DOWN, ^ref, :process, _, _})
-
+    # Worker goes down
+    assert_receive({:DOWN, ^ref_worker, :process, _, _})
     refute Process.alive?(worker)
   end
 
