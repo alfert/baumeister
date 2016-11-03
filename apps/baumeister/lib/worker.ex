@@ -33,6 +33,7 @@ defmodule Baumeister.Worker do
   def init([coordinator]) do
     Logger.info "Initializing Worker"
     state = %__MODULE__{coordinator: coordinator}
+    Coordinator.register(self)
     {:ok, state}
   end
 
