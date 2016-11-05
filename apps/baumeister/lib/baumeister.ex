@@ -21,15 +21,19 @@ defmodule Baumeister do
     `BaumeisterFile` struct. Only known keys are converted,
     an unknown key raises an `InvalidSyntax` error.
     """
+    @spec assign!(%{String.t => any}) :: t
     def assign!(map) do
       bmf = %__MODULE__{}
-      valid_keys = Map.keys(bmf)
-      |> Enum.map(&(Atom.to_string(&1)))
-      |> MapSet.new
+      valid_keys =
+        bmf
+        |> Map.keys()
+        |> Enum.map(&(Atom.to_string(&1)))
+        |> MapSet.new()
 
-      map |> Map.keys
+      map
+      |> Map.keys
       |> Enum.reduce(bmf, fn(key, acc) ->
-        if (Set.member?(valid_keys, key)) do
+        if MapSet.member?(valid_keys, key) do
           atom_key = String.to_atom(key)
           Map.put(acc, atom_key, Map.fetch!(map, key))
         else
@@ -37,7 +41,8 @@ defmodule Baumeister do
         end
       end)
     end
-  end
+
+  end # of Baumeister.BaumeisterFile
 
   use Application
 
@@ -50,7 +55,8 @@ defmodule Baumeister do
     children = [
       # Starts a worker by calling: Baumeister.Worker.start_link(arg1, arg2, arg3)
       # worker(Baumeister.Worker, [arg1, arg2, arg3]),
-      supervisor(Task.Supervisor, [], name: Baumeister.ObserverSupervisor),
+      supervisor(Task.Supervisor, [[name: Baumeister.ObserverSupervisor]]),
+      worker(Baumeister.Coordinator, [[name: Baumeister.Coordinator.name()]]),
       worker(Baumeister.Config, [Application.get_env(:baumeister, :persistence)])
     ]
 
@@ -68,6 +74,7 @@ defmodule Baumeister do
     iex> Baumeister.parse!("command: hey")
     %Baumeister.BaumeisterFile{command: "hey"}
   """
+  @spec parse!(String.t) :: BaumeisterFile.t
   def parse!(contents) do
     map = YamlElixir.read_from_string(contents)
     # {map, _bindings} = Code.eval_string(contents, [], [])
