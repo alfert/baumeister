@@ -10,9 +10,22 @@ defmodule Baumeister.WorkerTest do
   # Ensures that the coordinator is running and puts the pid in the environment
   setup do
     Application.ensure_started(:baumeister)
-    m = GenServer.whereis(Coordinator.name)
-    assert is_pid(m)
+    m = wait_for_coordinator
     {:ok, coordinator: m}
+  end
+
+  def wait_for_coordinator(wait\\ 5)
+  def wait_for_coordinator(0), do: assert "Coordinator is not available :-("
+  def wait_for_coordinator(wait) do
+    m = GenServer.whereis(Coordinator.name)
+    if not is_pid(m) do
+      # only 1 ms, to let the scheduler recover. This is to
+      # prevent a concurrency issue on Travis-CI
+      Process.sleep(1)
+      wait_for_coordinator(wait - 1)
+    else
+      m
+    end
   end
 
   test "Start a worker", _env do
