@@ -38,7 +38,7 @@ defmodule Baumeister.EventLogger do
 
   def handle_events(events, _from, state) do
     events
-    |> Enum.map(fn(ev) -> Logger.info("EventLogger: event = #{ev}") end)
+    |> Enum.map(fn(ev) -> Logger.info("EventLogger: event = #{inspect ev}") end)
     # We are a consumer, so we would never emit items.
     {:noreply, [], state}
   end
