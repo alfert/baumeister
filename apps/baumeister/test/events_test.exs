@@ -22,7 +22,8 @@ defmodule EventsTest do
 
   test "it starts and stops" do
     {:ok, pid} = EventCenter.start_link()
-    EventCenter.stop(pid)
+    EventCenter.stop()
+    refute Process.alive?(pid)
   end
 
   test "observer start and stops" do
@@ -31,7 +32,7 @@ defmodule EventsTest do
 
     GenStage.sync_subscribe(observer, to: ec)
     # GenStage.stop(observer)
-    EventCenter.stop(ec)
+    EventCenter.stop()
     # give the observer some time to die properly
     Process.sleep(1)
     refute Process.alive?(observer)
@@ -42,21 +43,19 @@ defmodule EventsTest do
     {:ok, observer} = TestObserver.start()
     GenStage.sync_subscribe(observer, to: ec)
 
-    :ok = EventCenter.sync_notify(ec, "Hello")
+    :ok = EventCenter.sync_notify("Hello")
     assert TestObserver.get(observer) == ["Hello"]
 
-    EventCenter.stop(ec)
+    EventCenter.stop()
   end
 
   test "send an event without consumer" do
     {:ok, ec} = EventCenter.start_link()
-    # {:ok, observer} = TestObserver.start()
-    # GenStage.sync_subscribe(observer, to: ec)
 
     # expect timeout after 2 ms
-    catch_exit(EventCenter.sync_notify(ec, "Hello", 2))
+    catch_exit(EventCenter.sync_notify("Hello", 2))
 
-    EventCenter.stop(ec)
+    EventCenter.stop()
   end
 
   test "send and consume several events" do
@@ -64,16 +63,16 @@ defmodule EventsTest do
     {:ok, observer_1} = TestObserver.start()
     GenStage.sync_subscribe(observer_1, to: ec)
 
-    :ok = EventCenter.sync_notify(ec, "One")
+    :ok = EventCenter.sync_notify("One")
 
     {:ok, observer_2} = TestObserver.start()
     GenStage.sync_subscribe(observer_2, to: ec)
 
-    :ok = EventCenter.sync_notify(ec, "Two")
+    :ok = EventCenter.sync_notify("Two")
     assert TestObserver.get(observer_1) == ["One", "Two"]
     assert TestObserver.get(observer_2) == ["Two"]
 
-    EventCenter.stop(ec)
+    EventCenter.stop()
   end
 
 end

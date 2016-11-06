@@ -32,16 +32,16 @@ defmodule Baumeister.EventCenter do
  end
 
  @doc "Sends an event and returns only after the event is dispatched."
- @spec sync_notify(pid, any, pos_integer | :infinity) :: :ok
- def sync_notify(pid, event, timeout \\ 5000) do
+ @spec sync_notify(any, pos_integer | :infinity) :: :ok
+ def sync_notify(event, timeout \\ 5000) do
    GenStage.call(__MODULE__, {:notify, event}, timeout)
  end
 
  @doc "Stops the EventCenter"
- def stop(pid) do
-   GenStage.stop(pid)
+ def stop() do
+   GenStage.stop(__MODULE__)
  end
- 
+
  ###################################################
  ##
  ## Callback Implementation
@@ -61,7 +61,7 @@ defmodule Baumeister.EventCenter do
    dispatch_events(%__MODULE__{state | demand: new_demand}, [])
  end
 
- defp dispatch_events(state = %__MODULE__{queue: queue, demand: 0}, events) do
+ defp dispatch_events(state = %__MODULE__{demand: 0}, events) do
    {:noreply, Enum.reverse(events), state}
  end
  defp dispatch_events(state = %__MODULE__{queue: queue, demand: demand}, events) do
@@ -69,7 +69,7 @@ defmodule Baumeister.EventCenter do
      {{:value, {from, event}}, new_queue} ->
        GenStage.reply(from, :ok)
        dispatch_events(%__MODULE__{queue: new_queue, demand: demand - 1}, [event | events])
-     {:empty, queue} ->
+     {:empty, _queue} ->
        {:noreply, Enum.reverse(events), state}
    end
  end
