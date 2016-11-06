@@ -30,16 +30,20 @@ defmodule Baumeister.EventCenter do
  def start_link() do
    GenStage.start_link(__MODULE__, :ok, name: __MODULE__)
  end
+ def start_link(:anon) do
+   GenStage.start_link(__MODULE__, :ok, [])
+ end
 
  @doc "Sends an event and returns only after the event is dispatched."
  @spec sync_notify(any, pos_integer | :infinity) :: :ok
- def sync_notify(event, timeout \\ 5000) do
-   GenStage.call(__MODULE__, {:notify, event}, timeout)
+ @spec sync_notify(pid, any, pos_integer | :infinity) :: :ok
+ def sync_notify(pid \\ __MODULE__, event, timeout \\ 5000) do
+   GenStage.call(pid, {:notify, event}, timeout)
  end
 
  @doc "Stops the EventCenter"
- def stop() do
-   GenStage.stop(__MODULE__)
+ def stop(pid \\ __MODULE__) do
+   GenStage.stop(pid)
  end
 
  ###################################################
