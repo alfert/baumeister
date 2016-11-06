@@ -1,4 +1,6 @@
 defmodule Baumeister.Observer do
+  alias Baumeister.EventCenter
+
   @moduledoc """
   Defines the API, which a specific observer has to implement.
   """
@@ -64,12 +66,14 @@ defmodule Baumeister.Observer do
     parent_pid = self
     {:ok, pid} = Task.Supervisor.start_child(Baumeister.ObserverSupervisor,
       fn ->
+        EventCenter.sync_notify({:observer, :start_observer, mod})
         {:ok, url, baumeister_file} = mod.observe(state)
         Baumeister.Observer.execute(parent_pid, url, baumeister_file)
       end)
     {:noreply, %__MODULE__{s | observer_pid: pid}}
   end
   def handle_cast({:execute, url, baumeister_file}, state) do
+    EventCenter.sync_notify({:observer, :execute, url})
     job = Baumeister.parse!(baumeister_file)
     Baumeister.execute(url, job)
     # This works only, if `run()` is asynchronous
