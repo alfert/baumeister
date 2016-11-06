@@ -36,7 +36,7 @@ defmodule Baumeister.EventCenter do
 
  @doc "Sends an event and returns only after the event is dispatched."
  @spec sync_notify(any, pos_integer | :infinity) :: :ok
- @spec sync_notify(pid, any, pos_integer | :infinity) :: :ok
+ @spec sync_notify(pid | atom, any, pos_integer | :infinity) :: :ok
  def sync_notify(pid \\ __MODULE__, event, timeout \\ 5000) do
    GenStage.call(pid, {:notify, event}, timeout)
  end
