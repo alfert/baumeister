@@ -3,6 +3,7 @@ defmodule EventsTest do
 
   alias Experimental.GenStage
   alias Baumeister.EventCenter
+  alias Baumeister.EventLogger
 
   defmodule TestObserver do
     @moduledoc """
@@ -50,7 +51,7 @@ defmodule EventsTest do
   end
 
   test "send an event without consumer" do
-    {:ok, ec} = EventCenter.start_link()
+    {:ok, _ec} = EventCenter.start_link()
 
     # expect timeout after 2 ms
     catch_exit(EventCenter.sync_notify("Hello", 2))
@@ -75,4 +76,18 @@ defmodule EventsTest do
     EventCenter.stop()
   end
 
+  test "use the event logger" do
+    {:ok, ec} = EventCenter.start_link()
+    {:ok, log} = EventLogger.start_link()
+    GenStage.sync_subscribe(log, to: ec)
+    {:ok, observer_1} = TestObserver.start()
+    GenStage.sync_subscribe(observer_1, to: ec)
+
+    :ok = EventCenter.sync_notify("One")
+    :ok = EventCenter.sync_notify("Two")
+
+    assert TestObserver.get(observer_1) == ["One", "Two"]
+
+    EventCenter.stop()
+  end
 end
