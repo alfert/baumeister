@@ -58,4 +58,22 @@ defmodule EventsTest do
 
     EventCenter.stop(ec)
   end
+
+  test "send and consume several events" do
+    {:ok, ec} = EventCenter.start_link()
+    {:ok, observer_1} = TestObserver.start()
+    GenStage.sync_subscribe(observer_1, to: ec)
+
+    :ok = EventCenter.sync_notify(ec, "One")
+
+    {:ok, observer_2} = TestObserver.start()
+    GenStage.sync_subscribe(observer_2, to: ec)
+
+    :ok = EventCenter.sync_notify(ec, "Two")
+    assert TestObserver.get(observer_1) == ["One", "Two"]
+    assert TestObserver.get(observer_2) == ["Two"]
+
+    EventCenter.stop(ec)
+  end
+
 end
