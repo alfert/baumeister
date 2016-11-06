@@ -25,6 +25,8 @@ defmodule Baumeister.Coordinator do
   require Logger
   use Elixometer
 
+  alias Baumeister.EventCenter
+
   # Metrics
   @nb_of_workers "baumeister.nb_of_registered_workers"
   @start_workers "baumeister.nb_of_started_workers"
@@ -79,12 +81,14 @@ defmodule Baumeister.Coordinator do
   end
 
   def handle_call({:register, worker}, _from, state) do
-    Logger.info "Register worker #{inspect worker}"
+    Logger.debug "Register worker #{inspect worker}"
+    EventCenter.sync_notify({:coordinator, :register, worker})
     new_state = do_register(worker, state)
     {:reply, :ok, new_state}
   end
   def handle_call({:unregister, worker}, _from, state) do
-    Logger.info "Unregister worker #{inspect worker}"
+    Logger.debug "Unregister worker #{inspect worker}"
+    EventCenter.sync_notify({:coordinator, :runegister, worker})
     {:reply, :ok, do_unregister(worker, state)}
   end
   def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do
