@@ -6,6 +6,7 @@ defmodule Baumeister.Worker do
   """
 
   alias Baumeister.Coordinator
+  alias Baumeister.EventCenter
 
   @type t :: %__MODULE__{
     coordinator: nil | pid,
@@ -23,7 +24,7 @@ defmodule Baumeister.Worker do
   ##############################################################################
 
   def start_link() do
-    Logger.info "Starting Worker"
+    Logger.debug "Starting Worker"
     coordinator = Coordinator.name()
     GenServer.start_link(__MODULE__, [coordinator])
   end
@@ -35,7 +36,8 @@ defmodule Baumeister.Worker do
   ##############################################################################
 
   def init([coordinator]) do
-    Logger.info "Initializing Worker"
+    Logger.debug "Initializing Worker"
+    EventCenter.sync_notify({:worker, :start, self})
     :ok = Coordinator.register(self)
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
     state = %__MODULE__{coordinator: coordinator, coordinator_ref: ref}
@@ -57,5 +59,11 @@ defmodule Baumeister.Worker do
     Logger.debug "Coordinator: got unknown info message: #{inspect msg}"
     {:noreply, state}
   end
+
+  def terminate(reason, _state) do
+    EventCenter.sync_notify({:worker, :terminate, reason})
+    :ok
+  end
+
 
 end
