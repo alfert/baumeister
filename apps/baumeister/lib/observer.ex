@@ -1,5 +1,6 @@
 defmodule Baumeister.Observer do
   alias Baumeister.EventCenter
+  alias Baumester.BaumeisterFile
 
   @moduledoc """
   Defines the API, which a specific observer has to implement.
@@ -74,7 +75,7 @@ defmodule Baumeister.Observer do
   end
   def handle_cast({:execute, url, baumeister_file}, state) do
     EventCenter.sync_notify({:observer, :execute, url})
-    job = Baumeister.parse!(baumeister_file)
+    job = BaumeisterFile.parse!(baumeister_file)
     Baumeister.execute(url, job)
     # This works only, if `run()` is asynchronous
     Baumeister.Observer.run(self)

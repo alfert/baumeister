@@ -15,6 +15,24 @@ defmodule Baumeister.BaumeisterFile do
   @type t :: %__MODULE__{command: String.t, os: os_type}
 
   @doc """
+  Parses a BaumeisterFile string representation and returns its
+  internal representation. In case of an invalid file, an exception
+  is raised.
+
+    iex> Baumeister.BaumeisterFile.parse!("command: hey")
+    %Baumeister.BaumeisterFile{command: "hey"}
+  """
+  @spec parse!(String.t) :: BaumeisterFile.t
+  def parse!(contents) do
+    map = YamlElixir.read_from_string(contents)
+    # {map, _bindings} = Code.eval_string(contents, [], [])
+    if not is_map(map), do: raise BaumeisterFile.InvalidSyntax,
+      message: "Must be a mapping with strings as keys!"
+    assign!(map)
+  end
+
+
+  @doc """
   Takes a map of strings to any values and assigns it to a
   `BaumeisterFile` struct. Only known keys are converted,
   an unknown key raises an `InvalidSyntax` error.

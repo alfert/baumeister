@@ -26,23 +26,6 @@ defmodule Baumeister do
   end
 
   @doc """
-  Parses a BaumeisterFile string representation and returns its
-  internal representation. In case of an invalid file, an exception
-  is raised.
-
-    iex> Baumeister.parse!("command: hey")
-    %Baumeister.BaumeisterFile{command: "hey"}
-  """
-  @spec parse!(String.t) :: BaumeisterFile.t
-  def parse!(contents) do
-    map = YamlElixir.read_from_string(contents)
-    # {map, _bindings} = Code.eval_string(contents, [], [])
-    if not is_map(map), do: raise BaumeisterFile.InvalidSyntax,
-      message: "Must be a mapping with strings as keys!"
-    BaumeisterFile.assign!(map)
-  end
-
-  @doc """
   Executes the commands defined in the BaumeisterFile on a node that
   fits to the settings (e.g. OS) and on which the repository at the
   URL will be checked out.
