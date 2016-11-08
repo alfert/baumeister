@@ -98,7 +98,7 @@ defmodule Baumeister.Worker do
   """
   def detect_capabilities() do
     [:os, :cpu, :git, :mix]
-    |> Enum.map(fn key -> detect_capability(key) end)
+    |> Enum.map(&detect_capability/1)
     |> Enum.into(%{})
   end
 
