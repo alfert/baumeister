@@ -28,8 +28,10 @@ defmodule Baumeister.WorkerTest do
     end
   end
 
+  @tag timeout: 1_000
   test "Start a worker", _env do
     {:ok, worker} = Worker.start_link()
+    Logger.debug "Worker is started"
     assert is_pid(worker)
     assert Process.alive?(worker)
     all_workers = Coordinator.workers()
@@ -40,6 +42,7 @@ defmodule Baumeister.WorkerTest do
     assert not Enum.member?(remaining_workers, worker)
   end
 
+  @tag timeout: 1_000
   test "Kill the coordinator", env do
     Process.flag(:trap_exit, true)
     {:ok, worker} = Worker.start_link()
@@ -57,6 +60,12 @@ defmodule Baumeister.WorkerTest do
     # Worker goes down
     assert_receive({:DOWN, ^ref_worker, :process, _, _})
     refute Process.alive?(worker)
+  end
+
+  test "Check for the capabilities" do
+    l = Worker.detect_capabilities()
+    assert is_map(l)
+    assert Map.fetch!(l, :os) != nil 
   end
 
 end
