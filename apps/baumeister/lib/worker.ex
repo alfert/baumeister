@@ -88,6 +88,14 @@ defmodule Baumeister.Worker do
     :ok
   end
 
+  @doc """
+  __Internal function!__
+
+  Detects the capabilities of the current worker. Initial set
+  considers the operating system, the CPU, and the existence of
+  git and mix. Future version may have many more capabilities
+  to be checked.
+  """
   def detect_capabilities() do
     [:os, :cpu, :git, :mix]
     |> Enum.map(fn key -> detect_capability(key) end)
