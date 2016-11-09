@@ -9,6 +9,7 @@ defmodule Baumeister.Coordinator do
   }
   defstruct workers: %{}, monitors: %{}
 
+  @type capabilities_t :: %{atom => any}
   defmodule WorkerSpec do
     @moduledoc """
     Data about a worker
@@ -16,7 +17,7 @@ defmodule Baumeister.Coordinator do
     @type t :: %__MODULE__{
       pid: nil | pid,
       monitor_ref: nil | reference,
-      capabilities: %{atom => any}
+      capabilities: Baumeister.Coordinator.capabilities_t
     }
     defstruct pid: nil, monitor_ref: nil,
       capabilities: %{}
@@ -29,6 +30,7 @@ defmodule Baumeister.Coordinator do
 
   alias Baumeister.EventCenter
   alias Baumeister.Worker
+  alias Baumeister.BaumeisterFile
 
   # Metrics
   @nb_of_workers "baumeister.nb_of_registered_workers"
@@ -177,4 +179,20 @@ defmodule Baumeister.Coordinator do
     %__MODULE__{state | workers: new_workers, monitors: new_monitors}
   end
 
+  @spec match_workers(%{pid => WorkerSpec.t}, BaumeisterFile.t) :: [pid]
+  def match_workers(workers, baumeisterfile) do
+    workers
+    |> Map.to_list
+    |> Enum.filter_map(
+      fn {_pid, w} -> match_worker?(w.capabilities, baumeisterfile) end,
+      fn {pid, _w} -> pid end)
+  end
+
+  @spec match_worker?(capabilities_t, BaumeisterFile.t) :: boolean
+  def match_worker?(capa, bmf) do
+    Logger.debug "bmf : #{inspect bmf}"
+    Logger.debug "capa: #{inspect capa}"
+    bmf.os == Map.fetch!(capa, :os) and
+      (bmf.language == "elixir" and Map.fetch!(capa, :mix))
+   end
 end

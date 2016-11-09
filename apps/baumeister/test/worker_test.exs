@@ -5,6 +5,7 @@ defmodule Baumeister.WorkerTest do
 
   alias Baumeister.Coordinator
   alias Baumeister.Worker
+  alias Baumeister.BaumeisterFile
 
 
   # Ensures that the coordinator is running and puts the pid in the environment
@@ -65,7 +66,19 @@ defmodule Baumeister.WorkerTest do
   test "Check for the capabilities" do
     l = Worker.detect_capabilities()
     assert is_map(l)
-    assert Map.fetch!(l, :os) != nil 
+    assert Map.fetch!(l, :os) != nil
+  end
+
+  test "Find suitable workers for Elixir on macOS" do
+    bmf = """
+      os: macos
+      language: elixir
+    """ |> BaumeisterFile.parse!
+    {:ok, worker} = Worker.start_link()
+    Logger.debug "Worker is started"
+    capa = Worker.detect_capabilities
+    assert %{:os => :macos, :mix => true} = capa
+    assert Coordinator.match_worker?(capa, bmf)
   end
 
 end
