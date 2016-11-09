@@ -61,6 +61,7 @@ defmodule Baumeister.BaumeisterFile do
 
   @spec canonized_values(any, atom) :: atom | any
   def canonized_values("macos", :os), do: :macos
+  def canonized_values("darwin", :os), do: :macos
   def canonized_values("windows", :os), do: :windows
   def canonized_values("linux", :os), do: :linux
   def canonized_values(value, _), do: value

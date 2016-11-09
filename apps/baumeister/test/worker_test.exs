@@ -70,8 +70,9 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "Find suitable workers for Elixir on macOS" do
+    {_, local_os} = :os.type()
     bmf = """
-      os: macos
+      os: #{local_os |> Atom.to_string}
       language: elixir
     """ |> BaumeisterFile.parse!
     {:ok, worker} = Worker.start_link()
