@@ -71,14 +71,16 @@ defmodule Baumeister.WorkerTest do
 
   test "Find suitable workers for Elixir on macOS" do
     {_, local_os} = :os.type()
+    local_os = local_os |> Atom.to_string
     bmf = """
-      os: #{local_os |> Atom.to_string}
+      os: #{local_os}
       language: elixir
     """ |> BaumeisterFile.parse!
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
     capa = Worker.detect_capabilities
-    assert %{:os => :macos, :mix => true} = capa
+    capa_manual = %{:os => BaumeisterFile.canonized_values(local_os, :os), :mix => true}
+    assert capa_manual = capa
     assert Coordinator.match_worker?(capa, bmf)
   end
 
