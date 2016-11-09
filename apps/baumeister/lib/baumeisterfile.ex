@@ -10,9 +10,9 @@ defmodule Baumeister.BaumeisterFile do
   @type os_type :: :macos | :linux | :windows
 
   defstruct(
-    [command: "", os: :macos])
+    [command: "", os: :macos, language: ""])
 
-  @type t :: %__MODULE__{command: String.t, os: os_type}
+  @type t :: %__MODULE__{command: String.t, os: os_type, language: String.t}
 
   @doc """
   Parses a BaumeisterFile string representation and returns its
@@ -51,11 +51,18 @@ defmodule Baumeister.BaumeisterFile do
     |> Enum.reduce(bmf, fn(key, acc) ->
       if MapSet.member?(valid_keys, key) do
         atom_key = String.to_atom(key)
-        Map.put(acc, atom_key, Map.fetch!(map, key))
+        value = Map.fetch!(map, key) |> canonized_values(atom_key)
+        Map.put(acc, atom_key, value)
       else
         raise(InvalidSyntax, message: "Unknown key #{key}")
       end
     end)
   end
+
+  @spec canonized_values(any, atom) :: atom | any
+  def canonized_values("macos", :os), do: :macos
+  def canonized_values("windows", :os), do: :windows
+  def canonized_values("linux", :os), do: :linux
+  def canonized_values(value, _), do: value
 
 end # of Baumeister.BaumeisterFile
