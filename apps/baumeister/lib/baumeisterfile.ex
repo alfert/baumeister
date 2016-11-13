@@ -26,7 +26,7 @@ defmodule Baumeister.BaumeisterFile do
   def parse!(contents) do
     map = YamlElixir.read_from_string(contents)
     # {map, _bindings} = Code.eval_string(contents, [], [])
-    if not is_map(map), do: raise BaumeisterFile.InvalidSyntax,
+    if not is_map(map), do: raise InvalidSyntax,
       message: "Must be a mapping with strings as keys!"
     assign!(map)
   end

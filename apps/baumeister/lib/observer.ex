@@ -1,6 +1,6 @@
 defmodule Baumeister.Observer do
   alias Baumeister.EventCenter
-  alias Baumester.BaumeisterFile
+  alias Baumeister.BaumeisterFile
 
   @moduledoc """
   Defines the API, which a specific observer has to implement.
