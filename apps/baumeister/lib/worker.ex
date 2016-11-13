@@ -44,6 +44,7 @@ defmodule Baumeister.Worker do
   @doc """
   Detects the capabilites of `worker_pid`.
   """
+  @spec capabilities(pid) :: %{atom => any}
   def capabilities(worker_pid) do
     GenServer.call(worker_pid, :capabilities)
   end
@@ -96,6 +97,7 @@ defmodule Baumeister.Worker do
   git and mix. Future version may have many more capabilities
   to be checked.
   """
+  @spec detect_capabilities() :: %{atom => any}
   def detect_capabilities() do
     [:os, :cpu, :git, :mix]
     |> Enum.map(&detect_capability/1)
