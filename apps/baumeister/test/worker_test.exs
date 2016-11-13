@@ -76,11 +76,15 @@ defmodule Baumeister.WorkerTest do
       os: #{local_os}
       language: elixir
     """ |> BaumeisterFile.parse!
-    {:ok, worker} = Worker.start_link()
+    {:ok, _worker} = Worker.start_link()
     Logger.debug "Worker is started"
     capa = Worker.detect_capabilities
-    capa_manual = %{:os => BaumeisterFile.canonized_values(local_os, :os), :mix => true}
-    assert capa_manual = capa
+    capa_expected = %{:os => BaumeisterFile.canonized_values(local_os, :os), :mix => true}
+
+    # check that at least all values of capa_expected are set in capa
+    for {k, v} <- capa_expected do
+      assert capa[k] == v, "key: #{inspect k}, expect: #{inspect v}, got: #{inspect capa[k]}"
+    end
     assert Coordinator.match_worker?(capa, bmf)
   end
 
