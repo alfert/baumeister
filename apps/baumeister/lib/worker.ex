@@ -22,9 +22,10 @@ defmodule Baumeister.Worker do
 
   @type t :: %__MODULE__{
     coordinator: nil | pid,
-    coordinator_ref: nil | reference
+    coordinator_ref: nil | reference,
+    processes: %{pid => String.t}
   }
-  defstruct coordinator: nil, coordinator_ref: nil
+  defstruct coordinator: nil, coordinator_ref: nil, processes: %{}
 
   use GenServer
   require Logger
@@ -49,6 +50,10 @@ defmodule Baumeister.Worker do
     GenServer.call(worker_pid, :capabilities)
   end
 
+  def execute(pid, url, bmf) do
+    GenServer.cast(pid, {:execute, url, bmf})
+  end
+
   ##############################################################################
   ##
   ## Callbacks and internals
@@ -57,6 +62,7 @@ defmodule Baumeister.Worker do
 
   def init([coordinator]) do
     Logger.debug "Initializing Worker"
+    Process.flag(:trap_exit, true)
     EventCenter.sync_notify({:worker, :start, self})
     :ok = Coordinator.register(self)
     :ok = Coordinator.update_capabilities(self, detect_capabilities())
@@ -69,7 +75,22 @@ defmodule Baumeister.Worker do
     {:reply, detect_capabilities(), state}
   end
 
-  # Handle the monitoring messages from Workers
+  def handle_cast({:execute, url, bmf}, state = %__MODULE__{processes: processes}) do
+    EventCenter.sync_notify({:worker, :execute, {:start, url}})
+    exec_pid = Task.start_link(fn ->
+      {out, rc} = execute_bmf(url, bmf)
+      case rc do
+        0 -> EventCenter.sync_notify({:worker, :execute, {:ok, url}})
+        _ -> EventCenter.sync_notify({:worker, :execute, {:error, url}})
+      end
+      EventCenter.sync_notify({:worker, :execute, {:log, url, out}})
+    end)
+    Logger.error "Implement: add the exec_pid to the list of tasks"
+    new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, url)}
+    {:noreply, state}
+  end
+
+  # Handle the monitoring messages from Coordinators
   def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
     if ref == state.coordinator_ref do
       Logger.info("Coordinator has stopped working. This nodes goes down.")
@@ -79,8 +100,17 @@ defmodule Baumeister.Worker do
       {:noreply, state}
     end
   end
+  def handle_info({:EXIT, pid, _reason}, state = %__MODULE__{processes: processes}) do
+    new_state = case processes |> Map.get(pid) do
+      nil -> Logger.error ("Unknown linked pid #{inspect pid}")
+             state
+      url -> EventCenter.sync_notify({:worker, :execute, {:crashed, url}})
+             %__MODULE__{state | processes: processes |> Map.delete(pid)}
+    end
+    {:noreply, new_state}
+  end
   def handle_info(msg, state) do
-    Logger.debug "Coordinator: got unknown info message: #{inspect msg}"
+    Logger.debug "Worker: got unknown info message: #{inspect msg}"
     {:noreply, state}
   end
 
