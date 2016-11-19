@@ -109,7 +109,8 @@ defmodule Baumeister.WorkerTest do
     {bmf, _local_os} = create_bmf("type #{non_existing_file}")
     {out, rc} = Worker.execute_bmf("file:///", bmf)
 
-    assert rc == 1
+    # return codes are different for various operating systems :-(
+    assert rc != 0
     # use trim to avoid problems with linefeeds
     assert String.trim(out) != ""
     # in the error message the file name should appear
@@ -123,9 +124,7 @@ defmodule Baumeister.WorkerTest do
 
     :ok = Worker.execute(worker, "file:///", bmf)
     assert_receive {:execute, {out, 0}}
-    # assert rc == 0
-    # # use trim to avoid problems with linefeeds
-    # assert String.trim(out) == "Hallo"
+    
   end
 
 
