@@ -51,7 +51,7 @@ defmodule Baumeister.Worker do
   end
 
   def execute(pid, url, bmf) do
-    GenServer.cast(pid, {:execute, url, bmf})
+    GenServer.call(pid, {:execute, url, bmf})
   end
 
   ##############################################################################
@@ -74,8 +74,7 @@ defmodule Baumeister.Worker do
   def handle_call(:capabilities, _from, state) do
     {:reply, detect_capabilities(), state}
   end
-
-  def handle_cast({:execute, url, bmf}, state = %__MODULE__{processes: processes}) do
+  def handle_call({:execute, url, bmf}, from, state = %__MODULE__{processes: processes}) do
     EventCenter.sync_notify({:worker, :execute, {:start, url}})
     exec_pid = Task.start_link(fn ->
       {out, rc} = execute_bmf(url, bmf)
@@ -84,11 +83,17 @@ defmodule Baumeister.Worker do
         _ -> EventCenter.sync_notify({:worker, :execute, {:error, url}})
       end
       EventCenter.sync_notify({:worker, :execute, {:log, url, out}})
+      send_exec_return(from, out, rc)
     end)
     Logger.error "Implement: add the exec_pid to the list of tasks"
     new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, url)}
-    {:noreply, state}
+    {:reply, :ok, state}
   end
+
+  defp send_exec_return({pid, ref} , out, rc) do
+    pid |> send({:execute, {out, rc}})
+  end
+
 
   # Handle the monitoring messages from Coordinators
   def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do

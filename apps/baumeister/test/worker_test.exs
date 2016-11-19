@@ -117,12 +117,12 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a simple command from a Worker process" do
-    {bmf, _local_os} = create_bmf("echox Hallo")
+    {bmf, _local_os} = create_bmf("echo Hallo")
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
     :ok = Worker.execute(worker, "file:///", bmf)
-
+    assert_receive {:execute, {out, 0}}
     # assert rc == 0
     # # use trim to avoid problems with linefeeds
     # assert String.trim(out) == "Hallo"
