@@ -88,4 +88,19 @@ defmodule Baumeister.WorkerTest do
     assert Coordinator.match_worker?(capa, bmf)
   end
 
+  test "execute a simple command" do
+    {_, local_os} = :os.type()
+    local_os = local_os |> Atom.to_string
+    bmf = """
+      os: #{local_os}
+      language: elixir
+      command: echo Hallo
+    """ |> BaumeisterFile.parse!
+    {out, rc} = Worker.execute_bmf("file:///", bmf)
+
+    assert rc == 0
+    # use trim to avoid problems with linefeeds
+    assert String.trim(out) == "Hallo"
+  end
+
 end
