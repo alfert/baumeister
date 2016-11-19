@@ -82,8 +82,6 @@ defmodule Baumeister.WorkerTest do
 
   test "Find suitable workers for Elixir for the current OS" do
     {bmf, local_os} = create_bmf()
-    {:ok, _worker} = Worker.start_link()
-    Logger.debug "Worker is started"
     capa = Worker.detect_capabilities
     capa_expected = %{:os => BaumeisterFile.canonized_values(local_os, :os), :mix => true}
 
@@ -117,5 +115,18 @@ defmodule Baumeister.WorkerTest do
     # in the error message the file name should appear
     assert String.contains?(out, non_existing_file)
   end
+
+  test "execute a simple command from a Worker process" do
+    {bmf, _local_os} = create_bmf("echox Hallo")
+    {:ok, worker} = Worker.start_link()
+    Logger.debug "Worker is started"
+
+    :ok = Worker.execute(worker, "file:///", bmf)
+
+    # assert rc == 0
+    # # use trim to avoid problems with linefeeds
+    # assert String.trim(out) == "Hallo"
+  end
+
 
 end
