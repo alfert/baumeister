@@ -103,4 +103,19 @@ defmodule Baumeister.WorkerTest do
     assert String.trim(out) == "Hallo"
   end
 
+  test "execute a failing command" do
+    name =  Path.wildcard("*")
+    |> Enum.max_by(fn s -> String.length(s) end)
+    |> Path.absname()
+    non_existing_file = "#{name}-xxx"
+    {bmf, _local_os} = create_bmf("type #{non_existing_file}")
+    {out, rc} = Worker.execute_bmf("file:///", bmf)
+
+    assert rc == 1
+    # use trim to avoid problems with linefeeds
+    assert String.trim(out) != ""
+    # in the error message the file name should appear
+    assert String.contains?(out, non_existing_file)
+  end
+
 end
