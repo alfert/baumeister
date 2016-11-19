@@ -92,6 +92,37 @@ defmodule Baumeister.Worker do
   @doc """
   __Internal function!__
 
+  Execute a BaumeisterFile. The following steps are required:
+
+  * Create a new workspace directory
+  * extract the workshacpe from the url with the proper SCM plugin
+  * cd into the directory
+  * execute the command from the `bmf`
+  * remove the workspace directory
+  * return the output and returncode from the command
+  """
+  @spec execute_bmf(String.t, Baumeister.BaumeisterFile.t) :: {String.t, integer}
+  def execute_bmf(url, bmf) do
+    # make workspace dir
+    tmpdir = System.tmp_dir!()
+    dir = Path.join(tmpdir, "baumeister_workspace")
+    :ok = File.mkdir_p!(dir)
+    # extract from `url`
+    # cd into dir ==> siehe System.cmd!
+    # execute command
+    {shell, arg1}  = case bmf.os do
+      :windows -> {"cmd.exe", "/c"}
+      _unix -> {"/bin/sh", "-c"}
+    end
+    {out, rc} = System.cmd(shell, [arg1, bmf.command], [cd: dir, stderr_to_stdout: true])
+    # remove the directory
+    :ok = File.rmdir! dir
+    {out, rc}
+  end
+
+  @doc """
+  __Internal function!__
+
   Detects the capabilities of the current worker. Initial set
   considers the operating system, the CPU, and the existence of
   git and mix. Future version may have many more capabilities
