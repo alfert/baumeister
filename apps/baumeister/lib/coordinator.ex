@@ -179,6 +179,10 @@ defmodule Baumeister.Coordinator do
     %__MODULE__{state | workers: new_workers, monitors: new_monitors}
   end
 
+  @doc """
+  Identifies the worker processes that match the requirements of
+  the Baumeister file. 
+  """
   @spec match_workers(%{pid => WorkerSpec.t}, BaumeisterFile.t) :: [pid]
   def match_workers(workers, baumeisterfile) do
     workers
@@ -188,6 +192,10 @@ defmodule Baumeister.Coordinator do
       fn {pid, _w} -> pid end)
   end
 
+  @doc """
+  Matches a single worker `capa` to the Baumeister file `bmf`.
+  Returns true, if worker matches the Baumeister file.
+  """
   @spec match_worker?(capabilities_t, BaumeisterFile.t) :: boolean
   def match_worker?(capa, bmf) do
     Logger.debug "bmf : #{inspect bmf}"
