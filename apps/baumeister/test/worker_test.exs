@@ -29,6 +29,17 @@ defmodule Baumeister.WorkerTest do
     end
   end
 
+  def create_bmf(cmd \\ "true") do
+    {_, local_os} = :os.type()
+    local_os = local_os |> Atom.to_string
+    bmf = """
+      os: #{local_os}
+      language: elixir
+      command: #{cmd}
+    """ |> BaumeisterFile.parse!
+    {bmf, local_os}
+  end
+
   @tag timeout: 1_000
   test "Start a worker", _env do
     {:ok, worker} = Worker.start_link()
@@ -70,12 +81,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "Find suitable workers for Elixir for the current OS" do
-    {_, local_os} = :os.type()
-    local_os = local_os |> Atom.to_string
-    bmf = """
-      os: #{local_os}
-      language: elixir
-    """ |> BaumeisterFile.parse!
+    {bmf, local_os} = create_bmf()
     {:ok, _worker} = Worker.start_link()
     Logger.debug "Worker is started"
     capa = Worker.detect_capabilities
@@ -89,13 +95,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a simple command" do
-    {_, local_os} = :os.type()
-    local_os = local_os |> Atom.to_string
-    bmf = """
-      os: #{local_os}
-      language: elixir
-      command: echo Hallo
-    """ |> BaumeisterFile.parse!
+    {bmf, _local_os} = create_bmf("echo Hallo")
     {out, rc} = Worker.execute_bmf("file:///", bmf)
 
     assert rc == 0
