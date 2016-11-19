@@ -16,7 +16,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   def wait_for_coordinator(wait\\ 5)
-  def wait_for_coordinator(0), do: assert "Coordinator is not available :-("
+  def wait_for_coordinator(0), do: flunk "Coordinator is not available :-("
   def wait_for_coordinator(wait) do
     m = GenServer.whereis(Coordinator.name)
     if not is_pid(m) do
@@ -69,7 +69,7 @@ defmodule Baumeister.WorkerTest do
     assert Map.fetch!(l, :os) != nil
   end
 
-  test "Find suitable workers for Elixir on macOS" do
+  test "Find suitable workers for Elixir for the current OS" do
     {_, local_os} = :os.type()
     local_os = local_os |> Atom.to_string
     bmf = """
