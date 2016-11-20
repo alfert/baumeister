@@ -124,7 +124,27 @@ defmodule Baumeister.WorkerTest do
 
     {:ok, ref} = Worker.execute(worker, "file:///", bmf)
     assert_receive {:executed, {out, 0, ^ref}}
+  end
 
+  test "execute a failing command from a Worker process" do
+    name =  Path.wildcard("*")
+    |> Enum.max_by(fn s -> String.length(s) end)
+    |> Path.absname()
+    non_existing_file = "#{name}-xxx"
+    {bmf, _local_os} = create_bmf("type #{non_existing_file}")
+    {:ok, worker} = Worker.start_link()
+    Logger.debug "Worker is started"
+
+    {:ok, ref} = Worker.execute(worker, "file:///", bmf)
+
+    # return codes are different for various operating systems :-(
+    assert_receive {:executed, {out, rc, ^ref}}
+    # return codes are different for various operating systems :-(
+    assert rc != 0
+    # use trim to avoid problems with linefeeds
+    assert String.trim(out) != ""
+    # in the error message the file name should appear
+    assert String.contains?(out, non_existing_file)
   end
 
   ####################
