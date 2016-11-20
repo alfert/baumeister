@@ -122,10 +122,17 @@ defmodule Baumeister.WorkerTest do
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
-    :ok = Worker.execute(worker, "file:///", bmf)
-    assert_receive {:execute, {out, 0}}
-    
+    {:ok, ref} = Worker.execute(worker, "file:///", bmf)
+    assert_receive {:executed, {out, 0, ^ref}}
+
   end
+
+  ####################
+  #
+  # Add tests with propcheck to run varies tasks with different
+  # runtimes, ideally also in parallel
+  #
+  ####################
 
 
 end
