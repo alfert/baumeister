@@ -50,6 +50,13 @@ defmodule Baumeister.Worker do
     GenServer.call(worker_pid, :capabilities)
   end
 
+  @doc """
+  Executes the given BaumeisterFile and returns a reference
+  to the process execution. Eventually, the a message of the form
+  `{:executed, {out, rc, ref}}` is send to the current process, to inform
+  about the resut of the asynchronous running BaumeisterFile execution process.
+  """
+  @spec execute(pid, String.t, Baumeister.BaumeisterFile.t) :: {:ok, reference}
   def execute(pid, url, bmf) do
     GenServer.call(pid, {:execute, url, bmf})
   end
@@ -75,6 +82,7 @@ defmodule Baumeister.Worker do
     {:reply, detect_capabilities(), state}
   end
   def handle_call({:execute, url, bmf}, from, state = %__MODULE__{processes: processes}) do
+    ref = make_ref()
     EventCenter.sync_notify({:worker, :execute, {:start, url}})
     exec_pid = Task.start_link(fn ->
       {out, rc} = execute_bmf(url, bmf)
@@ -83,15 +91,14 @@ defmodule Baumeister.Worker do
         _ -> EventCenter.sync_notify({:worker, :execute, {:error, url}})
       end
       EventCenter.sync_notify({:worker, :execute, {:log, url, out}})
-      send_exec_return(from, out, rc)
+      send_exec_return(from, out, rc, ref)
     end)
-    Logger.error "Implement: add the exec_pid to the list of tasks"
     new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, url)}
-    {:reply, :ok, state}
+    {:reply, {:ok, ref}, state}
   end
 
-  defp send_exec_return({pid, ref} , out, rc) do
-    pid |> send({:execute, {out, rc}})
+  defp send_exec_return({pid, _from_ref} , out, rc, ref) do
+    pid |> send({:executed, {out, rc, ref}})
   end
 
 
