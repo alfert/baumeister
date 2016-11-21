@@ -7,6 +7,7 @@ defmodule Baumeister.WorkerTest do
   alias Baumeister.Worker
   alias Baumeister.BaumeisterFile
 
+  use PropCheck
 
   # Ensures that the coordinator is running and puts the pid in the environment
   setup do
@@ -154,5 +155,20 @@ defmodule Baumeister.WorkerTest do
   #
   ####################
 
+  property "run many worker executions" do
+    {:ok, worker} = Worker.start_link()
+    Logger.debug "Worker is started"
+    forall delays <- list(float(0.0,1.0)) do
+      returns = delays
+      |> Stream.map(fn f -> create_bmf("sleep #{f}; echo Hallo")end)
+      |> Enum.map(fn {bmf, _} -> Worker.execute(worker,  "file:///", bmf) end)
+      |> Enum.map(fn {:ok, ref} -> receive do
+          {:executed, {_, 0, ^ref}} -> :ok
+         end
+      end)
+
+      Enum.count(returns) == Enum.count(delays)
+    end
+  end
 
 end
