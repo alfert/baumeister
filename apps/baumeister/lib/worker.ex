@@ -23,9 +23,12 @@ defmodule Baumeister.Worker do
   @type t :: %__MODULE__{
     coordinator: nil | pid,
     coordinator_ref: nil | reference,
-    processes: %{pid => String.t}
+    processes: %{pid => String.t},
+    job_counter: pos_integer,
+    workspace_base: String.t
   }
-  defstruct coordinator: nil, coordinator_ref: nil, processes: %{}
+  defstruct coordinator: nil, coordinator_ref: nil,
+    processes: %{}, job_counter: 0, workspace_base: ""
 
   use GenServer
   require Logger
@@ -74,7 +77,11 @@ defmodule Baumeister.Worker do
     :ok = Coordinator.register(self)
     :ok = Coordinator.update_capabilities(self, detect_capabilities())
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
-    state = %__MODULE__{coordinator: coordinator, coordinator_ref: ref}
+    base = Application.get_env(:baumeister, :workspace_base, System.tmp_dir!)
+    state = %__MODULE__{coordinator: coordinator,
+      coordinator_ref: ref,
+      workspace_base: base
+    }
     {:ok, state}
   end
 
@@ -84,8 +91,10 @@ defmodule Baumeister.Worker do
   def handle_call({:execute, url, bmf}, from, state = %__MODULE__{processes: processes}) do
     ref = make_ref()
     EventCenter.sync_notify({:worker, :execute, {:start, url}})
-    exec_pid = Task.start_link(fn ->
-      {out, rc} = execute_bmf(url, bmf)
+    {state, workspace} = workspace_path(state)
+    {:ok, exec_pid} = Task.start_link(fn ->
+      EventCenter.sync_notify({:worker_job, :spawned, self})
+      {out, rc} = execute_bmf(url, bmf, workspace)
       case rc do
         0 -> EventCenter.sync_notify({:worker, :execute, {:ok, url}})
         _ -> EventCenter.sync_notify({:worker, :execute, {:error, url}})
@@ -94,13 +103,19 @@ defmodule Baumeister.Worker do
       send_exec_return(from, out, rc, ref)
     end)
     new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, url)}
-    {:reply, {:ok, ref}, state}
+    {:reply, {:ok, ref}, new_state}
   end
 
   defp send_exec_return({pid, _from_ref} , out, rc, ref) do
     pid |> send({:executed, {out, rc, ref}})
   end
 
+  @spec workspace_path(t) :: {t, String.t}
+  def workspace_path(state = %__MODULE__{job_counter: job, workspace_base: base}) do
+    new_state = %__MODULE__{state | job_counter: job + 1}
+    path = Path.join([base, Atom.to_string(node), "#{job}"])
+    {new_state, path}
+  end
 
   # Handle the monitoring messages from Coordinators
   def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
@@ -115,6 +130,7 @@ defmodule Baumeister.Worker do
   def handle_info({:EXIT, pid, _reason}, state = %__MODULE__{processes: processes}) do
     new_state = case processes |> Map.get(pid) do
       nil -> Logger.error ("Unknown linked pid #{inspect pid}")
+             Logger.error "State: #{inspect state}"
              state
       url -> EventCenter.sync_notify({:worker, :execute, {:crashed, url}})
              %__MODULE__{state | processes: processes |> Map.delete(pid)}
@@ -137,28 +153,31 @@ defmodule Baumeister.Worker do
   Execute a BaumeisterFile. The following steps are required:
 
   * Create a new workspace directory
-  * extract the workshacpe from the url with the proper SCM plugin
+  * extract the workspace from the url with the proper SCM plugin
   * cd into the directory
   * execute the command from the `bmf`
   * remove the workspace directory
   * return the output and returncode from the command
   """
-  @spec execute_bmf(String.t, Baumeister.BaumeisterFile.t) :: {String.t, integer}
+  @spec execute_bmf(String.t, Baumeister.BaumeisterFile.t, String.t) :: {String.t, integer}
   def execute_bmf(url, bmf) do
-    # make workspace dir
     tmpdir = System.tmp_dir!()
-    dir = Path.join(tmpdir, "baumeister_workspace")
-    :ok = File.mkdir_p!(dir)
+    workspace = Path.join(tmpdir, "baumeister_workspace")
+    execute_bmf(url, bmf, workspace)
+  end
+  def execute_bmf(url, bmf, workspace) do
+    # make workspace dir
+    :ok = File.mkdir_p!(workspace)
     # extract from `url`
-    # cd into dir ==> siehe System.cmd!
+    # cd into workspace ==> siehe System.cmd!
     # execute command
     {shell, arg1}  = case bmf.os do
       :windows -> {"cmd.exe", "/c"}
       _unix -> {"/bin/sh", "-c"}
     end
-    {out, rc} = System.cmd(shell, [arg1, bmf.command], [cd: dir, stderr_to_stdout: true])
+    {out, rc} = System.cmd(shell, [arg1, bmf.command], [cd: workspace, stderr_to_stdout: true])
     # remove the directory
-    :ok = File.rmdir! dir
+    :ok = File.rmdir! workspace
     {out, rc}
   end
 
