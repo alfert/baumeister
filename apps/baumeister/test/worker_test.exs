@@ -124,7 +124,7 @@ defmodule Baumeister.WorkerTest do
     Logger.debug "Worker is started"
 
     {:ok, ref} = Worker.execute(worker, "file:///", bmf)
-    assert_receive {:executed, {out, 0, ^ref}}
+    assert_receive {:executed, {_out, 0, ^ref}}
   end
 
   test "execute a failing command from a Worker process" do
@@ -155,19 +155,24 @@ defmodule Baumeister.WorkerTest do
   #
   ####################
 
-  property "run many worker executions" do
+  property "run many worker executions", [:verbose] do
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
-    forall delays <- list(float(0.0,1.0)) do
+    # use size to achieve smaller lists
+    forall delays <- vector(10, float(0.0,0.1))  do
       returns = delays
-      |> Stream.map(fn f -> create_bmf("sleep #{f}; echo Hallo")end)
+      |> Stream.map(fn f -> create_bmf("sleep #{f} && echo Hallo") end)
+      # |> Stream.map(fn f -> create_bmf("echo Hallo")end)
       |> Enum.map(fn {bmf, _} -> Worker.execute(worker,  "file:///", bmf) end)
       |> Enum.map(fn {:ok, ref} -> receive do
-          {:executed, {_, 0, ^ref}} -> :ok
+          {:executed, {_, 0, ^ref}} = msg -> msg
          end
       end)
-
-      Enum.count(returns) == Enum.count(delays)
+      Logger.warn("Returns = #{inspect returns}")
+      Logger.warn("Delays  = #{inspect delays}")
+      (Enum.count(returns) == Enum.count(delays))
+      |> measure("Statistics about Delays", delays)
+      |> collect(Enum.sum(delays))
     end
   end
 
