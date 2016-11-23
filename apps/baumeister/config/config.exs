@@ -20,7 +20,11 @@ use Mix.Config
 #
 #     config :logger, level: :info
 #
+
+# Defines where to store the project definitions
 config :baumeister, persistence: :in_memory
+# Defines the bases directory for workspace of a client
+config :baumeister, workspace_base: "/tmp"
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
