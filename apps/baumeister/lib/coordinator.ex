@@ -9,15 +9,18 @@ defmodule Baumeister.Coordinator do
   }
   defstruct workers: %{}, monitors: %{}
 
+  @type capabilities_t :: %{atom => any}
   defmodule WorkerSpec do
     @moduledoc """
     Data about a worker
     """
     @type t :: %__MODULE__{
       pid: nil | pid,
-      monitor_ref: nil | reference
+      monitor_ref: nil | reference,
+      capabilities: Baumeister.Coordinator.capabilities_t
     }
-    defstruct pid: nil, monitor_ref: nil
+    defstruct pid: nil, monitor_ref: nil,
+      capabilities: %{}
  end
 
 
@@ -26,6 +29,8 @@ defmodule Baumeister.Coordinator do
   use Elixometer
 
   alias Baumeister.EventCenter
+  alias Baumeister.Worker
+  alias Baumeister.BaumeisterFile
 
   # Metrics
   @nb_of_workers "baumeister.nb_of_registered_workers"
@@ -69,6 +74,15 @@ defmodule Baumeister.Coordinator do
     GenServer.call(name(), :workers)
   end
 
+  @doc """
+  Updates the capabilities of worker to assign proper jobs. Should
+  only be used from the worker for updating its capabilities.
+  """
+  @spec update_capabilities(pid | tuple, %{atom => any}) :: :ok | {:error, any}
+  def update_capabilities(worker, capabilities) when is_map(capabilities)do
+    GenServer.call(name(), {:update_capabilities, worker, capabilities})
+  end
+
   ##############################################################################
   ##
   ## Internal Functions & Callbacks
@@ -93,6 +107,16 @@ defmodule Baumeister.Coordinator do
   end
   def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do
     {:reply, workers |> Map.values(), state}
+  end
+  def handle_call({:update_capabilities, worker, capa}, _from,
+                            state = %__MODULE__{workers: workers}) do
+    case Map.fetch(workers, worker) do
+      {:ok, spec} ->
+          s = %WorkerSpec{spec | capabilities: capa}
+          new_state = %__MODULE__{workers: Map.put(workers, worker, s)}
+          {:reply, :ok, new_state}
+      :error -> {:replay, {:error, :unknown_worker}, state}
+    end
   end
 
   # Handle the monitoring messages from Workers
@@ -129,7 +153,9 @@ defmodule Baumeister.Coordinator do
   """
   def do_register(worker, state = %__MODULE__{workers: workers, monitors: monitors}) do
     monitor = Process.monitor(worker)
-    new_workers = Map.put(workers, worker, %WorkerSpec{monitor_ref: monitor, pid: worker})
+    # capabilities = Worker.capabilities(worker)
+    spec = %WorkerSpec{monitor_ref: monitor, pid: worker}
+    new_workers = Map.put(workers, worker, spec)
     new_monitors = Map.put(monitors, monitor, worker)
     worker_no = new_workers |> Enum.count
     update_gauge(@nb_of_workers, worker_no)
@@ -153,4 +179,28 @@ defmodule Baumeister.Coordinator do
     %__MODULE__{state | workers: new_workers, monitors: new_monitors}
   end
 
+  @doc """
+  Identifies the worker processes that match the requirements of
+  the Baumeister file. 
+  """
+  @spec match_workers(%{pid => WorkerSpec.t}, BaumeisterFile.t) :: [pid]
+  def match_workers(workers, baumeisterfile) do
+    workers
+    |> Map.to_list
+    |> Enum.filter_map(
+      fn {_pid, w} -> match_worker?(w.capabilities, baumeisterfile) end,
+      fn {pid, _w} -> pid end)
+  end
+
+  @doc """
+  Matches a single worker `capa` to the Baumeister file `bmf`.
+  Returns true, if worker matches the Baumeister file.
+  """
+  @spec match_worker?(capabilities_t, BaumeisterFile.t) :: boolean
+  def match_worker?(capa, bmf) do
+    Logger.debug "bmf : #{inspect bmf}"
+    Logger.debug "capa: #{inspect capa}"
+    bmf.os == Map.fetch!(capa, :os) and
+      (bmf.language == "elixir" and Map.fetch!(capa, :mix))
+   end
 end
