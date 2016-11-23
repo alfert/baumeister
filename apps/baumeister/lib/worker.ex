@@ -158,6 +158,9 @@ defmodule Baumeister.Worker do
   * execute the command from the `bmf`
   * remove the workspace directory
   * return the output and returncode from the command
+
+  If the parameter `workspace` is missing, it is set to
+  directory `baumeister_workspace` in the system's temp dir.
   """
   @spec execute_bmf(String.t, Baumeister.BaumeisterFile.t, String.t) :: {String.t, integer}
   def execute_bmf(url, bmf) do
