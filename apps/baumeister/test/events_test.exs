@@ -5,21 +5,7 @@ defmodule EventsTest do
   alias Baumeister.EventCenter
   alias Baumeister.EventLogger
 
-  defmodule TestObserver do
-    @moduledoc """
-    A simple observer for the Event Center
-    """
-    use GenStage
-
-    def start(), do: GenStage.start_link(__MODULE__, :ok)
-    def init(_), do: {:consumer, []}
-    def handle_events(events, _, state) do
-      {:noreply, [], state ++ events}
-    end
-
-    def get(stage), do: GenStage.call(stage, :get)
-    def handle_call(:get, _, state), do: {:reply, state, [], state}
-  end
+  alias Baumeister.Test.TestListener
 
   test "EventCenter starts and stops" do
     {:ok, pid} = EventCenter.start_link(:anon)
@@ -29,7 +15,7 @@ defmodule EventsTest do
 
   test "observer start and stops" do
     {:ok, ec} = EventCenter.start_link(:anon)
-    {:ok, observer} = TestObserver.start()
+    {:ok, observer} = TestListener.start()
 
     GenStage.sync_subscribe(observer, to: ec)
     # GenStage.stop(observer)
@@ -41,11 +27,11 @@ defmodule EventsTest do
 
   test "send and consume an event" do
     {:ok, ec} = EventCenter.start_link(:anon)
-    {:ok, observer} = TestObserver.start()
+    {:ok, observer} = TestListener.start()
     GenStage.sync_subscribe(observer, to: ec)
 
     :ok = EventCenter.sync_notify(ec, "Hello")
-    assert TestObserver.get(observer) == ["Hello"]
+    assert TestListener.get(observer) == ["Hello"]
 
     EventCenter.stop(ec)
   end
@@ -61,17 +47,17 @@ defmodule EventsTest do
 
   test "send and consume several events" do
     {:ok, ec} = EventCenter.start_link(:anon)
-    {:ok, observer_1} = TestObserver.start()
+    {:ok, observer_1} = TestListener.start()
     GenStage.sync_subscribe(observer_1, to: ec)
 
     :ok = EventCenter.sync_notify(ec, "One")
 
-    {:ok, observer_2} = TestObserver.start()
+    {:ok, observer_2} = TestListener.start()
     GenStage.sync_subscribe(observer_2, to: ec)
 
     :ok = EventCenter.sync_notify(ec, "Two")
-    assert TestObserver.get(observer_1) == ["One", "Two"]
-    assert TestObserver.get(observer_2) == ["Two"]
+    assert TestListener.get(observer_1) == ["One", "Two"]
+    assert TestListener.get(observer_2) == ["Two"]
 
     EventCenter.stop(ec)
   end
@@ -80,13 +66,13 @@ defmodule EventsTest do
     {:ok, ec} = EventCenter.start_link(:anon)
     {:ok, log} = EventLogger.start_link()
     GenStage.sync_subscribe(log, to: ec)
-    {:ok, observer_1} = TestObserver.start()
+    {:ok, observer_1} = TestListener.start()
     GenStage.sync_subscribe(observer_1, to: ec)
 
     :ok = EventCenter.sync_notify(ec, "One")
     :ok = EventCenter.sync_notify(ec, "Two")
 
-    assert TestObserver.get(observer_1) == ["One", "Two"]
+    assert TestListener.get(observer_1) == ["One", "Two"]
 
     EventCenter.stop(ec)
   end
