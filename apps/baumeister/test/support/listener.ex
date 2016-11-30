@@ -4,7 +4,7 @@ defmodule Baumeister.Test.TestListener do
   """
   alias Experimental.GenStage
   alias Baumeister.EventCenter
-  
+
   use GenStage
 
   def start(), do: GenStage.start_link(__MODULE__, :ok)
@@ -14,5 +14,6 @@ defmodule Baumeister.Test.TestListener do
   end
 
   def get(stage), do: GenStage.call(stage, :get)
+  # {:reply, result, events, state}
   def handle_call(:get, _, state), do: {:reply, state, [], state}
 end
