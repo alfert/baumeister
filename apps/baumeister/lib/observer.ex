@@ -1,7 +1,7 @@
 defmodule Baumeister.Observer do
   alias Baumeister.EventCenter
   alias Baumeister.BaumeisterFile
-
+  alias Baumeister.Observer
   @moduledoc """
   Defines the API, which a specific observer has to implement.
   """
@@ -50,6 +50,18 @@ defmodule Baumeister.Observer do
     GenServer.cast(observer, {:execute, url, baumeister_file})
   end
 
+  @doc """
+    Stops the observer. Reason can either be `:stop` for normal
+    stops, and `:error` for failing observers.
+  """
+  @spec stop(pid, reason :: :stop | :error) :: :ok
+  def stop(observer, :stop) do
+    :ok = GenServer.stop(observer, :normal)
+  end
+  def stop(observer, :error) do
+    :ok = GenServer.stop(observer, :error)
+  end
+
   ###################################################
   ##
   ## Observer Callback Implementation
@@ -68,8 +80,12 @@ defmodule Baumeister.Observer do
     {:ok, pid} = Task.Supervisor.start_child(Baumeister.ObserverSupervisor,
       fn ->
         EventCenter.sync_notify({:observer, :start_observer, mod})
-        {:ok, url, baumeister_file} = mod.observe(state)
-        Baumeister.Observer.execute(parent_pid, url, baumeister_file)
+        case mod.observe(state) do
+          {:ok, url, baumeister_file} ->
+              Observer.execute(parent_pid, url, baumeister_file)
+          :error -> EventCenter.sync_notify{:observer, :failed_observer, mod}
+              Observer.stop(parent_pid, :error)
+        end
       end)
     {:noreply, %__MODULE__{s | observer_pid: pid}}
   end
