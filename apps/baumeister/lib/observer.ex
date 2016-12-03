@@ -115,7 +115,7 @@ defmodule Baumeister.Observer do
   ###################################################
 
   def init([name]) do
-    {:ok, %__MODULE__{state: %{name: name}}}
+    {:ok, %__MODULE__{name: name}}
   end
 
   def handle_call({:configure, plug_list}, _from, state) do
