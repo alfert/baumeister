@@ -22,7 +22,7 @@ defmodule Baumeister.Observer.FailPlugin do
   """
   @spec observe(state :: any) :: {:ok, String.t, String.t} | :error
   def observe(:will_fail) do
-    :error
+    {:error, "will always fail", :will_fail}
   end
 
 end
