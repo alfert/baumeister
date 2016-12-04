@@ -1,5 +1,6 @@
 defmodule Baumeister.Observer.NoopPlugin do
 
+  alias Baumeister.Observer
   @moduledoc """
   An `Observer` Plugin that does virtually nothing. It is ideally suited
   for testing purposes and it is the lower bound of provided functionality.
@@ -21,9 +22,9 @@ defmodule Baumeister.Observer.NoopPlugin do
   Returns immediately the configured URL and the content of the
   BaumeisterFile.
   """
-  @spec observe(state :: any) :: {:ok, String.t, String.t} | :error
-  def observe({url, bmf}) do
-    {:ok, url, bmf}
+  @spec observe(state :: any) :: Observer.observer_return_t
+  def observe(s = {url, bmf}) do
+    {:ok, url, bmf, s}
   end
 
 end

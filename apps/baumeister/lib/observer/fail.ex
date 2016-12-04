@@ -1,5 +1,6 @@
 defmodule Baumeister.Observer.FailPlugin do
 
+  alias Baumeister.Observer
   @moduledoc """
   An `Observer` Plugin that imeeditaly fails. It is ideally suited
   for testing purposes.
@@ -20,7 +21,7 @@ defmodule Baumeister.Observer.FailPlugin do
   Returns immediately the configured URL and the content of the
   BaumeisterFile.
   """
-  @spec observe(state :: any) :: {:ok, String.t, String.t} | :error
+  @spec observe(state :: any) :: Observer.observer_return_t
   def observe(:will_fail) do
     {:error, "will always fail", :will_fail}
   end
