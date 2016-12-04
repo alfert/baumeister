@@ -15,7 +15,7 @@ defmodule Baumeister do
       supervisor(Task.Supervisor, [[name: Baumeister.ObserverSupervisor]]),
       worker(Baumeister.Coordinator, [[name: Baumeister.Coordinator.name()]]),
       worker(Baumeister.EventCenter, []),
-      # worker(Baumeister.EventLogger, [[subscribe_to: Baumeister.EventCenter]]),
+      worker(Baumeister.EventLogger, [[subscribe_to: Baumeister.EventCenter, verbose: false]]),
       worker(Baumeister.Config, [Application.get_env(:baumeister, :persistence)])
     ]
 

@@ -31,14 +31,20 @@ defmodule Baumeister.EventLogger do
   ##
   ###################################################
 
-  def init([subscribe_to: prod]) do
-    {:consumer, :the_state_does_not_matter, subscribe_to: [prod]}
+  def init(opts) do
+    if Keyword.has_key?(opts, :subscribe_to) do
+      prod = Keyword.fetch!(opts, :subscribe_to)
+      {:consumer, opts, subscribe_to: [prod]}
+    else
+      {:consumer, opts}
+    end
   end
-  def init([]), do: {:consumer, :the_state_does_not_matter}
 
   def handle_events(events, _from, state) do
+    verbose = Keyword.get(state, :verbose, false)
     events
-    |> Enum.map(fn(ev) -> Logger.info("EventLogger: event = #{inspect ev}") end)
+    |> Enum.map(fn(ev) ->
+        if verbose, do: Logger.info("EventLogger: event = #{inspect ev}") end)
     # We are a consumer, so we would never emit items.
     {:noreply, [], state}
   end
