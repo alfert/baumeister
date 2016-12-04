@@ -6,11 +6,13 @@ defmodule Baumeister.ObserverTest do
 
   alias Baumeister.Test.TestListener
   alias Experimental.GenStage
+  alias Baumeister.EventCenter
 
   alias Baumeister.Observer
   alias Baumeister.Observer.FailPlugin
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
+  alias Baumeister.Observer.Delay
 
   def wait_for(pred) do
     case pred.() do
@@ -29,6 +31,10 @@ defmodule Baumeister.ObserverTest do
     GenStage.sync_subscribe(listener, to: Baumeister.EventCenter)
     {:ok, pid} = Observer.start_link(context[:test])
     assert is_pid(pid)
+
+    # Let the listener drain the event queue of old events.
+    wait_for fn -> 0 == EventCenter.clear() end
+    # wait_for fn -> 0 == TestListener.clear(listener) end
 
     # merge this with the context
     [pid: pid, listener: listener]
@@ -64,6 +70,7 @@ defmodule Baumeister.ObserverTest do
     """
 
     Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}},{Take, 2}])
+    TestListener.clear(listener)
     :ok = Observer.run(pid)
 
     wait_for fn -> length(TestListener.get(listener)) >= 3 end
@@ -89,6 +96,7 @@ defmodule Baumeister.ObserverTest do
     """
 
     Observer.configure(pid, [{Take, 0}, {NoopPlugin, {"file:///", bmf}}])
+
     :ok = Observer.run(pid)
 
     wait_for fn -> length(TestListener.get(listener)) >= 3 end
@@ -106,10 +114,12 @@ defmodule Baumeister.ObserverTest do
     command: echo "Ja, wir schaffen das"
     """
 
-    Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}}])
+    Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}}, {Delay, 50}])
+    TestListener.clear(listener)
     :ok = Observer.run(pid)
 
     wait_for fn -> length(TestListener.get(listener)) >= 2 end
+    Observer.stop(pid, :stop)
 
     # take only the first two elements, since noop is extremely fast
     # and produces a huge amount of events.
