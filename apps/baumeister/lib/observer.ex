@@ -139,7 +139,10 @@ defmodule Baumeister.Observer do
       end
       {obs, init}
     end)
-    {:reply, :ok, %__MODULE__{state | observer_fun: observer_fun, init_fun: init_fun}}
+    # Reset any plugin state information. The plugin state will be
+    # initialized when the pipeline is run the first time
+    {:reply, :ok, %__MODULE__{state |
+      observer_fun: observer_fun, init_fun: init_fun, state: %{}}}
   end
 
   @doc """
@@ -176,16 +179,7 @@ defmodule Baumeister.Observer do
       fn ->
         EventCenter.sync_notify({:observer, :start_observer, name})
         obs_state = s.init_fun.(state)
-        case s.observer_fun.(obs_state) do
-          {:ok, new_s} ->
-              url = Map.fetch!(new_s, :"$url")
-              baumeister_file = Map.fetch!(new_s, :"$bmf")
-              Observer.execute(parent_pid, url, baumeister_file)
-          {:error, _reason, new_s} -> EventCenter.sync_notify{:observer, :failed_observer, name}
-              Observer.stop(parent_pid, :error)
-          {:stop, new_s } -> EventCenter.sync_notify{:observer, :stopped_observer, name}
-              Observer.stop(parent_pid, :stop)
-        end
+        exec_plugin(obs_state, s.observer_fun, name, parent_pid)
       end)
     {:noreply, %__MODULE__{s | observer_pid: pid}}
   end
@@ -194,8 +188,34 @@ defmodule Baumeister.Observer do
     job = BaumeisterFile.parse!(baumeister_file)
     Baumeister.execute(url, job)
     # This works only, if `run()` is asynchronous
-    Baumeister.Observer.run(self)
+    # Baumeister.Observer.run(self)
     {:noreply, %__MODULE__{state | observer_pid: nil}}
+  end
+
+  @doc """
+  __INTERNAL FUNCTION__
+
+  Executes a plugin with a given `state` and `observer_function`.
+  In events, the `observer_name` is used for reference and
+  to the `observer` the results are communicated. That either leads
+  to executing the bmf or to stop the `observer`.
+  """
+  @spec exec_plugin(plugin_state, (plugin_state -> observer_return_t), any, pid) :: :ok
+  def exec_plugin(state, observer_fun, observer_name, observer) do
+    EventCenter.sync_notify({:observer, :exec_observer, observer_name})
+    case observer_fun.(state) do
+      {:ok, new_s} ->
+          url = Map.fetch!(new_s, :"$url")
+          baumeister_file = Map.fetch!(new_s, :"$bmf")
+          plug_state = new_s |> Map.drop([:"$url", :"$bmf"])
+          Observer.execute(observer, url, baumeister_file)
+          exec_plugin(plug_state, observer_fun, observer_name, observer)
+      {:error, _reason, new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
+          Observer.stop(observer, :error)
+      {:stop, new_s } -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
+          Observer.stop(observer, :stop)
+    end
+    :ok
   end
 
 end
