@@ -14,6 +14,8 @@ defmodule Baumeister.Test.TestListener do
   end
 
   def get(stage), do: GenStage.call(stage, :get)
+  def clear(stage), do: GenStage.call(stage, :clear)
   # {:reply, result, events, state}
   def handle_call(:get, _, state), do: {:reply, state, [], state}
+  def handle_call(:clear, _, state), do: {:reply, length(state), [], []}
 end
