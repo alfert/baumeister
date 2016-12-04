@@ -114,7 +114,6 @@ defmodule Baumeister.ObserverTest do
     # take only the first two elements, since noop is extremely fast
     # and produces a huge amount of events.
     l = TestListener.get(listener) |> Enum.take(2)
-    assert length(l) == 2
     assert [{_, :start_observer, _}, {_, :exec_observer, _}] = l
   end
 
