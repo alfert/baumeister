@@ -55,14 +55,6 @@ defmodule Baumeister.ObserverTest do
     refute Process.alive?(pid)
   end
 
-
-
-  # GENERAL TODO:
-  # * Allow the state of the observer change
-  # * Introduce `:stop` as addition to `:ok` and `:error`
-  # * Think carefully about nesting of plugins to enable
-  #   timings, delays, ... Similar to the Plug-Concept.
-
   @tag timeout: 1_000
   test "take and noop", context do
     pid = context[:pid]
@@ -71,17 +63,34 @@ defmodule Baumeister.ObserverTest do
     command: echo "Ja, wir schaffen das"
     """
 
-    Observer.configure(pid, [{Take, 1}, {NoopPlugin, {"file:///", bmf}}])
-    #Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}},{Take, 1}])
+    #Observer.configure(pid, [{Take, 0}, {NoopPlugin, {"file:///", bmf}}])
+    Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}},{Take, 1}])
+    :ok = Observer.run(pid)
+
+    wait_for fn -> length(TestListener.get(listener)) >= 3 end
+
+    l = TestListener.get(listener)
+    assert length(l) == 4
+    assert [{_, :start_observer, _}, {_, :execute, _}, {_, :stopped_observer, _}] = l
+  end
+
+  @tag timeout: 1_000
+  test "take and noop - premature end", context do
+    pid = context[:pid]
+    listener = context[:listener]
+    bmf = """
+    command: echo "Ja, wir schaffen das"
+    """
+
+    Observer.configure(pid, [{Take, 0}, {NoopPlugin, {"file:///", bmf}}])
     :ok = Observer.run(pid)
 
     wait_for fn -> length(TestListener.get(listener)) >= 2 end
 
     l = TestListener.get(listener)
     assert length(l) == 2
-    assert [{_, :start_observer, _}, {_, :failed_observer, _}] = l
+    assert [{_, :start_observer, _}, {_, :stopped_observer, _}] = l
   end
-
 
   @tag timeout: 1_000
   test "noop", context do
@@ -98,7 +107,7 @@ defmodule Baumeister.ObserverTest do
 
     l = TestListener.get(listener)
     assert length(l) == 2
-    assert [{_, :start_observer, _}, {_, :failed_observer, _}] = l
+    assert [{_, :start_observer, _}, {_, :execute, _}] = l
   end
 
 
