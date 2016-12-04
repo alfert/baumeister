@@ -153,8 +153,9 @@ defmodule Baumeister.WorkerTest do
   # Add tests with propcheck to run varies tasks with different
   # runtimes, ideally also in parallel
   #
+  # Extra long timeout since sometimes it does fit into 1 minute
   ####################
-
+  @tag timeout: 120_000
   property "run many worker executions", [:verbose] do
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
