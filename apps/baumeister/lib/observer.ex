@@ -128,7 +128,7 @@ defmodule Baumeister.Observer do
           {:ok, s_new} ->
             combined_plug.(s_new)
           other ->
-            Logger.debug("abort plug execution after: #{inspect other}")
+            # Logger.debug("abort plug execution after: #{inspect other}")
             other # abort any other operations
         end
       end
@@ -154,10 +154,10 @@ defmodule Baumeister.Observer do
   """
   @spec do_observe(atom, plugin_state) :: observer_return_t
   def do_observe(plug, state) do
-    Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
+    # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
       {:ok, url, bmf, s} ->
-        Logger.debug("got url and bmf from plug #{inspect plug}")
+        # Logger.debug("got url and bmf from plug #{inspect plug}")
         {:ok, state
           |> Map.put(:"$url", url)
           |> Map.put(:"$bmf", bmf)
