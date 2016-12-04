@@ -2,7 +2,7 @@ defmodule Baumeister.ObserverTest do
   use ExUnit.Case
 
   require Logger
-  @moduletag capture_log: false
+  @moduletag capture_log: true
 
   alias Baumeister.Test.TestListener
   alias Experimental.GenStage
@@ -44,7 +44,7 @@ defmodule Baumeister.ObserverTest do
 
     wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
-    l = TestListener.get(listener)
+    l = TestListener.get(listener) |> Enum.take(3)
     assert length(l) == 3
     assert [{_, :start_observer, _}, {_, :exec_observer, _},
         {_, :failed_observer, _}] = l
@@ -93,7 +93,7 @@ defmodule Baumeister.ObserverTest do
 
     wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
-    l = TestListener.get(listener)
+    l = TestListener.get(listener) |> Enum.take(3)
     assert length(l) == 3
     assert [{_, :start_observer, _}, {_, :exec_observer, _}, {_, :stopped_observer, _}] = l
   end
