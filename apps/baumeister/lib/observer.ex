@@ -122,11 +122,14 @@ defmodule Baumeister.Observer do
   def handle_call({:configure, plug_list}, _from, state) do
     # create pipelines of plugins
     {observer_fun, init_fun} = plug_list
-    |> Enum.reduce({fn s -> s end, fn s -> s end},
+    |> Enum.reduce({fn s -> {:ok, s} end, fn s -> s end},
     fn {plug, config}, {combined_plug, combined_init} ->
       obs = fn(s) -> case do_observe(plug, s) do
-          {:ok, s_new} -> combined_plug.(s_new)
-          other -> other # abort any other operations
+          {:ok, s_new} ->
+            combined_plug.(s_new)
+          other ->
+            Logger.debug("abort plug execution after: #{inspect other}")
+            other # abort any other operations
         end
       end
       init = fn(s) ->
@@ -151,6 +154,7 @@ defmodule Baumeister.Observer do
     Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
       {:ok, url, bmf, s} ->
+        Logger.debug("got url and bmf from plug #{inspect plug}")
         {:ok, state
           |> Map.put(:"$url", url)
           |> Map.put(:"$bmf", bmf)
