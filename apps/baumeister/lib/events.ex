@@ -41,6 +41,10 @@ defmodule Baumeister.EventCenter do
    GenStage.call(pid, {:notify, event}, timeout)
  end
 
+ def clear(pid \\ __MODULE__) do
+   GenStage.call(pid, :clear)
+ end
+
  @doc "Stops the EventCenter"
  def stop(pid \\ __MODULE__) do
    GenStage.stop(pid)
@@ -59,6 +63,9 @@ defmodule Baumeister.EventCenter do
  def handle_call({:notify, event}, from, state = %__MODULE__{queue: queue}) do
    added_queue = :queue.in({from, event}, queue)
    dispatch_events(%__MODULE__{state | queue: added_queue}, [])
+ end
+ def handle_call(:clear, _from, state = %__MODULE__{queue: queue, demand: demand}) do
+   {:reply, :queue.len(queue), [], %__MODULE__{state | queue: :queue.new(), demand: demand}}
  end
  def handle_demand(incoming_demand, state = %__MODULE__{demand: pending_demand}) do
    new_demand = incoming_demand + pending_demand
