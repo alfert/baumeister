@@ -65,6 +65,7 @@ defmodule Baumeister.Observer do
   Starts the oberver process
   """
   def start_link(name \\ "anonymous observer")  do
+    Logger.debug "Start Observer #{name}"
     GenServer.start_link(__MODULE__, [name])
   end
 
@@ -102,7 +103,7 @@ defmodule Baumeister.Observer do
   """
   @spec stop(pid, reason :: :stop | :error) :: :ok
   def stop(observer, :stop) do
-    :ok = GenServer.stop(observer, :normal)
+    :ok = GenServer.stop(observer)
   end
   def stop(observer, :error) do
     :ok = GenServer.stop(observer, :error)
@@ -179,7 +180,7 @@ defmodule Baumeister.Observer do
           {:error, _reason, new_s} -> EventCenter.sync_notify{:observer, :failed_observer, name}
               Observer.stop(parent_pid, :error)
           {:stop, new_s } -> EventCenter.sync_notify{:observer, :stopped_observer, name}
-              Observer.stop(parent_pid, :normal)
+              Observer.stop(parent_pid, :stop)
         end
       end)
     {:noreply, %__MODULE__{s | observer_pid: pid}}
