@@ -6,9 +6,6 @@ defmodule Baumeister.ObserverTest do
   alias Baumeister.Test.TestListener
   alias Experimental.GenStage
 
-  alias Baumeister.Coordinator
-  alias Baumeister.Worker
-  alias Baumeister.BaumeisterFile
   alias Baumeister.Observer
   alias Baumeister.Observer.FailPlugin
   alias Baumeister.Observer.NoopPlugin
@@ -59,19 +56,26 @@ defmodule Baumeister.ObserverTest do
   test "take and noop", context do
     pid = context[:pid]
     listener = context[:listener]
+    name = context[:test]
     bmf = """
     command: echo "Ja, wir schaffen das"
     """
 
-    #Observer.configure(pid, [{Take, 0}, {NoopPlugin, {"file:///", bmf}}])
-    Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}},{Take, 1}])
+    Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}},{Take, 2}])
     :ok = Observer.run(pid)
 
     wait_for fn -> length(TestListener.get(listener)) >= 3 end
-
     l = TestListener.get(listener)
-    assert length(l) == 4
-    assert [{_, :start_observer, _}, {_, :execute, _}, {_, :stopped_observer, _}] = l
+
+    plug_events = l
+    |> Enum.filter(
+      fn {_, _, ^name} -> true
+          _ -> false end)
+    |> Enum.map(fn {_, action, _} -> action end)
+    assert length(plug_events) >= 5
+    assert [:start_observer,
+      :exec_observer, :exec_observer, :exec_observer,
+      :stopped_observer] = plug_events
   end
 
   @tag timeout: 1_000
