@@ -212,7 +212,7 @@ defmodule Baumeister.Observer do
           exec_plugin(plug_state, observer_fun, observer_name, observer)
       {:error, _reason, new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
           Observer.stop(observer, :error)
-      {:stop, new_s } -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
+      {:stop, new_s} -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
           Observer.stop(observer, :stop)
     end
     :ok
