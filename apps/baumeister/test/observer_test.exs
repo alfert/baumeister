@@ -2,6 +2,7 @@ defmodule Baumeister.ObserverTest do
   use ExUnit.Case
 
   require Logger
+  @moduletag capture_log: false
 
   alias Baumeister.Test.TestListener
   alias Experimental.GenStage
@@ -41,11 +42,12 @@ defmodule Baumeister.ObserverTest do
     Observer.configure(pid, FailPlugin, :ok)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 2 end
+    wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
     l = TestListener.get(listener)
-    assert length(l) == 2
-    assert [{_, :start_observer, _}, {_, :failed_observer, _}] = l
+    assert length(l) == 3
+    assert [{_, :start_observer, _}, {_, :exec_observer, _},
+        {_, :failed_observer, _}] = l
 
     # It should really die, otherwise it's not implemented as it should
     Logger.debug "Test Observer"
@@ -89,11 +91,11 @@ defmodule Baumeister.ObserverTest do
     Observer.configure(pid, [{Take, 0}, {NoopPlugin, {"file:///", bmf}}])
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 2 end
+    wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
     l = TestListener.get(listener)
-    assert length(l) == 2
-    assert [{_, :start_observer, _}, {_, :stopped_observer, _}] = l
+    assert length(l) == 3
+    assert [{_, :start_observer, _}, {_, :exec_observer, _}, {_, :stopped_observer, _}] = l
   end
 
   @tag timeout: 1_000
@@ -109,9 +111,11 @@ defmodule Baumeister.ObserverTest do
 
     wait_for fn -> length(TestListener.get(listener)) >= 2 end
 
-    l = TestListener.get(listener)
+    # take only the first two elements, since noop is extremely fast
+    # and produces a huge amount of events.
+    l = TestListener.get(listener) |> Enum.take(2)
     assert length(l) == 2
-    assert [{_, :start_observer, _}, {_, :execute, _}] = l
+    assert [{_, :start_observer, _}, {_, :exec_observer, _}] = l
   end
 
 
