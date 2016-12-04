@@ -17,11 +17,10 @@ defmodule Baumeister.Observer.Take do
   end
 
   @doc """
-  Returns immediately the configured URL and the content of the
-  BaumeisterFile.
+  Decrements the counter and stops after the counter reaches `0`.
   """
   @spec observe(state :: non_neg_integer) :: Observer.observer_return_t
   def observe(0), do: {:stop, 0}
-  def observe(n), do: {:ok, n-1}
+  def observe(n), do: {:ok, n - 1}
 
 end
