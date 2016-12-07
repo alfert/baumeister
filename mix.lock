@@ -7,6 +7,7 @@
   "exometer_core": {:hex, :exometer_core, "1.4.0", "a546ccd38be910de6ea75ea95b724b6b2db513c26f02e30919b25eb19651815a", [:rebar3], [{:edown, "0.7.0", [hex: :edown, optional: false]}, {:folsom, "0.8.3", [hex: :folsom, optional: false]}, {:lager, "3.0.2", [hex: :lager, optional: false]}, {:parse_trans, "2.9.0", [hex: :parse_trans, optional: false]}, {:setup, "1.7.0", [hex: :setup, optional: false]}]},
   "folsom": {:hex, :folsom, "0.8.3", "71cff146152fa95e6092e62119f9dc96888660111e7b61853c8fdcf80598a4e0", [:rebar3], [{:bear, "0.8.3", [hex: :bear, optional: false]}]},
   "gen_stage": {:hex, :gen_stage, "0.9.0", "9daf0b5ae224405e0456b7df5a282a9a958176cdb9b963811ca38140e7e1b3c4", [:mix], []},
+  "git_cli": {:hex, :git_cli, "0.2.2", "9294da5a2c5a212e5393df254a42573244ae07927f5796f948fe9b4912c7f785", [:mix], []},
   "goldrush": {:hex, :goldrush, "0.1.8", "2024ba375ceea47e27ea70e14d2c483b2d8610101b4e852ef7f89163cdb6e649", [:rebar3], []},
   "lager": {:hex, :lager, "3.2.1", "eef4e18b39e4195d37606d9088ea05bf1b745986cf8ec84f01d332456fe88d17", [:rebar3], [{:goldrush, "0.1.8", [hex: :goldrush, optional: false]}]},
   "parse_trans": {:hex, :parse_trans, "2.9.0", "3f5f7b402928fb9fd200c891e635de909045d1efac40ce3f924d3892898f85eb", [:rebar, :rebar], [{:edown, "> 0.0.0", [hex: :edown, optional: false]}]},
