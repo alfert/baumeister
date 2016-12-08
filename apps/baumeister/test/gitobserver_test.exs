@@ -15,12 +15,14 @@ defmodule Baumeister.GitObserverTest do
     repos = make_temp_git_repo_with_some_content()
     %{repo: repo, parent_repo: parent} = repos
     # IO.inspect(repos)
-    
+
     {:ok, refstring} = GitLib.ls_remote(repo)
     refs = GitObs.parse_refs(refstring)
 
     assert %{} = refs
+    IO.inspect(refs)
     assert Map.has_key?(refs, "HEAD")
+    assert Map.has_key?(refs, "refs/heads/master")
   end
 
   @spec make_temp_git_repo_with_some_content() :: %{atom => any}
