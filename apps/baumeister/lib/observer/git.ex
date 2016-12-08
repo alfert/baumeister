@@ -23,23 +23,37 @@ defmodule Baumeister.Observer.Git do
   """
   @behaviour Baumeister.Observer
 
-  @type hash :: String.t
+  @type hash_t :: String.t
+
+  @type t :: %__MODULE__{
+    url: String.t,
+    refs: %{String.t => hash_t}
+  }
+  defstruct url: "", refs: %{}
 
   @doc """
   Configure the plugin with URL of the repository
   """
   @spec init(String.t) :: {:ok, any}
   def init(url) do
-    {:ok, url}
+    refs = url
+    |> Git.ls_remote()
+    |> parse_refs()
+    {:ok, %__MODULE__{url: url, refs: refs}}
   end
 
   @doc """
   Decrements the counter and stops after the counter reaches `0`.
   """
-  @spec observe(state :: String.t) :: Observer.observer_return_t
+  @spec observe(state :: t) :: Observer.observer_return_t
   def observe(_url), do: {:error, :not_implemented_yet}
 
-  @spec parse_refs(String.t) :: %{String.t => hash}
+  @doc """
+  Parses the output of `git ls-remote` and returns a mapping
+  of remote references and their sha1 values.
+  """
+  @spec parse_refs(String.t) :: %{String.t => hash_t}
+  def parse_refs({:ok, refs}), do: parse_refs(refs)
   def parse_refs(refs) do
     refs
     |> String.split("\n")
