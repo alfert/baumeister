@@ -7,9 +7,14 @@ defmodule Baumeister.Observer do
   alias Baumeister.Observer
 
   @typedoc """
+  The state of a plugin can by any value.
+  """
+  @type plugin_state :: any
+
+  @typedoc """
   A mapping between plugin name and its current state.
   """
-  @type plugin_state :: %{atom => any}
+  @type plugin_state_map :: %{atom => plugin_state}
 
   @typedoc """
   Allowed return values for an Observer Plugin:
@@ -18,8 +23,8 @@ defmodule Baumeister.Observer do
   * `:stop` The Plugin decides, that the Observer should stop.
   """
   @type observer_return_t ::
-    {:ok, String.t, String.t, any} |
-    {:ok, any} |
+    {:ok, String.t, String.t, plugin_state} |
+    {:ok, plugin_state} |
     {:error, any, any} |
     {:stop, any}
 
@@ -30,7 +35,7 @@ defmodule Baumeister.Observer do
   of the oberserver, which is passed to the `observer` function
   later on.
   """
-  @callback init(config :: any) :: {:ok, any}
+  @callback init(config :: any) :: {:ok, plugin_state}
 
   @doc """
   The observer calls this function to observe the target repository.
@@ -38,7 +43,7 @@ defmodule Baumeister.Observer do
   the URL of the target repository and the content of the `BaumeisterFile`,
   which is used to determine the nodes to execute the build.
   """
-  @callback observe(state :: any) :: observer_return_t
+  @callback observe(state :: plugin_state) :: observer_return_t
 
   ###################################################
   ##
@@ -152,7 +157,7 @@ defmodule Baumeister.Observer do
   pipelin. It manages the state and coordinates the execution of
   plugin
   """
-  @spec do_observe(atom, plugin_state) :: observer_return_t
+  @spec do_observe(atom, plugin_state_map) :: observer_return_t
   def do_observe(plug, state) do
     # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
@@ -200,7 +205,7 @@ defmodule Baumeister.Observer do
   to the `observer` the results are communicated. That either leads
   to executing the bmf or to stop the `observer`.
   """
-  @spec exec_plugin(plugin_state, (plugin_state -> observer_return_t), any, pid) :: :ok
+  @spec exec_plugin(plugin_state_map, (plugin_state_map -> observer_return_t), any, pid) :: :ok
   def exec_plugin(state, observer_fun, observer_name, observer) do
     EventCenter.sync_notify({:observer, :exec_observer, observer_name})
     case observer_fun.(state) do
