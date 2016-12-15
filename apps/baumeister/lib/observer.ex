@@ -17,13 +17,19 @@ defmodule Baumeister.Observer do
   @type plugin_state_map :: %{atom => plugin_state}
 
   @typedoc """
+  A pair of the repository URL to checkout and corresponding
+  BaumeisterFile
+  """
+  @type result_t :: {String.t, String.t}
+
+  @typedoc """
   Allowed return values for an Observer Plugin:
   * `:ok` if everything went fine. We return the URL and BaumeisterFile.
   * `:error` somethings fails. Stops the Observer with a crash
   * `:stop` The Plugin decides, that the Observer should stop.
   """
   @type observer_return_t ::
-    {:ok, String.t, String.t, plugin_state} |
+    {:ok, [result_t, ...], plugin_state} |
     {:ok, plugin_state} |
     {:error, any, any} |
     {:stop, any}

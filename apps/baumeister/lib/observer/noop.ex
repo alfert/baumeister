@@ -13,7 +13,7 @@ defmodule Baumeister.Observer.NoopPlugin do
   Provide the configuration as a pair of the repository URL and
   the content of a BaumeisterFile.
   """
-  @spec init(config :: {String.t, String.t}) :: {:ok, any}
+  @spec init(config :: Observer.result_t) :: {:ok, any}
   def init(config = {url, baumeisterfile}) do
     {:ok, config}
   end
@@ -24,7 +24,7 @@ defmodule Baumeister.Observer.NoopPlugin do
   """
   @spec observe(state :: any) :: Observer.observer_return_t
   def observe(s = {url, bmf}) do
-    {:ok, url, bmf, s}
+    {:ok, [s], s}
   end
 
 end
