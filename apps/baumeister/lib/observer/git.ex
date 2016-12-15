@@ -43,7 +43,8 @@ defmodule Baumeister.Observer.Git do
   end
 
   @doc """
-  Decrements the counter and stops after the counter reaches `0`.
+  Checks the remote references and returns for each modified
+  or new reference a positive return, such that a build is triggered. 
   """
   @spec observe(state :: t) :: Observer.observer_return_t
   def observe(_url), do: {:error, :not_implemented_yet}
