@@ -44,7 +44,7 @@ defmodule Baumeister.Observer.Git do
 
   @doc """
   Checks the remote references and returns for each modified
-  or new reference a positive return, such that a build is triggered. 
+  or new reference a positive return, such that a build is triggered.
   """
   @spec observe(state :: t) :: Observer.observer_return_t
   def observe(_url), do: {:error, :not_implemented_yet}
@@ -62,6 +62,19 @@ defmodule Baumeister.Observer.Git do
     |> Stream.filter(&match?([_,_], &1))
     |> Stream.map(fn [ref, k] -> {k, ref} end)
     |> Enum.into(%{})
+  end
+
+  def changed_refs(old_refs, new_refs) do
+    changed_keys = new_refs
+    |> Map.keys()
+    |> Stream.filter(fn k ->
+      # take only new refs or changed refs
+      case Map.fetch(old_refs, k) do
+        :error -> true
+        _ -> Map.fetch!(old_refs, k) != Map.fetch!(new_refs, k)
+      end
+    end)
+    Map.take(new_refs, changed_keys)
   end
 
 end

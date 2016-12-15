@@ -47,11 +47,18 @@ defmodule Baumeister.GitObserverTest do
     {:ok, refstring} = GitLib.ls_remote(repo)
     new_refs = GitObs.parse_refs(refstring)
 
+    branch1 = "refs/heads/feature/branch1"
     assert refs != new_refs
     assert refs["refs/heads/master"] == new_refs["refs/heads/master"]
-    assert Map.has_key?(new_refs, "refs/heads/feature/branch1")
+    assert Map.has_key?(new_refs, branch1)
     assert refs["HEAD"] != new_refs["HEAD"]
-    assert new_refs["HEAD"] == new_refs["refs/heads/feature/branch1"]
+    assert new_refs["HEAD"] == new_refs[branch1]
+
+    # and now test changed_refs
+    changed_refs = GitObs.changed_refs(refs, new_refs)
+    assert length(Map.keys(changed_refs)) == 2
+    assert Map.has_key?(changed_refs, branch1)
+    assert changed_refs[branch1] == new_refs[branch1]
   end
 
   @spec make_temp_git_repo_with_some_content() :: %{atom => any}
