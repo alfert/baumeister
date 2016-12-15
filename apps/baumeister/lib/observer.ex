@@ -167,12 +167,10 @@ defmodule Baumeister.Observer do
   def do_observe(plug, state) do
     # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
-      # TODO: Hack: this matches only on single return files.
-      {:ok, [{url, bmf}], s} ->
+      {:ok, result, s} when is_list(result)->
         # Logger.debug("got url and bmf from plug #{inspect plug}")
         {:ok, state
-          |> Map.put(:"$url", url)
-          |> Map.put(:"$bmf", bmf)
+          |> Map.put(:"$result", result)
           |> Map.put(plug, s)
         }
       {:ok, s} -> {:ok, Map.put(state, plug, s)}
@@ -217,10 +215,12 @@ defmodule Baumeister.Observer do
     EventCenter.sync_notify({:observer, :exec_observer, observer_name})
     case observer_fun.(state) do
       {:ok, new_s} ->
-          url = Map.fetch!(new_s, :"$url")
-          baumeister_file = Map.fetch!(new_s, :"$bmf")
-          plug_state = new_s |> Map.drop([:"$url", :"$bmf"])
-          Observer.execute(observer, url, baumeister_file)
+          new_s
+          |> Map.fetch!(:"$result")
+          |> Enum.each(fn {url, baumeister_file} ->
+            Observer.execute(observer, url, baumeister_file)
+          end)
+          plug_state = new_s |> Map.drop([:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)
       {:error, _reason, new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
           Observer.stop(observer, :error)
