@@ -167,7 +167,8 @@ defmodule Baumeister.Observer do
   def do_observe(plug, state) do
     # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
-      {:ok, url, bmf, s} ->
+      # TODO: Hack: this matches only on single return files.
+      {:ok, [{url, bmf}], s} ->
         # Logger.debug("got url and bmf from plug #{inspect plug}")
         {:ok, state
           |> Map.put(:"$url", url)
