@@ -8,9 +8,9 @@ defmodule Baumeister.Observer.Git do
   Design questions are:
 
   * Do we have a repository locally, which mirrors the remote repo, required
-    for all sorts of `git fetch`?
+    for all sorts of `git fetch`? ==> YES!
   * Do we need to store locally a last hash value to ask for any changes after
-    that hash?
+    that hash? ==> YES
   * Are we interested in a specific set of branches or simply all branches?
     Assumption: This is in option, per default configured to match all branches
     (`.*` as a regexp)
@@ -18,7 +18,8 @@ defmodule Baumeister.Observer.Git do
     to do a curl towards the Baumeister server. This would mean that we may
     need to provide a more general web-hook framework for Baumeister, but
     that's generally ok and required for integrating GitHub or BitBucket.
-  * Use fast remote polling via `git ls-remote`
+    ==> Hooks will come in another version of the Git Plugin
+  * Use fast remote polling via `git ls-remote` ==> YES
 
   """
   @behaviour Baumeister.Observer
@@ -27,19 +28,38 @@ defmodule Baumeister.Observer.Git do
 
   @type t :: %__MODULE__{
     url: String.t,
+    repo: Git.Repository.t,
+    local_path: String.t,
+    local_repo: Git.Repository.t,
     refs: %{String.t => hash_t}
   }
-  defstruct url: "", refs: %{}
+  defstruct url: "", repo: nil,
+    local_path: "",
+    local_repo: nil,
+    refs: %{}
 
   @doc """
   Configure the plugin with URL of the repository
   """
   @spec init(String.t) :: {:ok, any}
-  def init(url) do
-    refs = url
+  def init(url) when is_binary(url) do
+    state = init_repos(url)
+    refs = state.repo
     |> Git.ls_remote()
     |> parse_refs()
-    {:ok, %__MODULE__{url: url, refs: refs}}
+    {:ok, update_in(state.refs, fn _ -> refs end)}
+  end
+
+  defp init_repos(url) do
+    repo = Git.new(url)
+
+    admin_path = Application.get_env(:baumeister, :admin_data_dir,
+      Path.join(System.tmp_dir!(), "baumeister_admin"))
+    local_path = Path.join(admin_path, Path.basename(url))
+    # remove the directory, if it already exists otherwise clone will fail
+    {:ok, _} = File.rm_rf(local_path)
+    {:ok, local_repo} = Git.clone([url, local_path])
+    %__MODULE__{url: url, repo: repo, local_path: local_path, local_repo: local_repo}
   end
 
   @doc """
@@ -47,7 +67,31 @@ defmodule Baumeister.Observer.Git do
   or new reference a positive return, such that a build is triggered.
   """
   @spec observe(state :: t) :: Observer.observer_return_t
-  def observe(_url), do: {:error, :not_implemented_yet}
+  def observe(state = %__MODULE__{repo: repo, refs: refs}) do
+    # get new refs, check the difference and return the differences.
+    # new state os the map of new refs.
+    #
+    new_refs = repo
+    |> Git.ls_remote()
+    |> parse_refs()
+    changed = changed_refs(refs, new_refs)
+    new_state =  %__MODULE__{state | refs: new_refs}
+    case Map.keys(changed) do
+      [] -> {:ok, new_state}
+      _ -> # TODO: Replace the map with the content of the Baumesiter file
+      {:ok, changed, new_state}
+    end
+    # #########################################
+    #
+    # We need the coordinate system for Results, extending Observer.return_t!
+    #
+    # Checkout the remote repository as an adminstration
+    # repo here, to fetch the remote branches and to checkout
+    # the Baumeisterfiles ==> See test code, but we need a local
+    # repository here.
+    #
+    # #########################################
+  end
 
   @doc """
   Parses the output of `git ls-remote` and returns a mapping
@@ -64,6 +108,7 @@ defmodule Baumeister.Observer.Git do
     |> Enum.into(%{})
   end
 
+  @spec changed_refs(%{String.t => hash_t}, %{String.t => hash_t}) :: %{String.t => hash_t}
   def changed_refs(old_refs, new_refs) do
     changed_keys = new_refs
     |> Map.keys()

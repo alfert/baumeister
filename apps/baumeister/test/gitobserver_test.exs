@@ -22,7 +22,7 @@ defmodule Baumeister.GitObserverTest do
     refs = GitObs.parse_refs(refstring)
 
     assert %{} = refs
-    IO.inspect(refs)
+    # IO.inspect(refs)
     assert Map.has_key?(refs, "HEAD")
     assert Map.has_key?(refs, "refs/heads/master")
   end
@@ -36,12 +36,8 @@ defmodule Baumeister.GitObserverTest do
     {:ok, refstring} = GitLib.ls_remote(repo)
     refs = GitObs.parse_refs(refstring)
 
-    # update the README.md on the parent, but on a branch
-    {:ok, _} = GitLib.checkout(parent_repo, ["-b", "feature/branch1"])
-    readme = Path.join(parent_repo_path, "README.md")
-    :ok = File.touch(readme)
-    {:ok, _} = GitLib.add(parent_repo, readme)
-    {:ok, _}  = GitLib.commit(parent_repo, ["-m", "touched", "--allow-empty", readme])
+    # modify files on a brnach
+    update_the_parent(parent_repo, parent_repo_path, "feature/branch1")
 
     # check what has changed.
     {:ok, refstring} = GitLib.ls_remote(repo)
@@ -59,6 +55,40 @@ defmodule Baumeister.GitObserverTest do
     assert length(Map.keys(changed_refs)) == 2
     assert Map.has_key?(changed_refs, branch1)
     assert changed_refs[branch1] == new_refs[branch1]
+  end
+
+  test "Check the observer funtions", context do
+    repo = context[:repo]
+    repo_path = context[:repo_path]
+    parent_repo = context[:parent_repo]
+    parent_repo_path = context[:parent_repo_path]
+
+    {:ok, state} = GitObs.init(repo.path)
+    # nothin has changed
+    assert {:ok, state} == GitObs.observe(state)
+
+    # modify files on a branch
+    branch =  "feature/branch1"
+    update_the_parent(parent_repo, parent_repo_path, branch)
+    {:ok, refs, new_state} = GitObs.observe(state)
+    IO.inspect(refs)
+    assert Enum.count(refs) == 2
+    assert Map.has_key?(refs, "refs/heads/" <> branch)
+
+    {:ok, _} = GitLib.fetch(repo, [parent_repo_path, "refs/heads/" <> branch <> ":" <> "refs/heads/" <> branch])
+    {:ok, _} = GitLib.checkout(repo, branch)
+    {:ok, hallo} = File.read(Path.join(repo_path, "README.md"))
+    assert hallo == "hello"
+  end
+
+  def update_the_parent(parent_repo, parent_repo_path, branch_name) do
+    # update the README.md on the parent, but on a branch
+    {:ok, _} = GitLib.checkout(parent_repo, ["-b", branch_name])
+    readme = Path.join(parent_repo_path, "README.md")
+    :ok = File.write(readme, "hello")
+    {:ok, _} = GitLib.add(parent_repo, readme)
+    {:ok, _}  = GitLib.commit(parent_repo, ["-m", "touched", "--allow-empty", readme])
+
   end
 
   @spec make_temp_git_repo_with_some_content() :: %{atom => any}
