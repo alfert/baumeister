@@ -50,6 +50,7 @@ defmodule Baumeister.Observer.Git do
     {:ok, update_in(state.refs, fn _ -> refs end)}
   end
 
+  # creates the local administrative repository and returns the observer state.
   defp init_repos(url) do
     repo = Git.new(url)
 
@@ -78,8 +79,13 @@ defmodule Baumeister.Observer.Git do
     new_state =  %__MODULE__{state | refs: new_refs}
     case Map.keys(changed) do
       [] -> {:ok, new_state}
-      _ -> # TODO: Replace the map with the content of the Baumesiter file
-      {:ok, changed, new_state}
+      _ -> result = changed
+        |> Map.to_list()
+        |> Enum.map(fn {ref, sha} ->
+            {state.url,
+              read_baumeister_file(state.local_repo, state.repo, ref, sha)}
+           end)
+        {:ok, result, new_state}
     end
     # #########################################
     #
@@ -92,6 +98,20 @@ defmodule Baumeister.Observer.Git do
     #
     # #########################################
   end
+
+  def update_from_remote(repo, remote_repo, ref) do
+    "refs/head" <> branch = ref
+    {:ok, _} = Git.fetch(repo, [remote_repo.path, ref <> ":" <> ref])
+    {:ok, _} = Git.checkout(repo, branch)
+    :ok
+  end
+
+  def read_baumeister_file(repo, remote_repo, ref, sha) do
+    :ok = update_from_remote(repo, remote_repo, ref)
+    {:ok, content} = File.read(Path.join(repo.path, "BaumeisterFile"))
+    content
+  end
+
 
   @doc """
   Parses the output of `git ls-remote` and returns a mapping
