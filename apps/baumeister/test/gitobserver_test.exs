@@ -62,7 +62,7 @@ defmodule Baumeister.GitObserverTest do
     parent_repo = context[:parent_repo]
     parent_repo_path = context[:parent_repo_path]
 
-    {:ok, state} = GitObs.init(repo.path)
+    {:ok, state} = GitObs.init(parent_repo.path)
     # nothin has changed
     assert {:ok, state} == GitObs.observe(state)
 
@@ -71,13 +71,8 @@ defmodule Baumeister.GitObserverTest do
     update_the_parent(parent_repo, parent_repo_path, branch)
     {:ok, refs, new_state} = GitObs.observe(state)
     IO.inspect(refs)
-    assert Enum.count(refs) == 2
-    assert Map.has_key?(refs, "refs/heads/" <> branch)
-
-    {:ok, _} = GitLib.fetch(repo, [parent_repo_path, "refs/heads/" <> branch <> ":" <> "refs/heads/" <> branch])
-    {:ok, _} = GitLib.checkout(repo, branch)
-    {:ok, hallo} = File.read(Path.join(repo_path, "README.md"))
-    assert hallo == "README.md"
+    assert Enum.count(refs) == 1
+    assert refs == [{parent_repo_path, "BaumeisterFile"}]
   end
 
   def update_the_parent(parent_repo, parent_repo_path, branch_name) do

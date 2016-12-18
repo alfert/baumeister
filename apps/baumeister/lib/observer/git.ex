@@ -44,7 +44,7 @@ defmodule Baumeister.Observer.Git do
   @spec init(String.t) :: {:ok, any}
   def init(url) when is_binary(url) do
     state = init_repos(url)
-    refs = state.repo
+    refs = state.local_repo
     |> Git.ls_remote()
     |> parse_refs()
     {:ok, update_in(state.refs, fn _ -> refs end)}
@@ -72,7 +72,7 @@ defmodule Baumeister.Observer.Git do
     # get new refs, check the difference and return the differences.
     # new state os the map of new refs.
     #
-    new_refs = repo
+    new_refs = state.local_repo
     |> Git.ls_remote()
     |> parse_refs()
     changed = changed_refs(refs, new_refs)
@@ -100,7 +100,7 @@ defmodule Baumeister.Observer.Git do
   end
 
   def update_from_remote(repo, remote_repo, ref) do
-    "refs/head" <> branch = ref
+    "refs/heads/" <> branch = ref
     {:ok, _} = Git.fetch(repo, [remote_repo.path, ref <> ":" <> ref])
     {:ok, _} = Git.checkout(repo, branch)
     :ok
