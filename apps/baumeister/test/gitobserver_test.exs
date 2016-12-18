@@ -77,17 +77,19 @@ defmodule Baumeister.GitObserverTest do
     {:ok, _} = GitLib.fetch(repo, [parent_repo_path, "refs/heads/" <> branch <> ":" <> "refs/heads/" <> branch])
     {:ok, _} = GitLib.checkout(repo, branch)
     {:ok, hallo} = File.read(Path.join(repo_path, "README.md"))
-    assert hallo == "hello"
+    assert hallo == "README.md"
   end
 
   def update_the_parent(parent_repo, parent_repo_path, branch_name) do
     # update the README.md on the parent, but on a branch
     {:ok, _} = GitLib.checkout(parent_repo, ["-b", branch_name])
-    readme = Path.join(parent_repo_path, "README.md")
-    :ok = File.write(readme, "hello")
-    {:ok, _} = GitLib.add(parent_repo, readme)
-    {:ok, _}  = GitLib.commit(parent_repo, ["-m", "touched", "--allow-empty", readme])
-
+    ~w(README.md BaumeisterFile)
+    |> Enum.each(fn filename ->
+      file = Path.join(parent_repo_path, filename)
+      :ok = File.write(file, filename)
+      {:ok, _} = GitLib.add(parent_repo, file)
+    end)
+    {:ok, _}  = GitLib.commit(parent_repo, ["-m", "with content", "--allow-empty"])
   end
 
   @spec make_temp_git_repo_with_some_content() :: %{atom => any}
