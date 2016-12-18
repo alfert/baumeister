@@ -25,6 +25,8 @@ use Mix.Config
 config :baumeister, persistence: :in_memory
 # Defines the bases directory for workspace of a client
 config :baumeister, workspace_base: "/tmp"
+# Define the directory, where the administrative repos are stored
+config :baumeister, admin_data_dir: "/tmp"
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
