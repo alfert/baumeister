@@ -23,7 +23,6 @@ defmodule Baumeister.GitObserverTest do
 
     assert %{} = refs
     # IO.inspect(refs)
-    assert Map.has_key?(refs, "HEAD")
     assert Map.has_key?(refs, "refs/heads/master")
   end
 
@@ -47,12 +46,12 @@ defmodule Baumeister.GitObserverTest do
     assert refs != new_refs
     assert refs["refs/heads/master"] == new_refs["refs/heads/master"]
     assert Map.has_key?(new_refs, branch1)
-    assert refs["HEAD"] != new_refs["HEAD"]
-    assert new_refs["HEAD"] == new_refs[branch1]
+    # assert refs["HEAD"] != new_refs["HEAD"]
+    # assert new_refs["HEAD"] == new_refs[branch1]
 
     # and now test changed_refs
     changed_refs = GitObs.changed_refs(refs, new_refs)
-    assert length(Map.keys(changed_refs)) == 2
+    assert length(Map.keys(changed_refs)) == 1
     assert Map.has_key?(changed_refs, branch1)
     assert changed_refs[branch1] == new_refs[branch1]
   end

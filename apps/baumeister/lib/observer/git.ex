@@ -103,7 +103,9 @@ defmodule Baumeister.Observer.Git do
     refs
     |> String.split("\n")
     |> Stream.map(fn s -> s |> String.split("\t") end)
+    # this filters the origin address information (without \t)
     |> Stream.filter(&match?([_,_], &1))
+    |> Stream.filter(fn [_ref, k] -> k != "HEAD" end)
     |> Stream.map(fn [ref, k] -> {k, ref} end)
     |> Enum.into(%{})
   end
