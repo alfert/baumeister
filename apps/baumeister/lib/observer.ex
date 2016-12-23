@@ -6,6 +6,26 @@ defmodule Baumeister.Observer do
   alias Baumeister.BaumeisterFile
   alias Baumeister.Observer
 
+  defmodule Coordinate do
+    @moduledoc """
+    A Coordinate is a polymorphic reference to a repository
+    and a specific version inside, depending on the repository
+    and thus on the observer type.
+    """
+
+    @typedoc """
+    """
+    @type t :: %__MODULE__{
+      url: String.t,
+      observer: module,
+      version: any
+    }
+    defstruct url: "",
+      observer: nil,
+      version: nil
+
+  end
+
   @typedoc """
   The state of a plugin can by any value.
   """
@@ -20,7 +40,7 @@ defmodule Baumeister.Observer do
   A pair of the repository URL to checkout and corresponding
   BaumeisterFile
   """
-  @type result_t :: {String.t, String.t}
+  @type result_t :: {Coordinate.t, String.t}
 
   @typedoc """
   Allowed return values for an Observer Plugin:

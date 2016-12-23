@@ -38,6 +38,33 @@ defmodule Baumeister.Observer.Git do
     local_repo: nil,
     refs: %{}
 
+  defmodule Version do
+    @moduledoc """
+    A version specifier for git:
+      * the reference from the remote repository
+      * the sha value of the version
+      * a human understandable name of the version
+
+    """
+    defstruct ref: "", sha: "", name: ""
+
+    @doc """
+    Creates a proper Version out of `ref` and `sha`. Identifies
+    the branch, tag, GitHub Pull Request, BitBucket Pull Request.
+    If `ref` points to something different, the full `ref` will
+    become the name.
+    """
+    def make(ref, sha) do
+      name = case ref do
+        "refs/heads/" <> branch -> "Branch " <> branch
+        "refs/tags/" <> tag     -> "Tag " <> tag
+        "refs/pull" <> pr -> "Pull Request " <> String.replace_suffix(pr, "/head", "")
+        _ -> ref
+      end
+      %__MODULE__{ref: ref, sha: sha, name: name}
+    end
+  end
+
   @doc """
   Configure the plugin with URL of the repository
   """
@@ -82,32 +109,31 @@ defmodule Baumeister.Observer.Git do
       _ -> result = changed
         |> Map.to_list()
         |> Enum.map(fn {ref, sha} ->
-            {state.url,
+            {make_coordinate(state, ref, sha),
               read_baumeister_file(state.local_repo, state.repo, ref, sha)}
            end)
         {:ok, result, new_state}
     end
-    # #########################################
-    #
-    # We need the coordinate system for Results, extending Observer.return_t!
-    #
-    # Checkout the remote repository as an adminstration
-    # repo here, to fetch the remote branches and to checkout
-    # the Baumeisterfiles ==> See test code, but we need a local
-    # repository here.
-    #
-    # #########################################
   end
 
-  def update_from_remote(repo, remote_repo, ref) do
+
+  def make_coordinate(state = %__MODULE__{}, ref, sha) do
+    %Observer.Coordinate{
+      observer: __MODULE__,
+      url: state.url,
+      version: Version.make(ref, sha)
+    }
+  end
+
+  def update_from_remote(repo, remote_repo, ref, sha) do
     "refs/heads/" <> branch = ref
     {:ok, _} = Git.fetch(repo, [remote_repo.path, ref <> ":" <> ref])
-    {:ok, _} = Git.checkout(repo, branch)
+    {:ok, _} = Git.checkout(repo, sha) |> IO.inspect
     :ok
   end
 
   def read_baumeister_file(repo, remote_repo, ref, sha) do
-    :ok = update_from_remote(repo, remote_repo, ref)
+    :ok = update_from_remote(repo, remote_repo, ref, sha)
     {:ok, content} = File.read(Path.join(repo.path, "BaumeisterFile"))
     content
   end
