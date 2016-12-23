@@ -4,6 +4,7 @@ defmodule Baumeister.GitObserverTest do
   require Logger
   alias Git, as: GitLib
   alias Baumeister.Observer.Git, as: GitObs
+  alias Baumeister.Observer.Coordinate
 
   # Setup the repository and the paths to their working spaces
   setup do
@@ -70,9 +71,15 @@ defmodule Baumeister.GitObserverTest do
     branch =  "feature/branch1"
     update_the_parent(parent_repo, parent_repo_path, branch)
     {:ok, refs, new_state} = GitObs.observe(state)
-    IO.inspect(refs)
+    # IO.inspect(refs)
     assert Enum.count(refs) == 1
-    assert refs == [{parent_repo_path, "BaumeisterFile"}]
+    coord = %Coordinate{url: parent_repo_path, observer: GitObs}
+    assert [{coord, "BaumeisterFile"}] = refs
+    [{c, _}] = refs
+    # IO.inspect c
+    %Coordinate{version: v} = c
+    # IO.inspect v
+    assert v.name == "Branch " <> branch
   end
 
   def update_the_parent(parent_repo, parent_repo_path, branch_name) do

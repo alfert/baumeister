@@ -128,7 +128,7 @@ defmodule Baumeister.Observer.Git do
   def update_from_remote(repo, remote_repo, ref, sha) do
     "refs/heads/" <> branch = ref
     {:ok, _} = Git.fetch(repo, [remote_repo.path, ref <> ":" <> ref])
-    {:ok, _} = Git.checkout(repo, sha) |> IO.inspect
+    {:ok, _} = Git.checkout(repo, sha) # |> IO.inspect
     :ok
   end
 
