@@ -29,7 +29,6 @@ defmodule Baumeister.GitObserverTest do
 
   test "Create new remote refs", context do
     repo = context[:repo]
-    repo_path = context[:repo_path]
     parent_repo = context[:parent_repo]
     parent_repo_path = context[:parent_repo_path]
 
@@ -58,8 +57,6 @@ defmodule Baumeister.GitObserverTest do
   end
 
   test "Check the observer funtions", context do
-    repo = context[:repo]
-    repo_path = context[:repo_path]
     parent_repo = context[:parent_repo]
     parent_repo_path = context[:parent_repo_path]
 
@@ -70,11 +67,12 @@ defmodule Baumeister.GitObserverTest do
     # modify files on a branch
     branch =  "feature/branch1"
     update_the_parent(parent_repo, parent_repo_path, branch)
-    {:ok, refs, new_state} = GitObs.observe(state)
+    {:ok, refs, _new_state} = GitObs.observe(state)
     # IO.inspect(refs)
     assert Enum.count(refs) == 1
-    coord = %Coordinate{url: parent_repo_path, observer: GitObs}
     assert [{coord, "BaumeisterFile"}] = refs
+    assert coord.url == parent_repo_path
+    assert coord.observer == GitObs
     [{c, _}] = refs
     # IO.inspect c
     %Coordinate{version: v} = c

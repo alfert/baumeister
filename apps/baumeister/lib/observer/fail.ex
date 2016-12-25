@@ -26,4 +26,11 @@ defmodule Baumeister.Observer.FailPlugin do
     {:error, "will always fail", :will_fail}
   end
 
+  @doc """
+  A checkout cannot happen for the plugin. The call will fail.
+  """
+  def checkout(coord, _build_dir) do
+    msg = "no checkout possible for #{inspect __MODULE__}. Coordinate is #{inspect coord}"
+    raise ArgumentError, message: msg
+  end
 end

@@ -16,7 +16,7 @@ defmodule Baumeister.Observer.NoopPlugin do
   the content of a BaumeisterFile.
   """
   @spec init(config :: Observer.result_t) :: {:ok, any}
-  def init(config = {url, baumeisterfile}) do
+  def init(config = {_url, _baumeisterfile}) do
     {:ok, config}
   end
 
@@ -39,10 +39,12 @@ defmodule Baumeister.Observer.NoopPlugin do
 
   @doc """
   Does a checkout of the given `coordinate`, relative to the `workdir` given.
+  Since this is the NoopPlugin, any values of the coordinate are silently
+  ignored. 
   The newly created directory is returned.
   """
   @spec checkout(Coordinate.t, String.t) :: String.t
-  def checkout(coordinate, workdir) do
+  def checkout(_coordinate, workdir) do
     build_dir = Path.join(workdir, "build")
     File.mkdir_p!(build_dir)
     build_dir

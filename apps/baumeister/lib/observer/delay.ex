@@ -28,7 +28,7 @@ defmodule Baumeister.Observer.Delay do
   @doc """
   A checkout cannot happen for the delay plugin. The call will fail.
   """
-  def checkout(coord, build_dir) do
+  def checkout(coord, _build_dir) do
     msg = "no checkout possible for #{inspect __MODULE__}. Coordinate is #{inspect coord}"
     raise ArgumentError, message: msg
   end

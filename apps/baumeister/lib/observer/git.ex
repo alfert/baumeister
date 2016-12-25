@@ -96,7 +96,7 @@ defmodule Baumeister.Observer.Git do
   or new reference a positive return, such that a build is triggered.
   """
   @spec observe(state :: t) :: Observer.observer_return_t
-  def observe(state = %__MODULE__{repo: repo, refs: refs}) do
+  def observe(state = %__MODULE__{refs: refs}) do
     # get new refs, check the difference and return the differences.
     # new state os the map of new refs.
     #
@@ -127,7 +127,6 @@ defmodule Baumeister.Observer.Git do
   end
 
   def update_from_remote(repo, remote_repo, ref, sha) do
-    "refs/heads/" <> branch = ref
     {:ok, _} = Git.fetch(repo, [remote_repo.path, ref <> ":" <> ref])
     {:ok, _} = Git.checkout(repo, sha) # |> IO.inspect
     :ok

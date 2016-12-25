@@ -23,4 +23,11 @@ defmodule Baumeister.Observer.Take do
   def observe(0), do: {:stop, 0}
   def observe(n), do: {:ok, n - 1}
 
+  @doc """
+  A checkout cannot happen for the  plugin. The call will fail.
+  """
+  def checkout(coord, _build_dir) do
+    msg = "no checkout possible for #{inspect __MODULE__}. Coordinate is #{inspect coord}"
+    raise ArgumentError, message: msg
+  end
 end
