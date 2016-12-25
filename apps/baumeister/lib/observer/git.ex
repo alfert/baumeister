@@ -1,6 +1,7 @@
 defmodule Baumeister.Observer.Git do
 
   alias Baumeister.Observer
+  alias Baumeister.Observer.Coordinate
   @moduledoc """
   An `Observer` Plugin that checks if new commits are available for
   the given repository. It uses a polling approach.
@@ -170,4 +171,19 @@ defmodule Baumeister.Observer.Git do
     Map.take(new_refs, changed_keys)
   end
 
+  @doc """
+  Does a checkout of the given `coordinate`, relative to the `workdir` given.
+  The newly created directory is returned.
+  """
+  @spec checkout(Coordinate.t, String.t) :: String.t
+  def checkout(coordinate, workdir) do
+    local_path = workdir
+    |> Path.expand()
+    |> Path.join(coordinate.version.sha)
+    # remove the directory, if it already exists otherwise clone will fail
+    {:ok, _} = File.rm_rf(local_path)
+    {:ok, local_repo} = Git.clone([coordinate.url, local_path])
+    {:ok, _} = Git.checkout(local_repo, [coordinate.version.sha])
+    local_path
+  end
 end
