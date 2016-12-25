@@ -6,10 +6,41 @@ defmodule Baumeister.Observer do
   alias Baumeister.BaumeisterFile
   alias Baumeister.Observer
 
+  defmodule Coordinate do
+    @moduledoc """
+    A Coordinate is a polymorphic reference to a repository
+    and a specific version inside, depending on the repository
+    and thus on the observer type.
+    """
+
+    @typedoc """
+    """
+    @type t :: %__MODULE__{
+      url: String.t,
+      observer: module,
+      version: any
+    }
+    defstruct url: "",
+      observer: nil,
+      version: nil
+
+  end
+
+  @typedoc """
+  The state of a plugin can by any value.
+  """
+  @type plugin_state :: any
+
   @typedoc """
   A mapping between plugin name and its current state.
   """
-  @type plugin_state :: %{atom => any}
+  @type plugin_state_map :: %{atom => plugin_state}
+
+  @typedoc """
+  A pair of the repository URL to checkout and corresponding
+  BaumeisterFile
+  """
+  @type result_t :: {Coordinate.t, String.t}
 
   @typedoc """
   Allowed return values for an Observer Plugin:
@@ -18,8 +49,8 @@ defmodule Baumeister.Observer do
   * `:stop` The Plugin decides, that the Observer should stop.
   """
   @type observer_return_t ::
-    {:ok, String.t, String.t, any} |
-    {:ok, any} |
+    {:ok, [result_t, ...], plugin_state} |
+    {:ok, plugin_state} |
     {:error, any, any} |
     {:stop, any}
 
@@ -30,7 +61,7 @@ defmodule Baumeister.Observer do
   of the oberserver, which is passed to the `observer` function
   later on.
   """
-  @callback init(config :: any) :: {:ok, any}
+  @callback init(config :: any) :: {:ok, plugin_state}
 
   @doc """
   The observer calls this function to observe the target repository.
@@ -38,7 +69,14 @@ defmodule Baumeister.Observer do
   the URL of the target repository and the content of the `BaumeisterFile`,
   which is used to determine the nodes to execute the build.
   """
-  @callback observe(state :: any) :: observer_return_t
+  @callback observe(state :: plugin_state) :: observer_return_t
+
+
+  @doc """
+  Implements the checkout command for a build directory for
+  the given coordinate.   The newly created directory is returned.
+  """
+  @callback checkout(coord :: Coordinate.t, work_dir :: String.t) :: String.t
 
   ###################################################
   ##
@@ -152,15 +190,14 @@ defmodule Baumeister.Observer do
   pipelin. It manages the state and coordinates the execution of
   plugin
   """
-  @spec do_observe(atom, plugin_state) :: observer_return_t
+  @spec do_observe(atom, plugin_state_map) :: observer_return_t
   def do_observe(plug, state) do
     # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
-      {:ok, url, bmf, s} ->
+      {:ok, result, s} when is_list(result)->
         # Logger.debug("got url and bmf from plug #{inspect plug}")
         {:ok, state
-          |> Map.put(:"$url", url)
-          |> Map.put(:"$bmf", bmf)
+          |> Map.put(:"$result", result)
           |> Map.put(plug, s)
         }
       {:ok, s} -> {:ok, Map.put(state, plug, s)}
@@ -200,19 +237,21 @@ defmodule Baumeister.Observer do
   to the `observer` the results are communicated. That either leads
   to executing the bmf or to stop the `observer`.
   """
-  @spec exec_plugin(plugin_state, (plugin_state -> observer_return_t), any, pid) :: :ok
+  @spec exec_plugin(plugin_state_map, (plugin_state_map -> observer_return_t), any, pid) :: :ok
   def exec_plugin(state, observer_fun, observer_name, observer) do
     EventCenter.sync_notify({:observer, :exec_observer, observer_name})
     case observer_fun.(state) do
       {:ok, new_s} ->
-          url = Map.fetch!(new_s, :"$url")
-          baumeister_file = Map.fetch!(new_s, :"$bmf")
-          plug_state = new_s |> Map.drop([:"$url", :"$bmf"])
-          Observer.execute(observer, url, baumeister_file)
+          new_s
+          |> Map.fetch!(:"$result")
+          |> Enum.each(fn {url, baumeister_file} ->
+            Observer.execute(observer, url, baumeister_file)
+          end)
+          plug_state = new_s |> Map.drop([:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)
-      {:error, _reason, new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
+      {:error, _reason, _new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
           Observer.stop(observer, :error)
-      {:stop, new_s} -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
+      {:stop, _new_s} -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
           Observer.stop(observer, :stop)
     end
     :ok

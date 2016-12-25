@@ -19,6 +19,7 @@ defmodule Baumeister.Worker do
 
   alias Baumeister.Coordinator
   alias Baumeister.EventCenter
+  alias Baumeister.Observer.Coordinate
 
   @type t :: %__MODULE__{
     coordinator: nil | pid,
@@ -59,9 +60,9 @@ defmodule Baumeister.Worker do
   `{:executed, {out, rc, ref}}` is send to the current process, to inform
   about the resut of the asynchronous running BaumeisterFile execution process.
   """
-  @spec execute(pid, String.t, Baumeister.BaumeisterFile.t) :: {:ok, reference}
-  def execute(pid, url, bmf) do
-    GenServer.call(pid, {:execute, url, bmf})
+  @spec execute(pid, Coordinate.t, Baumeister.BaumeisterFile.t) :: {:ok, reference}
+  def execute(pid, %Coordinate{} = coordinate, bmf) do
+    GenServer.call(pid, {:execute, coordinate, bmf})
   end
 
   ##############################################################################
@@ -88,21 +89,21 @@ defmodule Baumeister.Worker do
   def handle_call(:capabilities, _from, state) do
     {:reply, detect_capabilities(), state}
   end
-  def handle_call({:execute, url, bmf}, from, state = %__MODULE__{processes: processes}) do
+  def handle_call({:execute, coordinate, bmf}, from, state = %__MODULE__{processes: processes}) do
     ref = make_ref()
-    EventCenter.sync_notify({:worker, :execute, {:start, url}})
+    EventCenter.sync_notify({:worker, :execute, {:start, coordinate}})
     {state, workspace} = workspace_path(state)
     {:ok, exec_pid} = Task.start_link(fn ->
       EventCenter.sync_notify({:worker_job, :spawned, self})
-      {out, rc} = execute_bmf(url, bmf, workspace)
+      {out, rc} = execute_bmf(coordinate, bmf, workspace)
       case rc do
-        0 -> EventCenter.sync_notify({:worker, :execute, {:ok, url}})
-        _ -> EventCenter.sync_notify({:worker, :execute, {:error, url}})
+        0 -> EventCenter.sync_notify({:worker, :execute, {:ok, coordinate}})
+        _ -> EventCenter.sync_notify({:worker, :execute, {:error, coordinate}})
       end
-      EventCenter.sync_notify({:worker, :execute, {:log, url, out}})
+      EventCenter.sync_notify({:worker, :execute, {:log, coordinate, out}})
       send_exec_return(from, out, rc, ref)
     end)
-    new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, url)}
+    new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, coordinate)}
     {:reply, {:ok, ref}, new_state}
   end
 
@@ -132,7 +133,7 @@ defmodule Baumeister.Worker do
       nil -> Logger.error ("Unknown linked pid #{inspect pid}")
              Logger.error "State: #{inspect state}"
              state
-      url -> EventCenter.sync_notify({:worker, :execute, {:crashed, url}})
+      coordinate -> EventCenter.sync_notify({:worker, :execute, {:crashed, coordinate}})
              %__MODULE__{state | processes: processes |> Map.delete(pid)}
     end
     {:noreply, new_state}
@@ -153,7 +154,7 @@ defmodule Baumeister.Worker do
   Execute a BaumeisterFile. The following steps are required:
 
   * Create a new workspace directory
-  * extract the workspace from the url with the proper SCM plugin
+  * extract the workspace from the coordinate with the proper SCM plugin
   * cd into the directory
   * execute the command from the `bmf`
   * remove the workspace directory
@@ -162,25 +163,25 @@ defmodule Baumeister.Worker do
   If the parameter `workspace` is missing, it is set to
   directory `baumeister_workspace` in the system's temp dir.
   """
-  @spec execute_bmf(String.t, Baumeister.BaumeisterFile.t, String.t) :: {String.t, integer}
-  def execute_bmf(url, bmf) do
+  @spec execute_bmf(Coordinate.t, Baumeister.BaumeisterFile.t, String.t) :: {String.t, integer}
+  def execute_bmf(coordinate, bmf) do
     tmpdir = System.tmp_dir!()
     workspace = Path.join(tmpdir, "baumeister_workspace")
-    execute_bmf(url, bmf, workspace)
+    execute_bmf(coordinate, bmf, workspace)
   end
-  def execute_bmf(url, bmf, workspace) do
+  def execute_bmf(coordinate, bmf, workspace) do
     # make workspace dir
     :ok = File.mkdir_p!(workspace)
-    # extract from `url`
-    # cd into workspace ==> siehe System.cmd!
-    # execute command
+    # checkout from `coordinate` into build_dir
+    build_dir = coordinate.observer.checkout(coordinate, workspace)
+    # execute command and cd into build_dir
     {shell, arg1}  = case bmf.os do
       :windows -> {"cmd.exe", "/c"}
       _unix -> {"/bin/sh", "-c"}
     end
-    {out, rc} = System.cmd(shell, [arg1, bmf.command], [cd: workspace, stderr_to_stdout: true])
-    # remove the directory
-    :ok = File.rmdir! workspace
+    {out, rc} = System.cmd(shell, [arg1, bmf.command], [cd: build_dir, stderr_to_stdout: true])
+    # remove the build directory
+    :ok = File.rmdir! build_dir
     {out, rc}
   end
 

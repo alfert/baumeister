@@ -45,6 +45,7 @@ defmodule Baumeister.Mixfile do
       {:propcheck, "~> 0.0.1", only: :test},
       { :yaml_elixir, "~> 1.2.1" },
       {:gen_stage, "~> 0.9.0"},
+      {:git_cli, "~> 0.2.2"},
       {:elixometer, "~> 1.2"},
       #lager 3.2.1 is needed for erl19 because of
       # https://github.com/basho/lager/pull/321

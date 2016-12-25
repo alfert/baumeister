@@ -3,7 +3,6 @@ defmodule Baumeister.Test.TestListener do
   A simple listener for the Event Center
   """
   alias Experimental.GenStage
-  alias Baumeister.EventCenter
 
   use GenStage
 
