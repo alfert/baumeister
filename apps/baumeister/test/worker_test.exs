@@ -6,6 +6,7 @@ defmodule Baumeister.WorkerTest do
   alias Baumeister.Coordinator
   alias Baumeister.Worker
   alias Baumeister.BaumeisterFile
+  alias Baumeister.Observer.NoopPlugin
 
   use PropCheck
 
@@ -39,6 +40,11 @@ defmodule Baumeister.WorkerTest do
       command: #{cmd}
     """ |> BaumeisterFile.parse!
     {bmf, local_os}
+  end
+
+  def make_tmp_coordinate() do
+    tmp_dir = System.tmp_dir!
+    NoopPlugin.make_coordinate(tmp_dir)
   end
 
   @tag timeout: 1_000
@@ -95,7 +101,8 @@ defmodule Baumeister.WorkerTest do
 
   test "execute a simple command" do
     {bmf, _local_os} = create_bmf("echo Hallo")
-    {out, rc} = Worker.execute_bmf("file:///", bmf)
+    coord = make_tmp_coordinate()
+    {out, rc} = Worker.execute_bmf(coord, bmf)
 
     assert rc == 0
     # use trim to avoid problems with linefeeds
@@ -108,7 +115,7 @@ defmodule Baumeister.WorkerTest do
     |> Path.absname()
     non_existing_file = "#{name}-xxx"
     {bmf, _local_os} = create_bmf("type #{non_existing_file}")
-    {out, rc} = Worker.execute_bmf("file:///", bmf)
+    {out, rc} = Worker.execute_bmf(make_tmp_coordinate(), bmf)
 
     # return codes are different for various operating systems :-(
     assert rc != 0
@@ -123,7 +130,7 @@ defmodule Baumeister.WorkerTest do
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
-    {:ok, ref} = Worker.execute(worker, "file:///", bmf)
+    {:ok, ref} = Worker.execute(worker, make_tmp_coordinate(), bmf)
     assert_receive {:executed, {_out, 0, ^ref}}
   end
 
@@ -136,7 +143,7 @@ defmodule Baumeister.WorkerTest do
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
-    {:ok, ref} = Worker.execute(worker, "file:///", bmf)
+    {:ok, ref} = Worker.execute(worker, make_tmp_coordinate(), bmf)
 
     # return codes are different for various operating systems :-(
     assert_receive {:executed, {out, rc, ^ref}}
@@ -164,7 +171,7 @@ defmodule Baumeister.WorkerTest do
       returns = delays
       |> Stream.map(fn f -> create_bmf("sleep #{f} && echo Hallo") end)
       # |> Stream.map(fn f -> create_bmf("echo Hallo")end)
-      |> Enum.map(fn {bmf, _} -> Worker.execute(worker,  "file:///", bmf) end)
+      |> Enum.map(fn {bmf, _} -> Worker.execute(worker, make_tmp_coordinate(), bmf) end)
       |> Enum.map(fn {:ok, ref} -> receive do
           {:executed, {_, 0, ^ref}} = msg -> msg
          end

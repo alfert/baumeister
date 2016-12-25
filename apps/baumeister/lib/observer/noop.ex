@@ -1,6 +1,8 @@
 defmodule Baumeister.Observer.NoopPlugin do
 
   alias Baumeister.Observer
+  alias Baumeister.Observer.Coordinate
+
   @moduledoc """
   An `Observer` Plugin that does virtually nothing. It is ideally suited
   for testing purposes and it is the lower bound of provided functionality.
@@ -24,7 +26,25 @@ defmodule Baumeister.Observer.NoopPlugin do
   """
   @spec observe(state :: any) :: Observer.observer_return_t
   def observe(s = {url, bmf}) do
-    {:ok, [s], s}
+    {:ok, [{make_coordinate(url), bmf}], s}
   end
 
+  @doc """
+  A little helper to create a noop coordinate, where no real checkout
+  happens, when a checkout is done with this coordinate.
+  """
+  def make_coordinate(url) do
+    %Coordinate{url: url, observer: __MODULE__}
+  end
+
+  @doc """
+  Does a checkout of the given `coordinate`, relative to the `workdir` given.
+  The newly created directory is returned.
+  """
+  @spec checkout(Coordinate.t, String.t) :: String.t
+  def checkout(coordinate, workdir) do
+    build_dir = Path.join(workdir, "build")
+    File.mkdir_p!(build_dir)
+    build_dir
+  end
 end
