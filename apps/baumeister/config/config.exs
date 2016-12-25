@@ -27,6 +27,9 @@ config :baumeister, persistence: :in_memory
 config :baumeister, workspace_base: "/tmp"
 # Define the directory, where the administrative repos are stored
 config :baumeister, admin_data_dir: "/tmp"
+# Define the email address and user name for git repository
+config :baumeister, git_email: "baumeister@example.com"
+config :baumesiter, git_user: "Baumeister User"
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment

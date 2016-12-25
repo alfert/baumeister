@@ -103,6 +103,7 @@ defmodule Baumeister.GitObserverTest do
     end
     parent_path = dirs |> Enum.at(0)
     {:ok, parent_repo} = GitLib.init(parent_path)
+    GitObs.set_user_config(parent_repo)
 
     readme = Path.join(parent_path, "README.md")
     assert is_binary(readme)
@@ -112,6 +113,7 @@ defmodule Baumeister.GitObserverTest do
 
     path = dirs |> Enum.at(1)
     {:ok, repo} = GitLib.clone([parent_path, path])
+    GitObs.set_user_config(repo)
     [repo: repo, parent_repo: parent_repo, repo_path: path, parent_repo_path: parent_path]
   end
 

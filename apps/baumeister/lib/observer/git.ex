@@ -88,7 +88,20 @@ defmodule Baumeister.Observer.Git do
     # remove the directory, if it already exists otherwise clone will fail
     {:ok, _} = File.rm_rf(local_path)
     {:ok, local_repo} = Git.clone([url, local_path])
+    set_user_config(local_repo)
     %__MODULE__{url: url, repo: repo, local_path: local_path, local_repo: local_repo}
+  end
+
+  @doc """
+  Sets the email address and the user for the git repository. The settings
+  are taken from the Application's configuration with the keys `:git_email` and
+  `git_user`.
+  """
+  def set_user_config(repo) do
+    email = Application.get_env(:baumeister, :git_email, "baumeister@example.com")
+    user = Application.get_env(:baumeister, :git_user, "Baumeister")
+    {:ok, _} = Git.config(repo, ["--local", "user.email", email])
+    {:ok, _} = Git.config(repo, ["--local", "user.name", user])
   end
 
   @doc """
