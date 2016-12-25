@@ -56,7 +56,7 @@ defmodule Baumeister.GitObserverTest do
     assert changed_refs[branch1] == new_refs[branch1]
   end
 
-  test "Check the observer funtions", context do
+  test "Check the observer functions", context do
     parent_repo = context[:parent_repo]
     parent_repo_path = context[:parent_repo_path]
 
