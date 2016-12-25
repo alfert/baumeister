@@ -77,7 +77,7 @@ defmodule Baumeister.Observer do
   the given coordinate.   The newly created directory is returned.
   """
   @callback checkout(coord :: Coordinate.t, work_dir :: String.t) :: String.t
-  
+
   ###################################################
   ##
   ## Observer API
@@ -249,9 +249,9 @@ defmodule Baumeister.Observer do
           end)
           plug_state = new_s |> Map.drop([:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)
-      {:error, _reason, new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
+      {:error, _reason, _new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
           Observer.stop(observer, :error)
-      {:stop, new_s} -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
+      {:stop, _new_s} -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
           Observer.stop(observer, :stop)
     end
     :ok
