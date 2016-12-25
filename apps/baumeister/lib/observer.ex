@@ -71,6 +71,13 @@ defmodule Baumeister.Observer do
   """
   @callback observe(state :: plugin_state) :: observer_return_t
 
+
+  @doc """
+  Implements the checkout command for a build directory for
+  the given coordinate.   The newly created directory is returned.
+  """
+  @callback checkout(coord :: Coordinate.t, work_dir :: String.t) :: String.t
+  
   ###################################################
   ##
   ## Observer API
