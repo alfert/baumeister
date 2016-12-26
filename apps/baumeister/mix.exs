@@ -12,6 +12,10 @@ defmodule Baumeister.Mixfile do
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     docs: [ #main: "README.md",
+      extras: ["README.md"],
+      extra_section: "Baumeister Guides"
+      ],
      deps: deps]
   end
 
@@ -51,7 +55,8 @@ defmodule Baumeister.Mixfile do
       # https://github.com/basho/lager/pull/321
       {:lager, ">= 3.2.1", override: true},
       {:credo, "~> 0.5.0", only: :dev},
-      {:dialyze, "~> 0.2.1", only: :dev}
+      {:dialyze, "~> 0.2.1", only: :dev},
+      {:ex_doc, "~> 0.14.0", only: :dev}
     ]
   end
 end
