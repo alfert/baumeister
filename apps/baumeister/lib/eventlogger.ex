@@ -31,6 +31,7 @@ defmodule Baumeister.EventLogger do
   ##
   ###################################################
 
+  @doc false
   def init(opts) do
     if Keyword.has_key?(opts, :subscribe_to) do
       prod = Keyword.fetch!(opts, :subscribe_to)
@@ -40,6 +41,7 @@ defmodule Baumeister.EventLogger do
     end
   end
 
+  @doc false
   def handle_events(events, _from, state) do
     verbose = Keyword.get(state, :verbose, false)
     events

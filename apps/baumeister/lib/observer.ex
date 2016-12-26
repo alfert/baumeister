@@ -1,6 +1,17 @@
 defmodule Baumeister.Observer do
   @moduledoc """
-  Defines the API, which a specific observer has to implement.
+  The `Observer` module defines the observer process for each repository, but
+  all particular observation processes require Observer plugins. These plugins
+  must implement `Observer` behaviour.
+
+  The observer come in two flavours:
+
+  * a full observer plugin implements access to a repository and is used by
+  observer and worker processes. Example: `Baumeister.Observer.Git`
+  * an observer plugin takes part in the observation process, e.g. for a
+  delay to reduce the amount of polling (`Baumeister.Observer.Delay`). These
+  plugins do not implement the `checkout` function used by the worker processes.
+
   """
   alias Baumeister.EventCenter
   alias Baumeister.BaumeisterFile
@@ -14,6 +25,11 @@ defmodule Baumeister.Observer do
     """
 
     @typedoc """
+    A Baumeister coordinate holds a reference to repository by its
+    `url`. The observer plugin, which is capable of handling the coordinate,
+    is stored in the `observer` field. The `version` holds a specific
+    version specicification, which can be interpreted properly by the
+    `observer` plugin.
     """
     @type t :: %__MODULE__{
       url: String.t,
@@ -44,9 +60,12 @@ defmodule Baumeister.Observer do
 
   @typedoc """
   Allowed return values for an Observer Plugin:
-  * `:ok` if everything went fine. We return the URL and BaumeisterFile.
-  * `:error` somethings fails. Stops the Observer with a crash
-  * `:stop` The Plugin decides, that the Observer should stop.
+  * `{:ok, results, state}`: A list of coordinates and BaumeisterFiles is returned
+  which will be executed in the next step.
+  * `{:ok, state}`: everything went fine, but no changes occured in the observed
+  repository. The next round of observation will follow.
+  * `:error` somethings fails. Stops the Observer with a crash.
+  * `:stop` The plugin list decides, that the Observer should stop.
   """
   @type observer_return_t ::
     {:ok, [result_t, ...], plugin_state} |
@@ -56,9 +75,9 @@ defmodule Baumeister.Observer do
 
 
   @doc """
-  Initializes the observer. It is called with the observer's
+  Initializes the observer plugin. It is called with the observer's
   configuration as parameter. The return value is the state
-  of the oberserver, which is passed to the `observer` function
+  of the oberserver plugin, which is passed to the `observer` function
   later on.
   """
   @callback init(config :: any) :: {:ok, plugin_state}
@@ -74,7 +93,7 @@ defmodule Baumeister.Observer do
 
   @doc """
   Implements the checkout command for a build directory for
-  the given coordinate.   The newly created directory is returned.
+  the given coordinate. The newly created directory is returned.
   """
   @callback checkout(coord :: Coordinate.t, work_dir :: String.t) :: String.t
 
@@ -100,7 +119,8 @@ defmodule Baumeister.Observer do
     {:ok, pid}
   end
   @doc """
-  Starts the oberver process
+  Starts the oberver process with the given name. The observer
+  is not configured yet.
   """
   def start_link(name \\ "anonymous observer")  do
     Logger.debug "Start Observer #{name}"
@@ -108,28 +128,40 @@ defmodule Baumeister.Observer do
   end
 
   @doc """
-  Configures the Observer with a list of plugin names and their
-  initializations. This list is executed in reverse order.
+  Configures the observer with a single plugin `mod` and
+  configuration `config`.
   """
   def configure(observer, mod, config) do
     configure(observer, [{mod, config}])
   end
+  @doc """
+  Configures the observer with a tuple of plugin `mod` and
+  configuration `config`.
+  """
   def configure(observer, {mod, config}) do
     configure(observer, [{mod, config}])
   end
-  def configure(observer, plug_list) when is_list(plug_list) do
+  @doc """
+  Configures the Observer with a list of plugin names and their
+  initializations. This list is executed in reverse order.
+  """
+def configure(observer, plug_list) when is_list(plug_list) do
     GenServer.call(observer, {:configure, plug_list})
   end
 
   @doc """
-  Starts operating the observer.
+  Starts operating the observer: The sequence of configured plugins
+  is executed until the process stops.
   """
   def run(observer) when is_pid(observer) do
     GenServer.cast(observer, :run)
   end
 
   @doc """
-  Executes an observer.
+  Executes an observer, taking a coodinate and baumeister file.
+  The BaumeisterFile is parsed and given together with the
+  coordinate to the Baumeister Coordinator to find a worker
+  for executionn.
   """
   def execute(observer, url, baumeister_file) do
     GenServer.cast(observer, {:execute, url, baumeister_file})
@@ -153,10 +185,12 @@ defmodule Baumeister.Observer do
   ##
   ###################################################
 
+  @doc false
   def init([name]) do
     {:ok, %__MODULE__{name: name}}
   end
 
+  @doc false
   def handle_call({:configure, plug_list}, _from, state) do
     # create pipelines of plugins
     {observer_fun, init_fun} = plug_list
@@ -187,8 +221,8 @@ defmodule Baumeister.Observer do
   __INTERNAL FUNCTION: NO API __
 
   This is the function which is called for each step within the plugin
-  pipelin. It manages the state and coordinates the execution of
-  plugin
+  pipeline. It manages the state and coordinates the execution of
+  plugin.
   """
   @spec do_observe(atom, plugin_state_map) :: observer_return_t
   def do_observe(plug, state) do
@@ -208,6 +242,7 @@ defmodule Baumeister.Observer do
     end
   end
 
+  @doc false
   def handle_cast(:run, s = %__MODULE__{name: name, state: state, observer_pid: nil}) do
     # Start the oberserver as a distinct process, under supervision
     # control and linked to this server process

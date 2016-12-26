@@ -9,7 +9,8 @@ defmodule Baumeister.Worker do
   job execution makes only sense, if the worker has all required capabilities
   for executing the particular job.
 
-  The following capabilities are checked and communicated to the coordinator:
+  The following capabilities are checked and communicated to the coordinator
+  (see `t:capabilities_t/0`):
 
   * `os`: either `windows`, `linux` or `macos`
   * `cpu`: `x86_64` (default value)
@@ -21,10 +22,31 @@ defmodule Baumeister.Worker do
   alias Baumeister.EventCenter
   alias Baumeister.Observer.Coordinate
 
+  @typedoc """
+  The capabilities are a map of keys of type `atom` to any value.
+  """
+  @type capabilities_t :: %{
+    git: boolean,
+    mix: boolean,
+    cpu: atom,
+    os: atom,
+    }
+
+
+  @typedoc """
+  The internal state of a worker:
+
+  * `coordinator`: the process id of the `coordinator` process
+  * `coordinator_ref`: a monitor reference to the coordinator process
+  * `processes` map all running tasks to their originitating Observer coordinator
+  * `job_counter` holds the total number of jobs executed by this worker
+  * `workspace_base` holds the path to the workspace into the repositories
+  are checked out for building.
+  """
   @type t :: %__MODULE__{
     coordinator: nil | pid,
     coordinator_ref: nil | reference,
-    processes: %{pid => String.t},
+    processes: %{pid => Coordinate.t},
     job_counter: pos_integer,
     workspace_base: String.t
   }
@@ -40,6 +62,11 @@ defmodule Baumeister.Worker do
   ##
   ##############################################################################
 
+  @doc """
+  Starts a new worker process and connect the process with
+  the Coordinator.
+  """
+  @spec start_link() :: {:ok, pid}
   def start_link() do
     Logger.debug "Starting Worker"
     coordinator = Coordinator.name()
@@ -49,7 +76,7 @@ defmodule Baumeister.Worker do
   @doc """
   Detects the capabilites of `worker_pid`.
   """
-  @spec capabilities(pid) :: %{atom => any}
+  @spec capabilities(pid) :: capabilities_t
   def capabilities(worker_pid) do
     GenServer.call(worker_pid, :capabilities)
   end
@@ -111,6 +138,12 @@ defmodule Baumeister.Worker do
     pid |> send({:executed, {out, rc, ref}})
   end
 
+  @doc """
+  Computes the workspace for the next job and returns a new worker state.
+
+  The `job_counter` is incremented and the path is a combination of
+  `workspace_base` and the `job_counter`.
+  """
   @spec workspace_path(t) :: {t, String.t}
   def workspace_path(state = %__MODULE__{job_counter: job, workspace_base: base}) do
     new_state = %__MODULE__{state | job_counter: job + 1}
@@ -149,6 +182,18 @@ defmodule Baumeister.Worker do
   end
 
   @doc """
+    __Internal function!__
+
+    See `execute_bmf/3`, where the missing parameter `workspace`
+    is set to directory `baumeister_workspace` in the system's temp dir.
+  """
+  @spec execute_bmf(Coordinate.t, Baumeister.BaumeisterFile.t) :: {String.t, integer}
+  def execute_bmf(coordinate, bmf) do
+    tmpdir = System.tmp_dir!()
+    workspace = Path.join(tmpdir, "baumeister_workspace")
+    execute_bmf(coordinate, bmf, workspace)
+  end
+  @doc """
   __Internal function!__
 
   Execute a BaumeisterFile. The following steps are required:
@@ -160,15 +205,8 @@ defmodule Baumeister.Worker do
   * remove the workspace directory
   * return the output and returncode from the command
 
-  If the parameter `workspace` is missing, it is set to
-  directory `baumeister_workspace` in the system's temp dir.
-  """
+    """
   @spec execute_bmf(Coordinate.t, Baumeister.BaumeisterFile.t, String.t) :: {String.t, integer}
-  def execute_bmf(coordinate, bmf) do
-    tmpdir = System.tmp_dir!()
-    workspace = Path.join(tmpdir, "baumeister_workspace")
-    execute_bmf(coordinate, bmf, workspace)
-  end
   def execute_bmf(coordinate, bmf, workspace) do
     # make workspace dir
     :ok = File.mkdir_p!(workspace)
@@ -193,13 +231,13 @@ defmodule Baumeister.Worker do
   git and mix. Future version may have many more capabilities
   to be checked.
   """
-  @spec detect_capabilities() :: %{atom => any}
+  @spec detect_capabilities() :: capabilities_t
   def detect_capabilities() do
     [:os, :cpu, :git, :mix]
     |> Enum.map(&detect_capability/1)
     |> Enum.into(%{})
   end
-
+  @doc false
   def detect_capability(:os) do
     case :os.type do
       {:unix, :darwin} -> {:os, :macos}

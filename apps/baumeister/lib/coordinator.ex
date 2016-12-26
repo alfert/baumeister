@@ -1,18 +1,33 @@
 defmodule Baumeister.Coordinator do
   @moduledoc """
   The Coordinator manages all workers and distributes jobs to the workers.
+
+  The coordinator matches a BaumeisterFile in its Elixir representation (see
+  `BaumeisterFile`) to the capabilities of the node, to find suitables nodes
+  which are able to execute the BaumeisterFile.
   """
 
+  @typedoc """
+  * `workers` is mapping from process ids to Worker Specifications. It holds
+  all registered workers.
+  * `monitors` is mapping from monitor references to process ids, to detect
+  aborting worker processes.
+  """
   @type t :: %__MODULE__{
     workers: %{pid => WorkerSpec.t},
     monitors: %{reference => pid}
   }
   defstruct workers: %{}, monitors: %{}
 
-  @type capabilities_t :: %{atom => any}
   defmodule WorkerSpec do
     @moduledoc """
     Data about a worker
+    """
+    @typedoc """
+    A worker specification contains:
+    * the process id of the worker
+    * the monitor reference to worker process
+    * the worker's capabilities
     """
     @type t :: %__MODULE__{
       pid: nil | pid,
@@ -89,11 +104,13 @@ defmodule Baumeister.Coordinator do
   ##
   ##############################################################################
 
+  @doc false
   def init([]) do
     Logger.info "Initialize the Coordinator"
     {:ok, %__MODULE__{}}
   end
 
+  @doc false
   def handle_call({:register, worker}, _from, state) do
     Logger.debug "Register worker #{inspect worker}"
     EventCenter.sync_notify({:coordinator, :register, worker})
@@ -120,6 +137,7 @@ defmodule Baumeister.Coordinator do
   end
 
   # Handle the monitoring messages from Workers
+  @doc false
   def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
     {:noreply, do_crashed_worker(ref, state)}
   end
@@ -181,7 +199,7 @@ defmodule Baumeister.Coordinator do
 
   @doc """
   Identifies the worker processes that match the requirements of
-  the Baumeister file. 
+  the Baumeister file.
   """
   @spec match_workers(%{pid => WorkerSpec.t}, BaumeisterFile.t) :: [pid]
   def match_workers(workers, baumeisterfile) do
@@ -196,7 +214,7 @@ defmodule Baumeister.Coordinator do
   Matches a single worker `capa` to the Baumeister file `bmf`.
   Returns true, if worker matches the Baumeister file.
   """
-  @spec match_worker?(capabilities_t, BaumeisterFile.t) :: boolean
+  @spec match_worker?(Worker.capabilities_t, BaumeisterFile.t) :: boolean
   def match_worker?(capa, bmf) do
     Logger.debug "bmf : #{inspect bmf}"
     Logger.debug "capa: #{inspect capa}"

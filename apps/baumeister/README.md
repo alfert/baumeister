@@ -1,6 +1,17 @@
-# Baumeister
+# Baumeister Core
 
-**TODO: Add description**
+This application is the functional core of Baumeister. It contains the
+basic implementations of  
+
+* the `Baumeister.Observer`, which keeps an eye on changes
+in repositories,
+* the `Baumeister.Worker`, realizing the distributed
+build engine
+* the `Baumeister.Coordinator`, assigning build jobs to workers to make a good
+match of job requirements and worker capabilities.
+* the `Baumeister.BaumeisterFile`, defining the language of Baumeister to
+define a build job.
+
 
 ## Installation
 
@@ -21,4 +32,3 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
       [applications: [:baumeister]]
     end
     ```
-

@@ -1,6 +1,9 @@
 defmodule Baumeister.BaumeisterFile do
   @moduledoc """
   Definition of the `BaumeisterFile` representation in Elixir.
+
+  The source of a BaumeisterFile is a YAML-File, which is very closely
+  defined to type `t`.
   """
 
   defmodule InvalidSyntax do
@@ -9,15 +12,23 @@ defmodule Baumeister.BaumeisterFile do
 
   @type os_type :: :macos | :linux | :windows
 
-  defstruct(
-    [command: "", os: :macos, language: ""])
+  defstruct command: "",
+    os: :macos,
+    language: ""
 
+  @typedoc """
+  The fields of a BaumeisterFile:
+  * `command`: the command to build the project
+  * `os`: the required operating sytem. Either `windows`, `linux` or `macos` 
+  * `language:` The required programming language environment. This is an open
+  value, which is used to detect matching capabilities of the worker nodes.
+  """
   @type t :: %__MODULE__{command: String.t, os: os_type, language: String.t}
 
   @doc """
   Parses a BaumeisterFile string representation and returns its
-  internal representation. In case of an invalid file, an exception
-  is raised.
+  internal representation. In case of an invalid file, the exception
+  `InvalidSyntax` is raised.
 
     iex> Baumeister.BaumeisterFile.parse!("command: hey")
     %Baumeister.BaumeisterFile{command: "hey"}

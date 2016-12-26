@@ -25,11 +25,16 @@ defmodule Baumeister.EventCenter do
 ##
 ###################################################
 
- @doc "Starts the EventCenter."
+ @doc "Starts the EventCenter registered with the module's name."
  @spec start_link() :: {:ok, pid}
  def start_link() do
    GenStage.start_link(__MODULE__, :ok, name: __MODULE__)
  end
+ @doc """
+ Starts the EventCenter as an anonymous process which is not registered.
+ This is used for testing purposes. The parameter `:anon` must be provided.
+ """
+ @spec start_link(:anon) :: {:ok, pid}
  def start_link(:anon) do
    GenStage.start_link(__MODULE__, :ok, [])
  end
@@ -41,6 +46,9 @@ defmodule Baumeister.EventCenter do
    GenStage.call(pid, {:notify, event}, timeout)
  end
 
+ @doc """
+ Empties the queue of events.
+ """
  def clear(pid \\ __MODULE__) do
    GenStage.call(pid, :clear)
  end
@@ -56,10 +64,12 @@ defmodule Baumeister.EventCenter do
  ##
  ###################################################
 
+ @doc false
  def init(:ok) do
    {:producer, %__MODULE__{}, dispatcher: GenStage.BroadcastDispatcher}
  end
 
+ @doc false
  def handle_call({:notify, event}, from, state = %__MODULE__{queue: queue}) do
    added_queue = :queue.in({from, event}, queue)
    dispatch_events(%__MODULE__{state | queue: added_queue}, [])
@@ -67,6 +77,7 @@ defmodule Baumeister.EventCenter do
  def handle_call(:clear, _from, state = %__MODULE__{queue: queue, demand: demand}) do
    {:reply, :queue.len(queue), [], %__MODULE__{state | queue: :queue.new(), demand: demand}}
  end
+ @doc false
  def handle_demand(incoming_demand, state = %__MODULE__{demand: pending_demand}) do
    new_demand = incoming_demand + pending_demand
    dispatch_events(%__MODULE__{state | demand: new_demand}, [])

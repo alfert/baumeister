@@ -2,9 +2,9 @@ defmodule Baumeister.Observer.FailPlugin do
 
   alias Baumeister.Observer
   @moduledoc """
-  An `Observer` Plugin that imeeditaly fails. It is ideally suited
+  An `Observer` Plugin that immediately fails. It is ideally suited
   for testing purposes.
-  To use it, provide the `init` function with two p
+  To use it, provide the `init` function with any value.
   """
   @behaviour Baumeister.Observer
 

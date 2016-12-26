@@ -7,7 +7,9 @@ defmodule Baumeister.Observer.NoopPlugin do
   An `Observer` Plugin that does virtually nothing. It is ideally suited
   for testing purposes and it is the lower bound of provided functionality.
 
-  To use it, provide the `init` function with two p
+  To use it, provide the `init` function with a repository URL and the
+  content of a BaumeisterFile. When running the plugin, the return value
+  is a coordinate is created out of the URL and the BaumeisterFile. 
   """
   @behaviour Baumeister.Observer
 
@@ -40,7 +42,7 @@ defmodule Baumeister.Observer.NoopPlugin do
   @doc """
   Does a checkout of the given `coordinate`, relative to the `workdir` given.
   Since this is the NoopPlugin, any values of the coordinate are silently
-  ignored. 
+  ignored.
   The newly created directory is returned.
   """
   @spec checkout(Coordinate.t, String.t) :: String.t
