@@ -8,7 +8,7 @@
   "ex_doc": {:hex, :ex_doc, "0.14.5", "c0433c8117e948404d93ca69411dd575ec6be39b47802e81ca8d91017a0cf83c", [:mix], [{:earmark, "~> 1.0", [hex: :earmark, optional: false]}]},
   "exometer_core": {:hex, :exometer_core, "1.4.0", "a546ccd38be910de6ea75ea95b724b6b2db513c26f02e30919b25eb19651815a", [:rebar3], [{:edown, "0.7.0", [hex: :edown, optional: false]}, {:folsom, "0.8.3", [hex: :folsom, optional: false]}, {:lager, "3.0.2", [hex: :lager, optional: false]}, {:parse_trans, "2.9.0", [hex: :parse_trans, optional: false]}, {:setup, "1.7.0", [hex: :setup, optional: false]}]},
   "folsom": {:hex, :folsom, "0.8.3", "71cff146152fa95e6092e62119f9dc96888660111e7b61853c8fdcf80598a4e0", [:rebar3], [{:bear, "0.8.3", [hex: :bear, optional: false]}]},
-  "gen_stage": {:hex, :gen_stage, "0.9.0", "9daf0b5ae224405e0456b7df5a282a9a958176cdb9b963811ca38140e7e1b3c4", [:mix], []},
+  "gen_stage": {:hex, :gen_stage, "0.10.0", "ce1eb93a3f9708f2e215f70b3d3c7f55dea4a4ed7e9615195e28d543c9086656", [:mix], []},
   "git_cli": {:hex, :git_cli, "0.2.2", "9294da5a2c5a212e5393df254a42573244ae07927f5796f948fe9b4912c7f785", [:mix], []},
   "goldrush": {:hex, :goldrush, "0.1.8", "2024ba375ceea47e27ea70e14d2c483b2d8610101b4e852ef7f89163cdb6e649", [:rebar3], []},
   "lager": {:hex, :lager, "3.2.1", "eef4e18b39e4195d37606d9088ea05bf1b745986cf8ec84f01d332456fe88d17", [:rebar3], [{:goldrush, "0.1.8", [hex: :goldrush, optional: false]}]},
@@ -17,5 +17,5 @@
   "propcheck": {:hex, :propcheck, "0.0.1", "e4f88852ee28a4d9b473cbc527504613289d377eb8fad67700008b5e51fb7711", [:mix], [{:proper, "~> 1.1.1-beta", [hex: :proper, optional: false]}]},
   "proper": {:hex, :proper, "1.1.1-beta", "5eef3fa0cae017ecb4bf6fd6a144349a048e999223a4f1e98ce372ff1772edd3", [:rebar3], []},
   "setup": {:hex, :setup, "1.7.0", "15df8e57c6df9755e22bfb1aef0c640bd97e9889396fdfb2a85a5536a9043674", [:rebar3], []},
-  "yamerl": {:hex, :yamerl, "0.3.2", "9eac1537d251e926f47763ab1db0d9e6e8f2397646c290d58aa6ceebc6832fb7", [:rebar3], []},
-  "yaml_elixir": {:hex, :yaml_elixir, "1.2.1", "4a8ee3b25598100c710ff11dde4d79b6335608ac092d69aab45cc7475b5abc4d", [:mix], [{:yamerl, "~> 0.3.2", [hex: :yamerl, optional: false]}]}}
+  "yamerl": {:hex, :yamerl, "0.3.3", "df48fe3e6aeaca05ec6c4b35418aa7c77258d0d1c32d578a2e12a14751c10d42", [:rebar3], []},
+  "yaml_elixir": {:hex, :yaml_elixir, "1.3.0", "5b945c235f0bc9d49c60927834576952c9e106afbc1dfa76ffcf615d7615e35f", [:mix], [{:yamerl, "~> 0.3.2", [hex: :yamerl, optional: false]}]}}
