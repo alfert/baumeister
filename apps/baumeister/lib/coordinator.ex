@@ -14,8 +14,8 @@ defmodule Baumeister.Coordinator do
   aborting worker processes.
   """
   @type t :: %__MODULE__{
-    workers: %{pid => WorkerSpec.t},
-    monitors: %{reference => pid}
+    workers: %{required(pid) => WorkerSpec.t},
+    monitors: %{required(reference) => pid}
   }
   defstruct workers: %{}, monitors: %{}
 
@@ -32,7 +32,7 @@ defmodule Baumeister.Coordinator do
     @type t :: %__MODULE__{
       pid: nil | pid,
       monitor_ref: nil | reference,
-      capabilities: Baumeister.Coordinator.capabilities_t
+      capabilities: Baumeister.Worker.capabilities_t
     }
     defstruct pid: nil, monitor_ref: nil,
       capabilities: %{}
@@ -93,7 +93,7 @@ defmodule Baumeister.Coordinator do
   Updates the capabilities of worker to assign proper jobs. Should
   only be used from the worker for updating its capabilities.
   """
-  @spec update_capabilities(pid | tuple, %{atom => any}) :: :ok | {:error, any}
+  @spec update_capabilities(pid | tuple, Worker.capabilities_t) :: :ok | {:error, any}
   def update_capabilities(worker, capabilities) when is_map(capabilities)do
     GenServer.call(name(), {:update_capabilities, worker, capabilities})
   end

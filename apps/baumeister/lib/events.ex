@@ -13,6 +13,12 @@ defmodule Baumeister.EventCenter do
 
   use GenStage
 
+  @typedoc """
+  Holds the internal state of the `EventCenter`.
+
+  * `queue`: the queue of events
+  * `demand`: the current demand of events to consume 
+  """
   @type t :: %__MODULE__{
     queue: :queue.queue,
     demand: non_neg_integer

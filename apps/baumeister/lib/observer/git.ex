@@ -4,29 +4,42 @@ defmodule Baumeister.Observer.Git do
   alias Baumeister.Observer.Coordinate
   @moduledoc """
   An `Observer` Plugin that checks if new commits are available for
-  the given repository. It uses a polling approach.
+  the given remote repository. It uses a polling approach.
 
-  Design questions are:
+  Design decisions are:
 
-  * Do we have a repository locally, which mirrors the remote repo, required
-    for all sorts of `git fetch`? ==> YES!
-  * Do we need to store locally a last hash value to ask for any changes after
-    that hash? ==> YES
-  * Are we interested in a specific set of branches or simply all branches?
-    Assumption: This is in option, per default configured to match all branches
-    (`.*` as a regexp)
-  * Do we really need to poll? Why not use a `post-receive` hook in git
-    to do a curl towards the Baumeister server. This would mean that we may
-    need to provide a more general web-hook framework for Baumeister, but
-    that's generally ok and required for integrating GitHub or BitBucket.
-    ==> Hooks will come in another version of the Git Plugin
-  * Use fast remote polling via `git ls-remote` ==> YES
+  * using local repository, cloned from the remote repository to detect the BaumeisterFiles.
+  * all remote references from the remote repository are considered, this means
+    usually all branches, tags and pull requests. Remote references are detected
+    with the `git ls-remote` command.
+  * Currently, there is no possibility of reducing the set of interesting
+    references with regexp or similar. This may come in future versions.
+  * Each call of `observe` function checks for remote references and detects
+    any differences. If they exist, they will be returned as `t:Baumeister.Observer.Coordinate.t/0`.
+    Since this plugin uses polling, the `observe` function has not delay functionality.
+    For that reason the `Baumeister.Observer.Delay` plugin can be used.
+
+  Instead of polling, we could use the `post-receive` hook of Git to sent a
+  notification to Baumeister. This would require a web-server approach inside
+  of Baumeister. An interesting idea for future versions of Baumeister.
 
   """
   @behaviour Baumeister.Observer
 
+  @typedoc """
+  A type for sha values.
+  """
   @type hash_t :: String.t
 
+  @typedoc """
+  The state of the Git Plugin:
+
+  * `url`: the URL of the remote Git repository
+  * `repo`: the repository datastructure for of the remote repo
+  * `local_path`: the path to the locally cloned repository
+  * `local_repo`: the repository datastructure for of the local repo
+  * `refs`: a mapping of remote references to their hased from the remote repo
+  """
   @type t :: %__MODULE__{
     url: String.t,
     repo: Git.Repository.t,
@@ -42,11 +55,12 @@ defmodule Baumeister.Observer.Git do
   defmodule Version do
     @moduledoc """
     A version specifier for git:
-      * the reference from the remote repository
-      * the sha value of the version
-      * a human understandable name of the version
+      * `ref`: the reference from the remote repository
+      * `sha`: the sha value of the version
+      * `name`: a human understandable name of the version
 
     """
+    @type t :: %__MODULE__{ref: String.t, sha: Observer.Git.hash_t, name: String.t}
     defstruct ref: "", sha: "", name: ""
 
     @doc """
@@ -55,6 +69,7 @@ defmodule Baumeister.Observer.Git do
     If `ref` points to something different, the full `ref` will
     become the name.
     """
+    @spec make(String.t, Observer.Git.hash_t) :: t
     def make(ref, sha) do
       name = case ref do
         "refs/heads/" <> branch -> "Branch " <> branch
@@ -67,7 +82,7 @@ defmodule Baumeister.Observer.Git do
   end
 
   @doc """
-  Configure the plugin with URL of the repository
+  Configure the plugin with the URL of the remote repository.
   """
   @spec init(String.t) :: {:ok, any}
   def init(url) when is_binary(url) do
@@ -130,7 +145,10 @@ defmodule Baumeister.Observer.Git do
     end
   end
 
-
+  @doc """
+  Creates a new coordinate from the plugin's state and the given
+  remote Git reference `ref` and its sha value `sha`.
+  """
   def make_coordinate(state = %__MODULE__{}, ref, sha) do
     %Observer.Coordinate{
       observer: __MODULE__,
@@ -139,12 +157,22 @@ defmodule Baumeister.Observer.Git do
     }
   end
 
+  @doc """
+  Updates the local repository `repo` from the remote repository `remote_repo`
+  and checks out the reference `ref` and the sha value `sha`.
+  """
+  @spec update_from_remote(Git.Repository.t, Git.Repository.t, String.t, hash_t) :: :ok
   def update_from_remote(repo, remote_repo, ref, sha) do
     {:ok, _} = Git.fetch(repo, [remote_repo.path, ref <> ":" <> ref])
     {:ok, _} = Git.checkout(repo, sha) # |> IO.inspect
     :ok
   end
 
+  @doc """
+  Updates the local repository `repo` from the remote repository `remote_repo`
+  and returns the BaumeisterFile from version `sha`.
+  """
+  @spec read_baumeister_file(Git.Repository.t, Git.Repository.t, String.t, hash_t) :: String.t
   def read_baumeister_file(repo, remote_repo, ref, sha) do
     :ok = update_from_remote(repo, remote_repo, ref, sha)
     {:ok, content} = File.read(Path.join(repo.path, "BaumeisterFile"))
@@ -169,6 +197,12 @@ defmodule Baumeister.Observer.Git do
     |> Enum.into(%{})
   end
 
+  @doc """
+  Calculates the changed reference sets between `old_refs` and `new_refs`.
+
+  Changed references have either a new name, i.e. the key is new, or the
+  sha value has changed.
+  """
   @spec changed_refs(%{String.t => hash_t}, %{String.t => hash_t}) :: %{String.t => hash_t}
   def changed_refs(old_refs, new_refs) do
     changed_keys = new_refs

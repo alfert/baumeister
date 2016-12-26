@@ -1,6 +1,7 @@
 defmodule Baumeister do
 
   alias Baumeister.BaumeisterFile
+  alias Baumeister.Observer.Coordinate
   use Application
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
@@ -28,10 +29,10 @@ defmodule Baumeister do
   @doc """
   Executes the commands defined in the BaumeisterFile on a node that
   fits to the settings (e.g. OS) and on which the repository at the
-  URL will be checked out.
+  Coordinate will be checked out.
   """
-  @spec execute(String.t, BaumeisterFile.t) :: :ok
-  def execute(_url, _job) do
+  @spec execute(Coordinate.t, BaumeisterFile.t) :: :ok
+  def execute(_coord, _job) do
     :ok
   end
 end

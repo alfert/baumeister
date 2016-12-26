@@ -19,7 +19,7 @@ defmodule Baumeister.BaumeisterFile do
   @typedoc """
   The fields of a BaumeisterFile:
   * `command`: the command to build the project
-  * `os`: the required operating sytem. Either `windows`, `linux` or `macos` 
+  * `os`: the required operating sytem. Either `windows`, `linux` or `macos`
   * `language:` The required programming language environment. This is an open
   value, which is used to detect matching capabilities of the worker nodes.
   """
@@ -70,6 +70,10 @@ defmodule Baumeister.BaumeisterFile do
     end)
   end
 
+  @doc """
+  Maps value variations to their proper Baumeister values. Currently,
+  only operating system names are mapped.
+  """
   @spec canonized_values(any, atom) :: atom | any
   def canonized_values("macos", :os), do: :macos
   def canonized_values("darwin", :os), do: :macos

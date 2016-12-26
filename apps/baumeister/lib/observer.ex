@@ -7,7 +7,7 @@ defmodule Baumeister.Observer do
   The observer come in two flavours:
 
   * a full observer plugin implements access to a repository and is used by
-  observer and worker processes. Example: `Baumeister.Observer.Git`
+  both, observer and worker processes. Example: `Baumeister.Observer.Git`
   * an observer plugin takes part in the observation process, e.g. for a
   delay to reduce the amount of polling (`Baumeister.Observer.Delay`). These
   plugins do not implement the `checkout` function used by the worker processes.
