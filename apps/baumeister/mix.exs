@@ -28,7 +28,7 @@ defmodule Baumeister.Mixfile do
   # Type "mix help compile.app" for more information
   def application do
     [applications: [:logger, :yaml_elixir, :git_cli, :elixometer],
-     mod: {Baumeister, []}]
+     mod: {Baumeister.App, []}]
   end
 
   # Dependencies can be Hex packages:
