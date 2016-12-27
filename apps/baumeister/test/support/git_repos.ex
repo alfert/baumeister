@@ -10,11 +10,11 @@ defmodule Baumeister.Test.GitRepos do
   @doc """
   Update the README.md on the parent, but on a branch
   """
-  def update_the_parent(parent_repo, parent_repo_path, branch_name) do
+  def update_the_parent(parent_repo, branch_name) do
     {:ok, _} = GitLib.checkout(parent_repo, ["-b", branch_name])
     ~w(README.md BaumeisterFile)
     |> Enum.each(fn filename ->
-      file = Path.join(parent_repo_path, filename)
+      file = Path.join(parent_repo.path, filename)
       :ok = File.write(file, filename)
       {:ok, _} = GitLib.add(parent_repo, file)
     end)

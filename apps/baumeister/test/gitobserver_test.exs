@@ -37,7 +37,7 @@ defmodule Baumeister.GitObserverTest do
     refs = GitObs.parse_refs(refstring)
 
     # modify files on a brnach
-    GitRepos.update_the_parent(parent_repo, parent_repo_path, "feature/branch1")
+    GitRepos.update_the_parent(parent_repo, "feature/branch1")
 
     # check what has changed.
     {:ok, refstring} = GitLib.ls_remote(repo)
@@ -67,7 +67,7 @@ defmodule Baumeister.GitObserverTest do
 
     # modify files on a branch
     branch =  "feature/branch1"
-    GitRepos.update_the_parent(parent_repo, parent_repo_path, branch)
+    GitRepos.update_the_parent(parent_repo, branch)
     {:ok, refs, _new_state} = GitObs.observe(state)
     # IO.inspect(refs)
     assert Enum.count(refs) == 1
