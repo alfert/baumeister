@@ -5,10 +5,11 @@ defmodule Baumeister.GitObserverTest do
   alias Git, as: GitLib
   alias Baumeister.Observer.Git, as: GitObs
   alias Baumeister.Observer.Coordinate
+  alias Baumeister.Test.GitRepos
 
   # Setup the repository and the paths to their working spaces
   setup do
-    {:ok, make_temp_git_repo_with_some_content()}
+    {:ok, GitRepos.make_temp_git_repo_with_some_content()}
   end
 
   # test "our own repo does provide remotes from github" do
@@ -36,7 +37,7 @@ defmodule Baumeister.GitObserverTest do
     refs = GitObs.parse_refs(refstring)
 
     # modify files on a brnach
-    update_the_parent(parent_repo, parent_repo_path, "feature/branch1")
+    GitRepos.update_the_parent(parent_repo, parent_repo_path, "feature/branch1")
 
     # check what has changed.
     {:ok, refstring} = GitLib.ls_remote(repo)
@@ -66,7 +67,7 @@ defmodule Baumeister.GitObserverTest do
 
     # modify files on a branch
     branch =  "feature/branch1"
-    update_the_parent(parent_repo, parent_repo_path, branch)
+    GitRepos.update_the_parent(parent_repo, parent_repo_path, branch)
     {:ok, refs, _new_state} = GitObs.observe(state)
     # IO.inspect(refs)
     assert Enum.count(refs) == 1
@@ -78,43 +79,6 @@ defmodule Baumeister.GitObserverTest do
     %Coordinate{version: v} = c
     # IO.inspect v
     assert v.name == "Branch " <> branch
-  end
-
-  def update_the_parent(parent_repo, parent_repo_path, branch_name) do
-    # update the README.md on the parent, but on a branch
-    {:ok, _} = GitLib.checkout(parent_repo, ["-b", branch_name])
-    ~w(README.md BaumeisterFile)
-    |> Enum.each(fn filename ->
-      file = Path.join(parent_repo_path, filename)
-      :ok = File.write(file, filename)
-      {:ok, _} = GitLib.add(parent_repo, file)
-    end)
-    {:ok, _}  = GitLib.commit(parent_repo, ["-m", "with content", "--allow-empty"])
-  end
-
-  @spec make_temp_git_repo_with_some_content() :: %{atom => any}
-  def make_temp_git_repo_with_some_content() do
-    dirs = for p <- ~w(baumeister_git_parent, baumeister_git) do
-      path = Path.join(System.tmp_dir!, p)
-      File.rm_rf!(path)
-      :ok = File.mkdir_p(path)
-      assert is_binary(path)
-      path
-    end
-    parent_path = dirs |> Enum.at(0)
-    {:ok, parent_repo} = GitLib.init(parent_path)
-    GitObs.set_user_config(parent_repo)
-
-    readme = Path.join(parent_path, "README.md")
-    assert is_binary(readme)
-    :ok = File.touch(readme)
-    {:ok, _} = GitLib.add(parent_repo, readme)
-    {:ok, _} = GitLib.commit(parent_repo, ~w(-a -m initial-commit))
-
-    path = dirs |> Enum.at(1)
-    {:ok, repo} = GitLib.clone([parent_path, path])
-    GitObs.set_user_config(repo)
-    [repo: repo, parent_repo: parent_repo, repo_path: path, parent_repo_path: parent_path]
   end
 
 end
