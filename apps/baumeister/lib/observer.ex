@@ -50,10 +50,15 @@ defmodule Baumeister.Observer do
   @typedoc """
   A mapping between plugin name and its current state.
   """
-  @type plugin_state_map :: %{atom => plugin_state}
+  @type plugin_state_map :: %{module => plugin_state}
 
   @typedoc """
-  A pair of the repository URL to checkout and corresponding
+  A plugin and its initial configuration.
+  """
+  @type plugin_config_t :: {module, any}
+
+  @typedoc """
+  A pair of the repository Coordinate to checkout and corresponding
   BaumeisterFile
   """
   @type result_t :: {Coordinate.t, String.t}
@@ -131,6 +136,7 @@ defmodule Baumeister.Observer do
   Configures the observer with a single plugin `mod` and
   configuration `config`.
   """
+  @spec configure(pid, module, any) :: :ok
   def configure(observer, mod, config) do
     configure(observer, [{mod, config}])
   end
@@ -138,6 +144,7 @@ defmodule Baumeister.Observer do
   Configures the observer with a tuple of plugin `mod` and
   configuration `config`.
   """
+  @spec configure(pid, plugin_config_t) :: :ok
   def configure(observer, {mod, config}) do
     configure(observer, [{mod, config}])
   end
@@ -145,7 +152,8 @@ defmodule Baumeister.Observer do
   Configures the Observer with a list of plugin names and their
   initializations. This list is executed in reverse order.
   """
-def configure(observer, plug_list) when is_list(plug_list) do
+  @spec configure(pid, [plugin_config_t]) :: :ok
+  def configure(observer, plug_list) when is_list(plug_list) do
     GenServer.call(observer, {:configure, plug_list})
   end
 
@@ -229,7 +237,7 @@ def configure(observer, plug_list) when is_list(plug_list) do
   def do_observe(plug, state) do
     # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
-      {:ok, result, s} when is_list(result)->
+      {:ok, result, s} when is_list(result) ->
         # Logger.debug("got url and bmf from plug #{inspect plug}")
         {:ok, state
           |> Map.put(:"$result", result)
