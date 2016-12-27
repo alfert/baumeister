@@ -10,20 +10,35 @@ defmodule Baumeister.Config do
   @type key :: any
   @type value :: any
 
+  @doc """
+  Starts the configuration server and configures a persistency
+  solution. The default setting runs in memory only, and is
+  currently the only configuration.
+  """
   def start_link(persistence_config \\ :in_memory) do
     GenServer.start_link(__MODULE__, [persistence_config], name: __MODULE__)
   end
 
+  @doc """
+  All keys stored in the server.
+  """
   @spec keys() :: [key]
   def keys() do
     GenServer.call(__MODULE__, :keys)
   end
 
+  @doc """
+  Put a key and a value into the server. It overwrites
+  an existing value of the key.
+  """
   @spec put(key, value) :: :ok
   def put(key, config) do
     GenServer.cast(__MODULE__, {:put, key, config})
   end
 
+  @doc """
+  Removes the key and its value.
+  """
   @spec remove(key) :: :ok
   def remove(key) do
     GenServer.cast(__MODULE__, {:remove, key})
@@ -38,10 +53,16 @@ defmodule Baumeister.Config do
     GenServer.call(__MODULE__, {:config, key})
   end
 
+  @doc """
+  Stops the configuration server.
+  """
   def stop() do
     GenServer.stop(__MODULE__, :normal)
   end
 
+  @doc """
+  Removes all entries of the configuration server.
+  """
   def remove_all() do
     GenServer.cast(__MODULE__, :remove_all)
   end
