@@ -1,4 +1,7 @@
 defmodule Baumeister.App do
+  @moduledoc """
+  The application module of Baumeister.
+  """
   # See http://elixir-lang.org/docs/stable/elixir/Application.html
   # for more information on OTP Applications
   use Application

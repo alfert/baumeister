@@ -84,8 +84,8 @@ defmodule Baumeister.Coordinator do
   @doc """
   Returns the list of worker specs
   """
-  @spec workers() :: [WorkerSpec.t]
-  def workers() do
+  @spec all_workers() :: [WorkerSpec.t]
+  def all_workers() do
     GenServer.call(name(), :workers)
   end
 

@@ -53,11 +53,11 @@ defmodule Baumeister.WorkerTest do
     Logger.debug "Worker is started"
     assert is_pid(worker)
     assert Process.alive?(worker)
-    all_workers = Coordinator.workers()
+    all_workers = Coordinator.all_workers()
     Logger.debug "all workers: #{inspect all_workers}"
     assert Enum.any?(all_workers, fn(w) -> w.pid == worker end)
     Process.exit(worker, :normal)
-    remaining_workers = Coordinator.workers()
+    remaining_workers = Coordinator.all_workers()
     assert not Enum.member?(remaining_workers, worker)
   end
 
@@ -70,7 +70,7 @@ defmodule Baumeister.WorkerTest do
     ref_worker = Process.monitor(worker)
 
     Logger.info "env is: #{inspect env}"
-    Logger.debug "Registered workers: #{inspect Coordinator.workers}"
+    Logger.debug "Registered workers: #{inspect Coordinator.all_workers}"
     Logger.debug "Killing Coordinator"
     Process.exit(env[:coordinator], :kill)
 

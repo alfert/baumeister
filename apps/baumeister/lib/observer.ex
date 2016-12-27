@@ -206,7 +206,8 @@ def configure(observer, plug_list) when is_list(plug_list) do
       end
       init = fn(s) ->
         {:ok, s_init} = plug.init(config)
-        Map.put(s, plug, s_init)
+        s
+        |> Map.put(plug, s_init)
         |> combined_init.()
       end
       {obs, init}

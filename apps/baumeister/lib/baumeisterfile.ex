@@ -62,7 +62,9 @@ defmodule Baumeister.BaumeisterFile do
     |> Enum.reduce(bmf, fn(key, acc) ->
       if MapSet.member?(valid_keys, key) do
         atom_key = String.to_atom(key)
-        value = Map.fetch!(map, key) |> canonized_values(atom_key)
+        value = map
+          |> Map.fetch!(key)
+          |> canonized_values(atom_key)
         Map.put(acc, atom_key, value)
       else
         raise(InvalidSyntax, message: "Unknown key #{key}")
