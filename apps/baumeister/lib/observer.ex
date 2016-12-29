@@ -112,14 +112,16 @@ defmodule Baumeister.Observer do
   require Logger
 
   defstruct state: %{}, observer_pid: nil,
-    observer_fun: nil, init_fun: nil, name: "anonymous observer"
+    observer_fun: nil, init_fun: nil, name: "anonymous observer",
+    executor_fun: nil
 
   @doc """
   Convenience function to start the observer and configure
-  it with the singleton plugin `mod`.
+  it with the singleton plugin `mod`. The executor function
+  is disabled, since this function is for testing purposes only.
   """
   def start_link(mod, configuration) when is_atom(mod) do
-    {:ok, pid} = start_link(Atom.to_string(mod))
+    {:ok, pid} = start_link(Atom.to_string(mod), fn(_,_) -> :ok end)
     :ok = configure(pid, mod, configuration)
     {:ok, pid}
   end
@@ -127,9 +129,16 @@ defmodule Baumeister.Observer do
   Starts the oberver process with the given name. The observer
   is not configured yet.
   """
-  def start_link(name \\ "anonymous observer")  do
+  @spec start_link(String.t, (Coordinate.t, String.t -> :ok) ) :: {:ok, pid}
+  def start_link(name \\ "anonymous observer", exec_fun \\ &run_baumeister/2)
+  def start_link(name, exec_fun)  do
     Logger.debug "Start Observer #{name}"
-    GenServer.start_link(__MODULE__, [name])
+    GenServer.start_link(__MODULE__, [name, exec_fun])
+  end
+
+  defp run_baumeister(coord, baumeister_file) do
+    job = BaumeisterFile.parse!(baumeister_file)
+    Baumeister.execute(coord, job)
   end
 
   @doc """
@@ -171,8 +180,9 @@ defmodule Baumeister.Observer do
   coordinate to the Baumeister Coordinator to find a worker
   for executionn.
   """
-  def execute(observer, url, baumeister_file) do
-    GenServer.cast(observer, {:execute, url, baumeister_file})
+  def execute(observer, %Coordinate{} = coordinate, baumeister_file) when
+    is_binary(baumeister_file) do
+    GenServer.cast(observer, {:execute, coordinate, baumeister_file})
   end
 
   @doc """
@@ -194,8 +204,8 @@ defmodule Baumeister.Observer do
   ###################################################
 
   @doc false
-  def init([name]) do
-    {:ok, %__MODULE__{name: name}}
+  def init([name, exec_fun]) do
+    {:ok, %__MODULE__{name: name, executor_fun: exec_fun}}
   end
 
   @doc false
@@ -238,7 +248,7 @@ defmodule Baumeister.Observer do
     # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
       {:ok, result, s} when is_list(result) ->
-        # Logger.debug("got url and bmf from plug #{inspect plug}")
+        # Logger.debug("got coordinate and bmf from plug #{inspect plug}")
         {:ok, state
           |> Map.put(:"$result", result)
           |> Map.put(plug, s)
@@ -264,10 +274,11 @@ defmodule Baumeister.Observer do
       end)
     {:noreply, %__MODULE__{s | observer_pid: pid}}
   end
-  def handle_cast({:execute, url, baumeister_file}, state) do
-    EventCenter.sync_notify({:observer, :execute, url})
-    job = BaumeisterFile.parse!(baumeister_file)
-    Baumeister.execute(url, job)
+  def handle_cast({:execute, coordinate, baumeister_file}, state) do
+    EventCenter.sync_notify({:observer, :execute, coordinate})
+    # job = BaumeisterFile.parse!(baumeister_file)
+    # Baumeister.execute(coordinate, job)
+    state.executor_fun.(coordinate, baumeister_file)
     # This works only, if `run()` is asynchronous
     # Baumeister.Observer.run(self)
     {:noreply, %__MODULE__{state | observer_pid: nil}}
@@ -288,8 +299,8 @@ defmodule Baumeister.Observer do
       {:ok, new_s} ->
           new_s
           |> Map.fetch!(:"$result")
-          |> Enum.each(fn {url, baumeister_file} ->
-            Observer.execute(observer, url, baumeister_file)
+          |> Enum.each(fn {coordinate, baumeister_file} ->
+            Observer.execute(observer, coordinate, baumeister_file)
           end)
           plug_state = new_s |> Map.drop([:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)

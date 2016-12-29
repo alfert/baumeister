@@ -29,6 +29,7 @@ defmodule Baumeister.ObserverTest do
     Process.flag(:trap_exit, true)
     {:ok, listener} = TestListener.start()
     GenStage.sync_subscribe(listener, to: Baumeister.EventCenter)
+    # set the observer name to the test name
     {:ok, pid} = Observer.start_link(context[:test])
     assert is_pid(pid)
 
