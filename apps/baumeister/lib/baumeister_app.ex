@@ -9,11 +9,15 @@ defmodule Baumeister.App do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
+    observer_spec = [worker(Baumeister.Observer, [], restart: :transient)]
+
     # Define workers and child supervisors to be supervised
     children = [
       # Starts a worker by calling: Baumeister.Worker.start_link(arg1, arg2, arg3)
       # worker(Baumeister.Worker, [arg1, arg2, arg3]),
-      supervisor(Task.Supervisor, [[name: Baumeister.ObserverSupervisor]]),
+      supervisor(Task.Supervisor, [[name: Baumeister.ObserverTaskSupervisor]]),
+      supervisor(Supervisor, [observer_spec, [id: Baumeister.ObserverSupervisor,
+        strategy: :simple_one_for_one, name: Baumeister.ObserverSupervisor]]),
       worker(Baumeister.Coordinator, [[name: Baumeister.Coordinator.name()]]),
       worker(Baumeister.EventCenter, []),
       worker(Baumeister.EventLogger, [[subscribe_to: Baumeister.EventCenter, verbose: false]]),

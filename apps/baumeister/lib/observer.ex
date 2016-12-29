@@ -256,7 +256,7 @@ defmodule Baumeister.Observer do
     # Start the oberserver as a distinct process, under supervision
     # control and linked to this server process
     parent_pid = self
-    {:ok, pid} = Task.Supervisor.start_child(Baumeister.ObserverSupervisor,
+    {:ok, pid} = Task.Supervisor.start_child(Baumeister.ObserverTaskSupervisor,
       fn ->
         EventCenter.sync_notify({:observer, :start_observer, name})
         obs_state = s.init_fun.(state)
