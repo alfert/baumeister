@@ -30,7 +30,7 @@ defmodule Baumeister.ObserverTest do
     {:ok, listener} = TestListener.start()
     GenStage.sync_subscribe(listener, to: Baumeister.EventCenter)
     # set the observer name to the test name
-    {:ok, pid} = Observer.start_link(context[:test])
+    {:ok, pid} = Observer.start_link(context[:test] |> Atom.to_string())
     assert is_pid(pid)
 
     # Let the listener drain the event queue of old events.
@@ -65,7 +65,7 @@ defmodule Baumeister.ObserverTest do
   test "take and noop", context do
     pid = context[:pid]
     listener = context[:listener]
-    name = context[:test]
+    name = context[:test] |> Atom.to_string()
     bmf = """
     command: echo "Ja, wir schaffen das"
     """
@@ -74,13 +74,13 @@ defmodule Baumeister.ObserverTest do
     TestListener.clear(listener)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 3 end
+    wait_for fn -> length(TestListener.get(listener)) >= 5 end
     l = TestListener.get(listener)
 
     plug_events = l
-    |> Enum.filter(
-      fn {_, _, ^name} -> true
-          _ -> false end)
+    |> IO.inspect()
+    |> Enum.filter(fn {_, _, n} -> n == name end)
+    |> IO.inspect()
     |> Enum.map(fn {_, action, _} -> action end)
     assert length(plug_events) >= 5
     assert [:start_observer,
