@@ -8,7 +8,22 @@ defmodule Baumeister.Test.GitRepos do
   import ExUnit.Assertions
 
   @doc """
-  Update the README.md on the parent, but on a branch
+  Updates the BaumeisterFile on the parent, optionally on a branch
+  """
+  def update_the_bmf(parent_repo, branch_name \\ "master", content) do
+    # use "-B" to create the branch if it does not exist
+    {:ok, _} = GitLib.checkout(parent_repo, ["-B", branch_name])
+    ~w(BaumeisterFile)
+    |> Enum.each(fn filename ->
+      file = Path.join(parent_repo.path, filename)
+      :ok = File.write(file, content)
+      {:ok, _} = GitLib.add(parent_repo, file)
+    end)
+    {:ok, _}  = GitLib.commit(parent_repo, ["-m", "update bmf", "--allow-empty"])
+  end
+
+  @doc """
+  Update the README.md and BaumeisterFile on the parent, but on a branch
   """
   def update_the_parent(parent_repo, branch_name) do
     {:ok, _} = GitLib.checkout(parent_repo, ["-b", branch_name])
