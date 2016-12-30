@@ -53,6 +53,24 @@ defmodule Baumeister do
     with {:ok, project} = Config.config(project_name),
       false = project.enabled
       do
+        :ok = Config.put(project_name, %__MODULE__{project | enabled: true})
+        :ok = Observer.run(project.observer)
+      end
+  end
+
+  @doc """
+  Disables the project and stop the observer's work.
+  """
+  def disable(project_name) do
+    with {:ok, project} = Config.config(project_name),
+      true = project.enabled
+      do
+        :ok = Config.put(project_name, %__MODULE__{project | enabled: false})
+        #########
+        #
+        # How do we disable an observer?
+        #
+        ##########
         :ok = Observer.run(project.observer)
       end
   end
