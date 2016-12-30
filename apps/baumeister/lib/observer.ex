@@ -116,16 +116,6 @@ defmodule Baumeister.Observer do
     executor_fun: nil
 
   @doc """
-  Convenience function to start the observer and configure
-  it with the singleton plugin `mod`. The executor function
-  is disabled, since this function is for testing purposes only.
-  """
-  def start_link(mod, configuration) when is_atom(mod) do
-    {:ok, pid} = start_link(Atom.to_string(mod), fn(_,_) -> :ok end)
-    :ok = configure(pid, mod, configuration)
-    {:ok, pid}
-  end
-  @doc """
   Starts the oberver process with the given name. The observer
   is not configured yet.
   """
@@ -149,14 +139,7 @@ defmodule Baumeister.Observer do
   def configure(observer, mod, config) do
     configure(observer, [{mod, config}])
   end
-  @doc """
-  Configures the observer with a tuple of plugin `mod` and
-  configuration `config`.
-  """
-  @spec configure(pid, plugin_config_t) :: :ok
-  def configure(observer, {mod, config}) do
-    configure(observer, [{mod, config}])
-  end
+
   @doc """
   Configures the Observer with a list of plugin names and their
   initializations. This list is executed in reverse order.
