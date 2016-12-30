@@ -15,7 +15,8 @@ defmodule Baumeister.Mixfile do
      docs: [ #main: "README.md",
       extras: ["README.md"],
       extra_section: "Baumeister Guides"
-      ],
+     ],
+     test_coverage: [tool: Coverex.Task],
      deps: deps]
   end
 
@@ -56,7 +57,8 @@ defmodule Baumeister.Mixfile do
       {:lager, ">= 3.2.1", override: true},
       {:credo, "~> 0.5.0", only: :dev},
       {:dialyze, "~> 0.2.1", only: :dev},
-      {:ex_doc, "~> 0.14.0", only: :dev}
+      {:ex_doc, "~> 0.14.0", only: :dev},
+      {:coverex, "~> 1.4.0", only: :test}
     ]
   end
 end
