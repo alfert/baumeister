@@ -281,7 +281,7 @@ defmodule Baumeister.Observer do
     case observer_fun.(state) do
       {:ok, new_s} ->
           new_s
-          |> Map.fetch!(:"$result")
+          |> Map.get(:"$result", [])
           |> Enum.each(fn {coordinate, baumeister_file} ->
             Observer.execute(observer, coordinate, baumeister_file)
           end)
