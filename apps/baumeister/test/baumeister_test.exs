@@ -23,9 +23,14 @@ defmodule BaumeisterTest do
     :ok = Supervisor.stop(Baumeister.ObserverSupervisor, :normal)
     repos = GitRepos.make_temp_git_repo_with_some_content()
     assert nil != Process.whereis(Baumeister.ObserverSupervisor)
+
+    # Drain the event queue of old events.
+    wait_for fn -> 0 == EventCenter.clear() end
+
     {:ok, repos}
   end
 
+  @tag timeout: 1_000
   test "add a new project", %{parent_repo_path: repo_url, parent_repo: repo} do
     # observe the git repo, but only 1 time, and wait 100 ms
     plugs = [{Delay, 100}, {Git, repo_url}, {Take, 1}]
@@ -47,8 +52,19 @@ defmodule BaumeisterTest do
     {bmf, _local_os} = create_bmf("echo Hello")
     {:ok, _} = GitRepos.update_the_bmf(repo, bmf)
 
-    assert [] == TestListener.get(observer)
+    # wait for some events
+    wait_for fn -> length(TestListener.get(observer)) >= 3 end
+    l = observer
+    |> TestListener.get()
+    |> Enum.map(fn {_, a, _} -> a end)
 
+    assert l ==
+      [:start_observer, :exec_observer, :exec_observer, :stopped_observer]
+
+    # After a stop, the project is disabled
+    {:ok, p} = Config.config(project)
+    assert nil == p.observer
+    assert false == p.enabled
   end
 
   test "Ensure that all required processes are running" do
@@ -68,4 +84,14 @@ defmodule BaumeisterTest do
     """
     {bmf, local_os}
   end
+
+  def wait_for(pred) do
+    case pred.() do
+      false ->
+        Process.sleep(1)
+        wait_for(pred)
+      _ -> true
+    end
+  end
+
 end

@@ -37,12 +37,8 @@ defmodule Baumeister do
     case Config.config(project_name) do
       {:ok, _} -> {:error, "Project #{project_name} already exists"}
       _ ->
-        {:ok, observer} = Supervisor.start_child(Baumeister.ObserverSupervisor,
-          [project_name])
-        :ok = Observer.configure(observer, plugin_list)
         :ok = Config.put(project_name,
-          %__MODULE__{name: project_name, url: url, plugins: plugin_list,
-            observer: observer})
+          %__MODULE__{name: project_name, url: url, plugins: plugin_list})
     end
   end
 
@@ -53,9 +49,29 @@ defmodule Baumeister do
     with {:ok, project} = Config.config(project_name),
       false = project.enabled
       do
-        :ok = Config.put(project_name, %__MODULE__{project | enabled: true})
-        :ok = Observer.run(project.observer)
+        {:ok, observer} = Supervisor.start_child(Baumeister.ObserverSupervisor,
+          [project_name])
+        # spawn a process that monitors the observers and
+        # updates the status in the config database
+        pid = spawn(fn -> ref = Process.monitor(observer)
+          receive do
+            {_, ^ref, _, _, _} -> put_disabled_project(project_name)
+          end
+        end)
+        :ok = Observer.configure(observer, project.plugins)
+        :ok = Config.put(project_name, %__MODULE__{project | enabled: true,
+          observer: observer})
+        :ok = Observer.run(observer)
       end
+  end
+
+  defp put_disabled_project(project_name) do
+    {:ok, project} = Config.config(project_name)
+    put_disabled_project(project_name, project)
+  end
+  defp put_disabled_project(project_name, project) do
+    :ok = Config.put(project_name, %__MODULE__{project | enabled: false,
+      observer: nil})
   end
 
   @doc """
@@ -65,13 +81,8 @@ defmodule Baumeister do
     with {:ok, project} = Config.config(project_name),
       true = project.enabled
       do
-        :ok = Config.put(project_name, %__MODULE__{project | enabled: false})
-        #########
-        #
-        # How do we disable an observer?
-        #
-        ##########
-        :ok = Observer.run(project.observer)
+        :ok = Observer.stop(project.observer, :stop)
+        put_disabled_project(project_name, project)
       end
   end
 end
