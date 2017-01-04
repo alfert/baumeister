@@ -83,9 +83,9 @@ defmodule Baumeister.Worker do
 
   @doc """
   Executes the given BaumeisterFile and returns a reference
-  to the process execution. Eventually, the a message of the form
+  to the process execution. Eventually, a message of the form
   `{:executed, {out, rc, ref}}` is send to the current process, to inform
-  about the resut of the asynchronous running BaumeisterFile execution process.
+  about the result of the asynchronous running BaumeisterFile execution process.
   """
   @spec execute(pid, Coordinate.t, Baumeister.BaumeisterFile.t) :: {:ok, reference}
   def execute(pid, %Coordinate{} = coordinate, bmf) do
