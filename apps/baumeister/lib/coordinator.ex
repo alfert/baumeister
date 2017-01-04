@@ -114,26 +114,35 @@ defmodule Baumeister.Coordinator do
   def handle_call({:register, worker}, _from, state) do
     Logger.debug "Register worker #{inspect worker}"
     EventCenter.sync_notify({:coordinator, :register, worker})
-    new_state = do_register(worker, state)
-    {:reply, :ok, new_state}
+    do_register(worker, state)
+    |> reply(:ok)
   end
   def handle_call({:unregister, worker}, _from, state) do
     Logger.debug "Unregister worker #{inspect worker}"
     EventCenter.sync_notify({:coordinator, :runegister, worker})
-    {:reply, :ok, do_unregister(worker, state)}
+    do_unregister(worker, state)
+    |> reply(:ok)
   end
   def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do
-    {:reply, workers |> Map.values(), state}
+    state
+    |> reply(workers |> Map.values())
   end
   def handle_call({:update_capabilities, worker, capa}, _from,
                             state = %__MODULE__{workers: workers}) do
     case Map.fetch(workers, worker) do
       {:ok, spec} ->
           s = %WorkerSpec{spec | capabilities: capa}
-          new_state = %__MODULE__{workers: Map.put(workers, worker, s)}
-          {:reply, :ok, new_state}
+          state
+          |> Map.put(:workers, workers |> Map.put(worker, s))
+          |> reply(:ok)
       :error -> {:replay, {:error, :unknown_worker}, state}
     end
+  end
+
+  # OTP reply for nice pipelines
+  @spec reply(t, any) :: {:reply, any, t}
+  defp reply(state = %__MODULE__{}, return_value) do
+    {:reply, return_value, state}
   end
 
   # Handle the monitoring messages from Workers
