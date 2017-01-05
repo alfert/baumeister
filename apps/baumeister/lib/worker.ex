@@ -161,12 +161,14 @@ defmodule Baumeister.Worker do
       {:noreply, state}
     end
   end
-  def handle_info({:EXIT, pid, _reason}, state = %__MODULE__{processes: processes}) do
+  def handle_info({:EXIT, pid, reason}, state = %__MODULE__{processes: processes}) do
     new_state = case processes |> Map.get(pid) do
       nil -> Logger.error ("Unknown linked pid #{inspect pid}")
              Logger.error "State: #{inspect state}"
              state
-      coordinate -> EventCenter.sync_notify({:worker, :execute, {:crashed, coordinate}})
+      coordinate ->
+             if reason != :normal, do:
+              EventCenter.sync_notify({:worker, :crashed, {reason, coordinate}})
              %__MODULE__{state | processes: processes |> Map.delete(pid)}
     end
     {:noreply, new_state}
@@ -193,6 +195,7 @@ defmodule Baumeister.Worker do
     workspace = Path.join(tmpdir, "baumeister_workspace")
     execute_bmf(coordinate, bmf, workspace)
   end
+
   @doc """
   __Internal function!__
 
