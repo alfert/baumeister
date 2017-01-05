@@ -12,6 +12,7 @@ defmodule BaumeisterTest do
   alias Baumeister.Test.GitRepos
   alias Baumeister.EventCenter
   alias Baumeister.Test.TestListener
+  alias Baumeister.Test.Utils
   alias Experimental.GenStage
 
   require Logger
@@ -25,7 +26,7 @@ defmodule BaumeisterTest do
     assert nil != Process.whereis(Baumeister.ObserverSupervisor)
 
     # Drain the event queue of old events.
-    wait_for fn -> 0 == EventCenter.clear() end
+    Utils.wait_for fn -> 0 == EventCenter.clear() end
 
     {:ok, repos}
   end
@@ -49,11 +50,11 @@ defmodule BaumeisterTest do
     # enable the observer
     :ok = Baumeister.enable(project)
 
-    {bmf, _local_os} = create_bmf("echo Hello")
+    {bmf, _local_os} = Utils.create_bmf("echo Hello")
     {:ok, _} = GitRepos.update_the_bmf(repo, bmf)
 
     # wait for some events
-    wait_for fn -> length(TestListener.get(observer)) >= 3 end
+    Utils.wait_for fn -> length(TestListener.get(observer)) >= 4 end
     l = observer
     |> TestListener.get()
     |> Enum.map(fn {_, a, _} -> a end)
@@ -72,26 +73,6 @@ defmodule BaumeisterTest do
     assert nil != obs_sup
     assert 0 == Supervisor.count_children(obs_sup).active
     assert nil != Process.whereis(Baumeister.ObserverTaskSupervisor)
-  end
-
-  def create_bmf(cmd \\ "true") do
-    {_, local_os} = :os.type()
-    local_os = local_os |> Atom.to_string
-    bmf = """
-      os: #{local_os}
-      language: elixir
-      command: #{cmd}
-    """
-    {bmf, local_os}
-  end
-
-  def wait_for(pred) do
-    case pred.() do
-      false ->
-        Process.sleep(1)
-        wait_for(pred)
-      _ -> true
-    end
   end
 
 end

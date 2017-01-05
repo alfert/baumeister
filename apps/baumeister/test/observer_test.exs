@@ -5,6 +5,7 @@ defmodule Baumeister.ObserverTest do
   @moduletag capture_log: true
 
   alias Baumeister.Test.TestListener
+  alias Baumeister.Test.Utils
   alias Experimental.GenStage
   alias Baumeister.EventCenter
 
@@ -13,15 +14,6 @@ defmodule Baumeister.ObserverTest do
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
   alias Baumeister.Observer.Delay
-
-  def wait_for(pred) do
-    case pred.() do
-      false ->
-        Process.sleep(1)
-        wait_for(pred)
-      _ -> true
-    end
-  end
 
   setup context do
     IO.inspect(context)
@@ -34,7 +26,7 @@ defmodule Baumeister.ObserverTest do
     assert is_pid(pid)
 
     # Let the listener drain the event queue of old events.
-    wait_for fn -> 0 == EventCenter.clear() end
+    Utils.wait_for fn -> 0 == EventCenter.clear() end
     # wait_for fn -> 0 == TestListener.clear(listener) end
 
     # merge this with the context
@@ -49,7 +41,7 @@ defmodule Baumeister.ObserverTest do
     Observer.configure(pid, FailPlugin, :ok)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 3 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
     l = TestListener.get(listener) |> Enum.take(3)
     assert length(l) == 3
@@ -74,7 +66,7 @@ defmodule Baumeister.ObserverTest do
     TestListener.clear(listener)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 5 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 5 end
     l = TestListener.get(listener)
 
     plug_events = l
@@ -100,7 +92,7 @@ defmodule Baumeister.ObserverTest do
 
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 3 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
     l = TestListener.get(listener) |> Enum.take(3)
     assert length(l) == 3
@@ -119,7 +111,7 @@ defmodule Baumeister.ObserverTest do
     TestListener.clear(listener)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 2 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 2 end
     Observer.stop(pid, :stop)
 
     # take only the first two elements, since noop is extremely fast

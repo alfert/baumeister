@@ -3,10 +3,16 @@ defmodule Baumeister.WorkerTest do
 
   require Logger
 
+  alias Experimental.GenStage
+
   alias Baumeister.Coordinator
   alias Baumeister.Worker
   alias Baumeister.BaumeisterFile
   alias Baumeister.Observer.NoopPlugin
+  alias Baumeister.Test.TestListener
+  alias Baumeister.EventCenter
+
+  alias Baumeister.Test.Utils
 
   use PropCheck
 
@@ -29,17 +35,6 @@ defmodule Baumeister.WorkerTest do
     else
       m
     end
-  end
-
-  def create_bmf(cmd \\ "true") do
-    {_, local_os} = :os.type()
-    local_os = local_os |> Atom.to_string
-    bmf = """
-      os: #{local_os}
-      language: elixir
-      command: #{cmd}
-    """ |> BaumeisterFile.parse!
-    {bmf, local_os}
   end
 
   def make_tmp_coordinate() do
@@ -88,7 +83,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "Find suitable workers for Elixir for the current OS" do
-    {bmf, local_os} = create_bmf()
+    {bmf, local_os} = Utils.create_parsed_bmf()
     capa = Worker.detect_capabilities
     capa_expected = %{:os => BaumeisterFile.canonized_values(local_os, :os), :mix => true}
 
@@ -100,7 +95,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a simple command" do
-    {bmf, _local_os} = create_bmf("echo Hallo")
+    {bmf, _local_os} = Utils.create_parsed_bmf("echo Hallo")
     coord = make_tmp_coordinate()
     {out, rc} = Worker.execute_bmf(coord, bmf)
 
@@ -114,7 +109,7 @@ defmodule Baumeister.WorkerTest do
     |> Enum.max_by(fn s -> String.length(s) end)
     |> Path.absname()
     non_existing_file = "#{name}-xxx"
-    {bmf, _local_os} = create_bmf("type #{non_existing_file}")
+    {bmf, _local_os} = Utils.create_parsed_bmf("type #{non_existing_file}")
     {out, rc} = Worker.execute_bmf(make_tmp_coordinate(), bmf)
 
     # return codes are different for various operating systems :-(
@@ -126,7 +121,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a simple command from a Worker process" do
-    {bmf, _local_os} = create_bmf("echo Hallo")
+    {bmf, _local_os} = Utils.create_parsed_bmf("echo Hallo")
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
@@ -139,7 +134,7 @@ defmodule Baumeister.WorkerTest do
     |> Enum.max_by(fn s -> String.length(s) end)
     |> Path.absname()
     non_existing_file = "#{name}-xxx"
-    {bmf, _local_os} = create_bmf("type #{non_existing_file}")
+    {bmf, _local_os} = Utils.create_parsed_bmf("type #{non_existing_file}")
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
@@ -169,7 +164,7 @@ defmodule Baumeister.WorkerTest do
     # use size to achieve smaller lists
     forall delays <- vector(10, float(0.0,0.1))  do
       returns = delays
-      |> Stream.map(fn f -> create_bmf("sleep #{f} && echo Hallo") end)
+      |> Stream.map(fn f -> Utils.create_parsed_bmf("sleep #{f} && echo Hallo") end)
       # |> Stream.map(fn f -> create_bmf("echo Hallo")end)
       |> Enum.map(fn {bmf, _} -> Worker.execute(worker, make_tmp_coordinate(), bmf) end)
       |> Enum.map(fn {:ok, ref} -> receive do
