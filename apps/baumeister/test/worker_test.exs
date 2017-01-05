@@ -150,9 +150,37 @@ defmodule Baumeister.WorkerTest do
     assert String.contains?(out, non_existing_file)
   end
 
+  @tag timeout: 1_000
+  test "execute a command via the coordinator", _env do
+    {bmf, _local_os} = Utils.create_parsed_bmf("echo Hallo")
+    coord = make_tmp_coordinate()
+    {:ok, listener} = TestListener.start()
+    GenStage.sync_subscribe(listener, to: EventCenter)
+    {:ok, worker} = Worker.start_link()
+    Logger.debug "Worker is started"
+
+    {:ok, ref} = Coordinator.add_job(coord, bmf)
+    ################
+    #
+    # Why is the event sent to the coordinator? Only
+    # for testing purposes?
+    #
+    #################
+    # wait for some events
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 6 end
+    # consider only worker messages
+    l = listener
+    |> TestListener.get()
+    |> Enum.filter(fn {w, a, _} -> w == :worker and a == :execute end)
+    |> Enum.map(fn {_, _, data} -> data end)
+
+    assert l ==
+      [{:start, coord}, {:ok, coord}, {:log, coord, "Hallo\n"}]
+  end
+
   ####################
   #
-  # Add tests with propcheck to run varies tasks with different
+  # Add tests with propcheck to run various tasks with different
   # runtimes, ideally also in parallel
   #
   # Extra long timeout since sometimes it does fit into 1 minute

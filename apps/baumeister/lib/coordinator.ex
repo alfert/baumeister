@@ -46,6 +46,7 @@ defmodule Baumeister.Coordinator do
   alias Baumeister.EventCenter
   alias Baumeister.Worker
   alias Baumeister.BaumeisterFile
+  alias Baumeister.Observer.Coordinate
 
   # Metrics
   @nb_of_workers "baumeister.nb_of_registered_workers"
@@ -98,6 +99,21 @@ defmodule Baumeister.Coordinator do
     GenServer.call(name(), {:update_capabilities, worker, capabilities})
   end
 
+  @doc """
+  Adds a job defined by its `coordinate` and BaumeisterFile `bmf`.
+  The Coordinator seeks for a proper worker for job execution and returns
+  `{:ok, ref}` with a reference to the executing task. This references is used
+  in `Baumeister.EventCenter` notifications to inform about the status of the task.
+
+  If no
+  worker is found, the error `unsupported_feature` is returned and the
+  job is neither executed nor enqueued for later execution.
+  """
+  @spec add_job(Coordinate.t, BaumeisterFile.t) :: {:ok, reference} | {:unsupported_feature, any}
+  def add_job(coordinate, bmf) do
+    GenServer.call(name(), {:add_job, coordinate, bmf})
+  end
+
   ##############################################################################
   ##
   ## Internal Functions & Callbacks
@@ -136,6 +152,17 @@ defmodule Baumeister.Coordinator do
           |> Map.put(:workers, workers |> Map.put(worker, s))
           |> reply(:ok)
       :error -> {:replay, {:error, :unknown_worker}, state}
+    end
+  end
+  def handle_call({:add_job, coord, bmf}, _from,
+                            state = %__MODULE__{workers: workers}) do
+    case match_workers(workers, bmf) do
+      [] -> {:reply, {:unsupported_feature, :no_idea}, state}
+      pids ->
+        return_value = pids
+          |> Enum.random()
+          |> Worker.execute(coord, bmf)
+        reply(state, return_value)
     end
   end
 
