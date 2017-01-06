@@ -16,14 +16,14 @@ defmodule BaumeisterTest do
   alias Experimental.GenStage
 
   require Logger
-  @moduletag capture_log: true
+  # @moduletag capture_log: true
 
   # Setup the repository and the paths to their working spaces
   setup do
     Logger.info "Stop the Observer Supervisor"
     :ok = Supervisor.stop(Baumeister.ObserverSupervisor, :normal)
     repos = GitRepos.make_temp_git_repo_with_some_content()
-    assert nil != Process.whereis(Baumeister.ObserverSupervisor)
+    Utils.wait_for fn -> nil != Process.whereis(Baumeister.ObserverSupervisor) end
 
     # Drain the event queue of old events.
     Utils.wait_for fn -> 0 == EventCenter.clear() end
@@ -54,13 +54,22 @@ defmodule BaumeisterTest do
     {:ok, _} = GitRepos.update_the_bmf(repo, bmf)
 
     # wait for some events
-    Utils.wait_for fn -> length(TestListener.get(observer)) >= 4 end
-    l = observer
+    # When running a larger test set, there are sometimes some old
+    # events still in the queue. Therefore, we filter all events
+    # for our current observer for `project`
+    Utils.wait_for fn -> observer
+      |> TestListener.get()
+      |> Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
+    end
+    {testl, rubbish} = observer
     |> TestListener.get()
+    |> Enum.partition(fn {_, _, v} -> v == project end)
+    l = testl
     |> Enum.map(fn {_, a, _} -> a end)
 
     assert l ==
       [:start_observer, :exec_observer, :exec_observer, :stopped_observer]
+    if rubbish != [], do: Logger.error("rubbish is #{inspect rubbish}")
 
     # After a stop, the project is disabled
     {:ok, p} = Config.config(project)
