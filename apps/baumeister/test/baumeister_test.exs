@@ -23,6 +23,7 @@ defmodule BaumeisterTest do
     Logger.info "Stop the Observer Supervisor"
     :ok = Supervisor.stop(Baumeister.ObserverSupervisor, :normal)
     repos = GitRepos.make_temp_git_repo_with_some_content()
+    :ok = Application.ensure_started(:baumeister)
     Utils.wait_for fn -> nil != Process.whereis(Baumeister.ObserverSupervisor) end
 
     # Drain the event queue of old events.
