@@ -39,13 +39,13 @@ defmodule BaumeisterTest do
     project = "baumeister_test"
     assert Config.keys() == []
 
-    {:ok, observer} = TestListener.start()
-    GenStage.sync_subscribe(observer, to: EventCenter)
+    {:ok, listener} = TestListener.start()
+    GenStage.sync_subscribe(listener, to: EventCenter)
 
     :ok = Baumeister.add_project(project, repo_url, plugs)
 
-    # nothing has happend, the observer is still disabled
-    assert [] == TestListener.get(observer)
+    # nothing has happend, the listener is still disabled
+    assert [] == TestListener.get(listener)
     assert Config.keys() == [project]
 
     # enable the observer
@@ -57,12 +57,12 @@ defmodule BaumeisterTest do
     # wait for some events
     # When running a larger test set, there are sometimes some old
     # events still in the queue. Therefore, we filter all events
-    # for our current observer for `project`
-    Utils.wait_for fn -> observer
+    # for our current listener for `project`
+    Utils.wait_for fn -> listener
       |> TestListener.get()
       |> Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
     end
-    {testl, rubbish} = observer
+    {testl, rubbish} = listener
     |> TestListener.get()
     |> Enum.partition(fn {_, _, v} -> v == project end)
     l = testl
