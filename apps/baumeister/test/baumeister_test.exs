@@ -37,7 +37,7 @@ defmodule BaumeisterTest do
   @tag timeout: 1_000
   test "add a new project", %{parent_repo_path: repo_url, parent_repo: repo} do
     # observe the git repo, but only 1 time, and wait 100 ms
-    plugs = [{Delay, 100}, {Git, repo_url}, {Take, 1}]
+    plugs = [{Take, 2}, {Git, repo_url}, {Delay, 250}]
     project = "baumeister_test"
     assert Config.keys() == []
 
@@ -52,7 +52,8 @@ defmodule BaumeisterTest do
 
     # enable the observer
     :ok = Baumeister.enable(project)
-
+    Logger.info("Project is enabled, observer is running")
+    :timer.sleep(250)
     {bmf, _local_os} = Utils.create_bmf("echo Hello")
     {:ok, _} = GitRepos.update_the_bmf(repo, bmf)
 
