@@ -28,7 +28,7 @@ defmodule Baumeister.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :yaml_elixir, :git_cli, :elixometer],
+    [applications: [:sasl, :logger, :yaml_elixir, :git_cli, :elixometer],
      mod: {Baumeister.App, []}]
   end
 
