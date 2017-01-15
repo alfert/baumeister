@@ -10,6 +10,7 @@ defmodule Baumeister do
   alias Baumeister.Observer.Coordinate
   alias Baumeister.Observer
   alias Baumeister.Config
+  alias Baumeister.Coordinator
 
 
   defstruct name: "", url: "", plugins: [], enabled: false, observer: nil
@@ -20,8 +21,9 @@ defmodule Baumeister do
   Coordinate will be checked out.
   """
   @spec execute(Coordinate.t, BaumeisterFile.t) :: :ok
-  def execute(_coord, _job) do
-    :ok
+  def execute(coordinate, bmf) do
+    Log.info("Execute bmf #{inspect bmf} for coord #{inspect coordinate}")
+    Coordinator.add_job(coordinate, bmf)
   end
 
   @doc """
