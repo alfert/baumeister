@@ -43,7 +43,7 @@ defmodule Baumeister.Test.GitRepos do
   """
   @spec make_temp_git_repo_with_some_content() :: Keyword.t
   def make_temp_git_repo_with_some_content() do
-    dirs = for p <- ~w(baumeister_git_parent, baumeister_git) do
+    dirs = for p <- ~w(baumeister_git_parent baumeister_git) do
       path = Path.join(System.tmp_dir!, p)
       File.rm_rf!(path)
       :ok = File.mkdir_p(path)
