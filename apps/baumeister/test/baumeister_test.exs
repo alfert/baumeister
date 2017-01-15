@@ -20,13 +20,15 @@ defmodule BaumeisterTest do
 
   # Setup the repository and the paths to their working spaces
   setup do
-    Logger.info "Stop the Observer Supervisor"
-    :ok = Supervisor.stop(Baumeister.ObserverSupervisor, :normal)
+    Logger.info "Stop the Baumeister App for a fresh start"
+    :ok = Application.stop(:baumeister)
     repos = GitRepos.make_temp_git_repo_with_some_content()
-    :ok = Application.ensure_started(:baumeister)
+    Logger.info "Start the Baumeister Application"
+    :ok= Application.ensure_started(:baumeister)
     Utils.wait_for fn -> nil != Process.whereis(Baumeister.ObserverSupervisor) end
 
     # Drain the event queue of old events.
+    Logger.info "Clear the event center"
     Utils.wait_for fn -> 0 == EventCenter.clear() end
 
     {:ok, repos}
@@ -61,6 +63,7 @@ defmodule BaumeisterTest do
     Utils.wait_for fn -> listener
       |> TestListener.get()
       |> Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
+      # |> Enum.any?(fn {_, a, _} -> a == :execute end)
     end
     {testl, rubbish} = listener
     |> TestListener.get()
