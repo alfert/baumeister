@@ -122,7 +122,7 @@ defmodule Baumeister.Observer do
   @spec start_link(String.t, (Coordinate.t, String.t -> :ok) ) :: {:ok, pid}
   def start_link(name \\ "anonymous observer", exec_fun \\ &run_baumeister/2)
   def start_link(name, exec_fun)  do
-    Logger.debug "Start Observer #{name}"
+    # Logger.debug "Start Observer #{name} with exec_fun #{inspect exec_fun}"
     GenServer.start_link(__MODULE__, [name, exec_fun])
   end
 
@@ -188,6 +188,7 @@ defmodule Baumeister.Observer do
 
   @doc false
   def init([name, exec_fun]) do
+    # Logger.debug("Observer init for #{name} with exec_fun #{inspect exec_fun}")
     {:ok, %__MODULE__{name: name, executor_fun: exec_fun}}
   end
 
@@ -280,6 +281,7 @@ defmodule Baumeister.Observer do
     EventCenter.sync_notify({:observer, :exec_observer, observer_name})
     case observer_fun.(state) do
       {:ok, new_s} ->
+          # Logger.debug("exec_plugin: new_s = #{inspect new_s}")
           new_s
           |> Map.get(:"$result", [])
           |> Enum.each(fn {coordinate, baumeister_file} ->

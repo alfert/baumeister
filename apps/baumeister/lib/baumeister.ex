@@ -12,6 +12,7 @@ defmodule Baumeister do
   alias Baumeister.Config
   alias Baumeister.Coordinator
 
+  require Logger
 
   defstruct name: "", url: "", plugins: [], enabled: false, observer: nil
 
@@ -22,7 +23,7 @@ defmodule Baumeister do
   """
   @spec execute(Coordinate.t, BaumeisterFile.t) :: :ok
   def execute(coordinate, bmf) do
-    Log.info("Execute bmf #{inspect bmf} for coord #{inspect coordinate}")
+    Logger.info("Execute bmf #{inspect bmf} for coord #{inspect coordinate}")
     Coordinator.add_job(coordinate, bmf)
   end
 
