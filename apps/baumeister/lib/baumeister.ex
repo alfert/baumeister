@@ -24,7 +24,7 @@ defmodule Baumeister do
   @spec execute(Coordinate.t, BaumeisterFile.t) :: :ok
   def execute(coordinate, bmf) do
     Logger.info("Execute bmf #{inspect bmf} for coord #{inspect coordinate}")
-    Coordinator.add_job(coordinate, bmf)
+    {:ok, ref} = Coordinator.add_job(coordinate, bmf)
   end
 
   @doc """
