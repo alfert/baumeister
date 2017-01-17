@@ -9,10 +9,13 @@ defmodule BaumeisterTest do
   alias Baumeister.Observer.FailPlugin
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
-  alias Baumeister.Test.GitRepos
   alias Baumeister.EventCenter
+  alias Baumeister.Worker
+
+  alias Baumeister.Test.GitRepos
   alias Baumeister.Test.TestListener
   alias Baumeister.Test.Utils
+
   alias Experimental.GenStage
 
   require Logger
@@ -26,6 +29,10 @@ defmodule BaumeisterTest do
     Logger.info "Start the Baumeister Application"
     :ok= Application.ensure_started(:baumeister)
     Utils.wait_for fn -> nil != Process.whereis(Baumeister.ObserverSupervisor) end
+
+    Logger.info "Start a worker"
+    {:ok, worker} = Worker.start_link()
+    Logger.info "Worker process is #{inspect worker}"
 
     # Drain the event queue of old events.
     Logger.info "Clear the event center"
@@ -63,8 +70,10 @@ defmodule BaumeisterTest do
     # for our current listener for `project`
     Utils.wait_for fn -> listener
       |> TestListener.get()
-      |> Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
-      # |> Enum.any?(fn {_, a, _} -> a == :execute end)
+      # |> Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
+      |> Enum.filter(fn {w, _a, _} -> w == :worker end)
+      |> Enum.count()
+      >= 3
     end
     {testl, rubbish} = listener
     |> TestListener.get()
