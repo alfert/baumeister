@@ -222,7 +222,7 @@ defmodule Baumeister.Worker do
     end
     {out, rc} = System.cmd(shell, [arg1, bmf.command], [cd: build_dir, stderr_to_stdout: true])
     # remove the build directory
-    :ok = File.rmdir! build_dir
+    {:ok, _files} = File.rm_rf(build_dir)
     {out, rc}
   end
 
