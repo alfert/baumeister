@@ -68,23 +68,33 @@ defmodule BaumeisterTest do
     # When running a larger test set, there are sometimes some old
     # events still in the queue. Therefore, we filter all events
     # for our current listener for `project`
-    Utils.wait_for fn -> listener
-      |> TestListener.get()
-      # |> Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
+    Utils.wait_for fn ->
+      events = TestListener.get(listener)
+      worker_ev_cnt = events
       |> Enum.filter(fn {w, _a, _} -> w == :worker end)
       |> Enum.count()
-      >= 3
+      stopped_observer? = events
+      |>  Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
+
+      # And the condition
+      (stopped_observer? and (worker_ev_cnt >= 3))
     end
-    {testl, rubbish} = listener
+
+    {ol, w_list} = listener
     |> TestListener.get()
     |> Enum.partition(fn {_, _, v} -> v == project end)
-    l = testl
-    |> Enum.map(fn {_, a, _} -> a end)
+    obs_actions = ol |> Enum.map(fn {_, a, _} -> a end)
+    worker_actions = w_list
+    |> Enum.filter(fn {w, _, _} -> w == :worker end)
+    |> Enum.map(fn
+        {_, :execute, {a, _version, _out}} -> a
+        {_, :execute, {a, _version}} -> a end)
 
-    assert l ==
+    assert obs_actions ==
       [:start_observer, :exec_observer, :exec_observer, :exec_observer, :stopped_observer]
-    assert [] == rubbish
-    if rubbish != [], do: Logger.error("rubbish is #{inspect rubbish}")
+
+    assert worker_actions == [:start, :ok, :log]
+
 
     # After a stop, the project is disabled
     {:ok, p} = Config.config(project)
