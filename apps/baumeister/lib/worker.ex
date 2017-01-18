@@ -83,9 +83,9 @@ defmodule Baumeister.Worker do
 
   @doc """
   Executes the given BaumeisterFile and returns a reference
-  to the process execution. Eventually, the a message of the form
+  to the process execution. Eventually, a message of the form
   `{:executed, {out, rc, ref}}` is send to the current process, to inform
-  about the resut of the asynchronous running BaumeisterFile execution process.
+  about the result of the asynchronous running BaumeisterFile execution process.
   """
   @spec execute(pid, Coordinate.t, Baumeister.BaumeisterFile.t) :: {:ok, reference}
   def execute(pid, %Coordinate{} = coordinate, bmf) do
@@ -161,12 +161,14 @@ defmodule Baumeister.Worker do
       {:noreply, state}
     end
   end
-  def handle_info({:EXIT, pid, _reason}, state = %__MODULE__{processes: processes}) do
+  def handle_info({:EXIT, pid, reason}, state = %__MODULE__{processes: processes}) do
     new_state = case processes |> Map.get(pid) do
       nil -> Logger.error ("Unknown linked pid #{inspect pid}")
              Logger.error "State: #{inspect state}"
              state
-      coordinate -> EventCenter.sync_notify({:worker, :execute, {:crashed, coordinate}})
+      coordinate ->
+             if reason != :normal, do:
+              EventCenter.sync_notify({:worker, :crashed, {reason, coordinate}})
              %__MODULE__{state | processes: processes |> Map.delete(pid)}
     end
     {:noreply, new_state}
@@ -193,6 +195,7 @@ defmodule Baumeister.Worker do
     workspace = Path.join(tmpdir, "baumeister_workspace")
     execute_bmf(coordinate, bmf, workspace)
   end
+
   @doc """
   __Internal function!__
 
@@ -219,7 +222,7 @@ defmodule Baumeister.Worker do
     end
     {out, rc} = System.cmd(shell, [arg1, bmf.command], [cd: build_dir, stderr_to_stdout: true])
     # remove the build directory
-    :ok = File.rmdir! build_dir
+    {:ok, _files} = File.rm_rf(build_dir)
     {out, rc}
   end
 

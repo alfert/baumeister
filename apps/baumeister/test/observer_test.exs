@@ -5,6 +5,7 @@ defmodule Baumeister.ObserverTest do
   @moduletag capture_log: true
 
   alias Baumeister.Test.TestListener
+  alias Baumeister.Test.Utils
   alias Experimental.GenStage
   alias Baumeister.EventCenter
 
@@ -14,26 +15,18 @@ defmodule Baumeister.ObserverTest do
   alias Baumeister.Observer.Take
   alias Baumeister.Observer.Delay
 
-  def wait_for(pred) do
-    case pred.() do
-      false ->
-        Process.sleep(1)
-        wait_for(pred)
-      _ -> true
-    end
-  end
-
   setup context do
     IO.inspect(context)
     # need process flag, because Observer will crash
     Process.flag(:trap_exit, true)
     {:ok, listener} = TestListener.start()
     GenStage.sync_subscribe(listener, to: Baumeister.EventCenter)
-    {:ok, pid} = Observer.start_link(context[:test])
+    # set the observer name to the test name
+    {:ok, pid} = Observer.start_link(context[:test] |> Atom.to_string())
     assert is_pid(pid)
 
     # Let the listener drain the event queue of old events.
-    wait_for fn -> 0 == EventCenter.clear() end
+    Utils.wait_for fn -> 0 == EventCenter.clear() end
     # wait_for fn -> 0 == TestListener.clear(listener) end
 
     # merge this with the context
@@ -48,7 +41,7 @@ defmodule Baumeister.ObserverTest do
     Observer.configure(pid, FailPlugin, :ok)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 3 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
     l = TestListener.get(listener) |> Enum.take(3)
     assert length(l) == 3
@@ -64,7 +57,7 @@ defmodule Baumeister.ObserverTest do
   test "take and noop", context do
     pid = context[:pid]
     listener = context[:listener]
-    name = context[:test]
+    name = context[:test] |> Atom.to_string()
     bmf = """
     command: echo "Ja, wir schaffen das"
     """
@@ -73,13 +66,13 @@ defmodule Baumeister.ObserverTest do
     TestListener.clear(listener)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 3 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 5 end
     l = TestListener.get(listener)
 
     plug_events = l
-    |> Enum.filter(
-      fn {_, _, ^name} -> true
-          _ -> false end)
+    |> IO.inspect()
+    |> Enum.filter(fn {_, _, n} -> n == name end)
+    |> IO.inspect()
     |> Enum.map(fn {_, action, _} -> action end)
     assert length(plug_events) >= 5
     assert [:start_observer,
@@ -99,7 +92,7 @@ defmodule Baumeister.ObserverTest do
 
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 3 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
     l = TestListener.get(listener) |> Enum.take(3)
     assert length(l) == 3
@@ -118,7 +111,7 @@ defmodule Baumeister.ObserverTest do
     TestListener.clear(listener)
     :ok = Observer.run(pid)
 
-    wait_for fn -> length(TestListener.get(listener)) >= 2 end
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 2 end
     Observer.stop(pid, :stop)
 
     # take only the first two elements, since noop is extremely fast

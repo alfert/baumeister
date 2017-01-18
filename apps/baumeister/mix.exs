@@ -15,7 +15,8 @@ defmodule Baumeister.Mixfile do
      docs: [ #main: "README.md",
       extras: ["README.md"],
       extra_section: "Baumeister Guides"
-      ],
+     ],
+     test_coverage: [tool: Coverex.Task],
      deps: deps]
   end
 
@@ -27,8 +28,8 @@ defmodule Baumeister.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :yaml_elixir, :elixometer],
-     mod: {Baumeister, []}]
+    [applications: [:sasl, :logger, :yaml_elixir, :git_cli, :elixometer],
+     mod: {Baumeister.App, []}]
   end
 
   # Dependencies can be Hex packages:
@@ -47,8 +48,8 @@ defmodule Baumeister.Mixfile do
   defp deps do
     [
       {:propcheck, "~> 0.0.1", only: :test},
-      { :yaml_elixir, "~> 1.2.1" },
-      {:gen_stage, "~> 0.9.0"},
+      { :yaml_elixir, "~> 1.3.0" },
+      {:gen_stage, "~> 0.10.0"},
       {:git_cli, "~> 0.2.2"},
       {:elixometer, "~> 1.2"},
       #lager 3.2.1 is needed for erl19 because of
@@ -56,7 +57,8 @@ defmodule Baumeister.Mixfile do
       {:lager, ">= 3.2.1", override: true},
       {:credo, "~> 0.5.0", only: :dev},
       {:dialyze, "~> 0.2.1", only: :dev},
-      {:ex_doc, "~> 0.14.0", only: :dev}
+      {:ex_doc, "~> 0.14.0", only: :dev},
+      {:coverex, "~> 1.4.0", only: :test}
     ]
   end
 end

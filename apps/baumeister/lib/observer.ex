@@ -50,10 +50,15 @@ defmodule Baumeister.Observer do
   @typedoc """
   A mapping between plugin name and its current state.
   """
-  @type plugin_state_map :: %{atom => plugin_state}
+  @type plugin_state_map :: %{module => plugin_state}
 
   @typedoc """
-  A pair of the repository URL to checkout and corresponding
+  A plugin and its initial configuration.
+  """
+  @type plugin_config_t :: {module, any}
+
+  @typedoc """
+  A pair of the repository Coordinate to checkout and corresponding
   BaumeisterFile
   """
   @type result_t :: {Coordinate.t, String.t}
@@ -107,45 +112,40 @@ defmodule Baumeister.Observer do
   require Logger
 
   defstruct state: %{}, observer_pid: nil,
-    observer_fun: nil, init_fun: nil, name: "anonymous observer"
+    observer_fun: nil, init_fun: nil, name: "anonymous observer",
+    executor_fun: nil
 
-  @doc """
-  Convenience function to start the observer and configure
-  it with the singleton plugin `mod`.
-  """
-  def start_link(mod, configuration) when is_atom(mod) do
-    {:ok, pid} = start_link(Atom.to_string(mod))
-    :ok = configure(pid, mod, configuration)
-    {:ok, pid}
-  end
   @doc """
   Starts the oberver process with the given name. The observer
   is not configured yet.
   """
-  def start_link(name \\ "anonymous observer")  do
-    Logger.debug "Start Observer #{name}"
-    GenServer.start_link(__MODULE__, [name])
+  @spec start_link(String.t, (Coordinate.t, String.t -> :ok) ) :: {:ok, pid}
+  def start_link(name \\ "anonymous observer", exec_fun \\ &run_baumeister/2)
+  def start_link(name, exec_fun)  do
+    # Logger.debug "Start Observer #{name} with exec_fun #{inspect exec_fun}"
+    GenServer.start_link(__MODULE__, [name, exec_fun])
+  end
+
+  defp run_baumeister(coord, baumeister_file) do
+    job = BaumeisterFile.parse!(baumeister_file)
+    Baumeister.execute(coord, job)
   end
 
   @doc """
   Configures the observer with a single plugin `mod` and
   configuration `config`.
   """
+  @spec configure(pid, module, any) :: :ok
   def configure(observer, mod, config) do
     configure(observer, [{mod, config}])
   end
-  @doc """
-  Configures the observer with a tuple of plugin `mod` and
-  configuration `config`.
-  """
-  def configure(observer, {mod, config}) do
-    configure(observer, [{mod, config}])
-  end
+
   @doc """
   Configures the Observer with a list of plugin names and their
   initializations. This list is executed in reverse order.
   """
-def configure(observer, plug_list) when is_list(plug_list) do
+  @spec configure(pid, [plugin_config_t]) :: :ok
+  def configure(observer, plug_list) when is_list(plug_list) do
     GenServer.call(observer, {:configure, plug_list})
   end
 
@@ -163,8 +163,9 @@ def configure(observer, plug_list) when is_list(plug_list) do
   coordinate to the Baumeister Coordinator to find a worker
   for executionn.
   """
-  def execute(observer, url, baumeister_file) do
-    GenServer.cast(observer, {:execute, url, baumeister_file})
+  def execute(observer, %Coordinate{} = coordinate, baumeister_file) when
+    is_binary(baumeister_file) do
+    GenServer.cast(observer, {:execute, coordinate, baumeister_file})
   end
 
   @doc """
@@ -186,8 +187,9 @@ def configure(observer, plug_list) when is_list(plug_list) do
   ###################################################
 
   @doc false
-  def init([name]) do
-    {:ok, %__MODULE__{name: name}}
+  def init([name, exec_fun]) do
+    # Logger.debug("Observer init for #{name} with exec_fun #{inspect exec_fun}")
+    {:ok, %__MODULE__{name: name, executor_fun: exec_fun}}
   end
 
   @doc false
@@ -206,7 +208,8 @@ def configure(observer, plug_list) when is_list(plug_list) do
       end
       init = fn(s) ->
         {:ok, s_init} = plug.init(config)
-        Map.put(s, plug, s_init)
+        s
+        |> Map.put(plug, s_init)
         |> combined_init.()
       end
       {obs, init}
@@ -228,8 +231,8 @@ def configure(observer, plug_list) when is_list(plug_list) do
   def do_observe(plug, state) do
     # Logger.debug("do_observe: plug = #{inspect plug}, state = #{inspect state}")
     case state |> Map.fetch!(plug) |> plug.observe() do
-      {:ok, result, s} when is_list(result)->
-        # Logger.debug("got url and bmf from plug #{inspect plug}")
+      {:ok, result, s} when is_list(result) ->
+        # Logger.debug("got coordinate and bmf from plug #{inspect plug}")
         {:ok, state
           |> Map.put(:"$result", result)
           |> Map.put(plug, s)
@@ -247,7 +250,7 @@ def configure(observer, plug_list) when is_list(plug_list) do
     # Start the oberserver as a distinct process, under supervision
     # control and linked to this server process
     parent_pid = self
-    {:ok, pid} = Task.Supervisor.start_child(Baumeister.ObserverSupervisor,
+    {:ok, pid} = Task.Supervisor.start_child(Baumeister.ObserverTaskSupervisor,
       fn ->
         EventCenter.sync_notify({:observer, :start_observer, name})
         obs_state = s.init_fun.(state)
@@ -255,10 +258,11 @@ def configure(observer, plug_list) when is_list(plug_list) do
       end)
     {:noreply, %__MODULE__{s | observer_pid: pid}}
   end
-  def handle_cast({:execute, url, baumeister_file}, state) do
-    EventCenter.sync_notify({:observer, :execute, url})
-    job = BaumeisterFile.parse!(baumeister_file)
-    Baumeister.execute(url, job)
+  def handle_cast({:execute, coordinate, baumeister_file}, state) do
+    EventCenter.sync_notify({:observer, :execute, coordinate})
+    # job = BaumeisterFile.parse!(baumeister_file)
+    # Baumeister.execute(coordinate, job)
+    state.executor_fun.(coordinate, baumeister_file)
     # This works only, if `run()` is asynchronous
     # Baumeister.Observer.run(self)
     {:noreply, %__MODULE__{state | observer_pid: nil}}
@@ -277,10 +281,11 @@ def configure(observer, plug_list) when is_list(plug_list) do
     EventCenter.sync_notify({:observer, :exec_observer, observer_name})
     case observer_fun.(state) do
       {:ok, new_s} ->
+          # Logger.debug("exec_plugin: new_s = #{inspect new_s}")
           new_s
-          |> Map.fetch!(:"$result")
-          |> Enum.each(fn {url, baumeister_file} ->
-            Observer.execute(observer, url, baumeister_file)
+          |> Map.get(:"$result", [])
+          |> Enum.each(fn {coordinate, baumeister_file} ->
+            Observer.execute(observer, coordinate, baumeister_file)
           end)
           plug_state = new_s |> Map.drop([:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)

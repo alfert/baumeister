@@ -160,10 +160,16 @@ defmodule Baumeister.Observer.Git do
   @doc """
   Updates the local repository `repo` from the remote repository `remote_repo`
   and checks out the reference `ref` and the sha value `sha`.
+
+  The `fetch` command runs against the remote repository, merges the remote
+  reference in the corresponding local branch even if not fast-forward merge is
+  possible (`+` in the reference). Finally, the checkout results in a
+  detached head, which is no problem, since we do not checkin anything in
+  this repository.
   """
   @spec update_from_remote(Git.Repository.t, Git.Repository.t, String.t, hash_t) :: :ok
   def update_from_remote(repo, remote_repo, ref, sha) do
-    {:ok, _} = Git.fetch(repo, [remote_repo.path, ref <> ":" <> ref])
+    {:ok, _} = Git.fetch(repo, [remote_repo.path, "+" <> ref])
     {:ok, _} = Git.checkout(repo, sha) # |> IO.inspect
     :ok
   end

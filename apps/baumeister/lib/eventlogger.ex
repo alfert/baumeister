@@ -45,7 +45,7 @@ defmodule Baumeister.EventLogger do
   def handle_events(events, _from, state) do
     verbose = Keyword.get(state, :verbose, false)
     events
-    |> Enum.map(fn(ev) ->
+    |> Enum.each(fn(ev) ->
         if verbose, do: Logger.info("EventLogger: event = #{inspect ev}") end)
     # We are a consumer, so we would never emit items.
     {:noreply, [], state}

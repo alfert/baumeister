@@ -2,7 +2,7 @@
 
 Baumeister is a build management system, inspired by Jenkins, Travis CI and BuildBot.
 
-[![Build Status](https://travis-ci.org/alfert/baumeister.svg?branch=master)](https://travis-ci.org/alfert/bbaumeister)
+[![Build Status](https://travis-ci.org/alfert/baumeister.svg?branch=master)](https://travis-ci.org/alfert/baumeister)
 
 ## Design
 

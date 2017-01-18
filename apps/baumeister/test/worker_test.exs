@@ -3,10 +3,16 @@ defmodule Baumeister.WorkerTest do
 
   require Logger
 
+  alias Experimental.GenStage
+
   alias Baumeister.Coordinator
   alias Baumeister.Worker
   alias Baumeister.BaumeisterFile
   alias Baumeister.Observer.NoopPlugin
+  alias Baumeister.Test.TestListener
+  alias Baumeister.EventCenter
+
+  alias Baumeister.Test.Utils
 
   use PropCheck
 
@@ -31,17 +37,6 @@ defmodule Baumeister.WorkerTest do
     end
   end
 
-  def create_bmf(cmd \\ "true") do
-    {_, local_os} = :os.type()
-    local_os = local_os |> Atom.to_string
-    bmf = """
-      os: #{local_os}
-      language: elixir
-      command: #{cmd}
-    """ |> BaumeisterFile.parse!
-    {bmf, local_os}
-  end
-
   def make_tmp_coordinate() do
     tmp_dir = System.tmp_dir!
     NoopPlugin.make_coordinate(tmp_dir)
@@ -53,11 +48,11 @@ defmodule Baumeister.WorkerTest do
     Logger.debug "Worker is started"
     assert is_pid(worker)
     assert Process.alive?(worker)
-    all_workers = Coordinator.workers()
+    all_workers = Coordinator.all_workers()
     Logger.debug "all workers: #{inspect all_workers}"
     assert Enum.any?(all_workers, fn(w) -> w.pid == worker end)
     Process.exit(worker, :normal)
-    remaining_workers = Coordinator.workers()
+    remaining_workers = Coordinator.all_workers()
     assert not Enum.member?(remaining_workers, worker)
   end
 
@@ -70,7 +65,7 @@ defmodule Baumeister.WorkerTest do
     ref_worker = Process.monitor(worker)
 
     Logger.info "env is: #{inspect env}"
-    Logger.debug "Registered workers: #{inspect Coordinator.workers}"
+    Logger.debug "Registered workers: #{inspect Coordinator.all_workers}"
     Logger.debug "Killing Coordinator"
     Process.exit(env[:coordinator], :kill)
 
@@ -88,7 +83,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "Find suitable workers for Elixir for the current OS" do
-    {bmf, local_os} = create_bmf()
+    {bmf, local_os} = Utils.create_parsed_bmf()
     capa = Worker.detect_capabilities
     capa_expected = %{:os => BaumeisterFile.canonized_values(local_os, :os), :mix => true}
 
@@ -100,7 +95,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a simple command" do
-    {bmf, _local_os} = create_bmf("echo Hallo")
+    {bmf, _local_os} = Utils.create_parsed_bmf("echo Hallo")
     coord = make_tmp_coordinate()
     {out, rc} = Worker.execute_bmf(coord, bmf)
 
@@ -114,7 +109,7 @@ defmodule Baumeister.WorkerTest do
     |> Enum.max_by(fn s -> String.length(s) end)
     |> Path.absname()
     non_existing_file = "#{name}-xxx"
-    {bmf, _local_os} = create_bmf("type #{non_existing_file}")
+    {bmf, _local_os} = Utils.create_parsed_bmf("type #{non_existing_file}")
     {out, rc} = Worker.execute_bmf(make_tmp_coordinate(), bmf)
 
     # return codes are different for various operating systems :-(
@@ -126,7 +121,7 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a simple command from a Worker process" do
-    {bmf, _local_os} = create_bmf("echo Hallo")
+    {bmf, _local_os} = Utils.create_parsed_bmf("echo Hallo")
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
@@ -139,7 +134,7 @@ defmodule Baumeister.WorkerTest do
     |> Enum.max_by(fn s -> String.length(s) end)
     |> Path.absname()
     non_existing_file = "#{name}-xxx"
-    {bmf, _local_os} = create_bmf("type #{non_existing_file}")
+    {bmf, _local_os} = Utils.create_parsed_bmf("type #{non_existing_file}")
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
@@ -155,9 +150,37 @@ defmodule Baumeister.WorkerTest do
     assert String.contains?(out, non_existing_file)
   end
 
+  @tag timeout: 1_000
+  test "execute a command via the coordinator", _env do
+    {bmf, _local_os} = Utils.create_parsed_bmf("echo Hallo")
+    coord = make_tmp_coordinate()
+    {:ok, listener} = TestListener.start()
+    GenStage.sync_subscribe(listener, to: EventCenter)
+    {:ok, worker} = Worker.start_link()
+    Logger.debug "Worker is started"
+
+    {:ok, ref} = Coordinator.add_job(coord, bmf)
+    ################
+    #
+    # Why is the event sent to the coordinator? Only
+    # for testing purposes?
+    #
+    #################
+    # wait for some events
+    Utils.wait_for fn -> length(TestListener.get(listener)) >= 6 end
+    # consider only worker messages
+    l = listener
+    |> TestListener.get()
+    |> Enum.filter(fn {w, a, _} -> w == :worker and a == :execute end)
+    |> Enum.map(fn {_, _, data} -> data end)
+
+    assert l ==
+      [{:start, coord}, {:ok, coord}, {:log, coord, "Hallo\n"}]
+  end
+
   ####################
   #
-  # Add tests with propcheck to run varies tasks with different
+  # Add tests with propcheck to run various tasks with different
   # runtimes, ideally also in parallel
   #
   # Extra long timeout since sometimes it does fit into 1 minute
@@ -169,7 +192,7 @@ defmodule Baumeister.WorkerTest do
     # use size to achieve smaller lists
     forall delays <- vector(10, float(0.0,0.1))  do
       returns = delays
-      |> Stream.map(fn f -> create_bmf("sleep #{f} && echo Hallo") end)
+      |> Stream.map(fn f -> Utils.create_parsed_bmf("sleep #{f} && echo Hallo") end)
       # |> Stream.map(fn f -> create_bmf("echo Hallo")end)
       |> Enum.map(fn {bmf, _} -> Worker.execute(worker, make_tmp_coordinate(), bmf) end)
       |> Enum.map(fn {:ok, ref} -> receive do

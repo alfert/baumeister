@@ -46,6 +46,7 @@ defmodule Baumeister.Coordinator do
   alias Baumeister.EventCenter
   alias Baumeister.Worker
   alias Baumeister.BaumeisterFile
+  alias Baumeister.Observer.Coordinate
 
   # Metrics
   @nb_of_workers "baumeister.nb_of_registered_workers"
@@ -84,8 +85,8 @@ defmodule Baumeister.Coordinator do
   @doc """
   Returns the list of worker specs
   """
-  @spec workers() :: [WorkerSpec.t]
-  def workers() do
+  @spec all_workers() :: [WorkerSpec.t]
+  def all_workers() do
     GenServer.call(name(), :workers)
   end
 
@@ -96,6 +97,21 @@ defmodule Baumeister.Coordinator do
   @spec update_capabilities(pid | tuple, Worker.capabilities_t) :: :ok | {:error, any}
   def update_capabilities(worker, capabilities) when is_map(capabilities)do
     GenServer.call(name(), {:update_capabilities, worker, capabilities})
+  end
+
+  @doc """
+  Adds a job defined by its `coordinate` and BaumeisterFile `bmf`.
+  The Coordinator seeks for a proper worker for job execution and returns
+  `{:ok, ref}` with a reference to the executing task. This references is used
+  in `Baumeister.EventCenter` notifications to inform about the status of the task.
+
+  If no
+  worker is found, the error `unsupported_feature` is returned and the
+  job is neither executed nor enqueued for later execution.
+  """
+  @spec add_job(Coordinate.t, BaumeisterFile.t) :: {:ok, reference} | {:unsupported_feature, any}
+  def add_job(coordinate, bmf) do
+    GenServer.call(name(), {:add_job, coordinate, bmf})
   end
 
   ##############################################################################
@@ -114,26 +130,46 @@ defmodule Baumeister.Coordinator do
   def handle_call({:register, worker}, _from, state) do
     Logger.debug "Register worker #{inspect worker}"
     EventCenter.sync_notify({:coordinator, :register, worker})
-    new_state = do_register(worker, state)
-    {:reply, :ok, new_state}
+    do_register(worker, state)
+    |> reply(:ok)
   end
   def handle_call({:unregister, worker}, _from, state) do
     Logger.debug "Unregister worker #{inspect worker}"
     EventCenter.sync_notify({:coordinator, :runegister, worker})
-    {:reply, :ok, do_unregister(worker, state)}
+    do_unregister(worker, state)
+    |> reply(:ok)
   end
   def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do
-    {:reply, workers |> Map.values(), state}
+    state
+    |> reply(workers |> Map.values())
   end
   def handle_call({:update_capabilities, worker, capa}, _from,
                             state = %__MODULE__{workers: workers}) do
     case Map.fetch(workers, worker) do
       {:ok, spec} ->
           s = %WorkerSpec{spec | capabilities: capa}
-          new_state = %__MODULE__{workers: Map.put(workers, worker, s)}
-          {:reply, :ok, new_state}
+          state
+          |> Map.put(:workers, workers |> Map.put(worker, s))
+          |> reply(:ok)
       :error -> {:replay, {:error, :unknown_worker}, state}
     end
+  end
+  def handle_call({:add_job, coord, bmf}, _from,
+                            state = %__MODULE__{workers: workers}) do
+    case match_workers(workers, bmf) do
+      [] -> {:reply, {:unsupported_feature, :no_idea}, state}
+      pids ->
+        return_value = pids
+          |> Enum.random()
+          |> Worker.execute(coord, bmf)
+        reply(state, return_value)
+    end
+  end
+
+  # OTP reply for nice pipelines
+  @spec reply(t, any) :: {:reply, any, t}
+  defp reply(state = %__MODULE__{}, return_value) do
+    {:reply, return_value, state}
   end
 
   # Handle the monitoring messages from Workers
