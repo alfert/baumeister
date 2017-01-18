@@ -21,10 +21,15 @@ defmodule Baumeister do
   fits to the settings (e.g. OS) and on which the repository at the
   Coordinate will be checked out.
   """
-  @spec execute(Coordinate.t, BaumeisterFile.t) :: :ok
+  @spec execute(Coordinate.t, BaumeisterFile.t) :: {:ok, reference} | {:error, any}
   def execute(coordinate, bmf) do
     Logger.info("Execute bmf #{inspect bmf} for coord #{inspect coordinate}")
-    {:ok, ref} = Coordinator.add_job(coordinate, bmf)
+    case Coordinator.add_job(coordinate, bmf) do
+      {:ok, ref} -> {:ok, ref}
+      {:unsupported_feature, feature} ->
+        Logger.error("An unsupported feature <#{inspect feature}> was requested for coordinate #{inspect coordinate}")
+        {:error, :unsupported_feature}
+    end
   end
 
   @doc """
