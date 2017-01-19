@@ -90,7 +90,7 @@ defmodule Baumeister.Observer.Git do
     refs = state.local_repo
     |> Git.ls_remote()
     |> parse_refs()
-    {:ok, update_in(state.refs, fn _ -> refs end)}
+    {:ok, %__MODULE__{state | refs: refs}}
   end
 
   # creates the local administrative repository and returns the observer state.
@@ -170,7 +170,7 @@ defmodule Baumeister.Observer.Git do
   @spec update_from_remote(Git.Repository.t, Git.Repository.t, String.t, hash_t) :: :ok
   def update_from_remote(repo, remote_repo, ref, sha) do
     {:ok, _} = Git.fetch(repo, [remote_repo.path, "+" <> ref])
-    {:ok, _} = Git.checkout(repo, sha) # |> IO.inspect
+    {:ok, _} = Git.checkout(repo, [sha]) # |> IO.inspect
     :ok
   end
 
@@ -190,8 +190,9 @@ defmodule Baumeister.Observer.Git do
   Parses the output of `git ls-remote` and returns a mapping
   of remote references and their sha1 values.
   """
-  @spec parse_refs(String.t) :: %{String.t => hash_t}
+  @spec parse_refs({:ok, String.t}) :: %{String.t => hash_t}
   def parse_refs({:ok, refs}), do: parse_refs(refs)
+  @spec parse_refs(String.t) :: %{String.t => hash_t}
   def parse_refs(refs) do
     refs
     |> String.split("\n")
@@ -199,7 +200,7 @@ defmodule Baumeister.Observer.Git do
     # this filters the origin address information (without \t)
     |> Stream.filter(&match?([_,_], &1))
     |> Stream.filter(fn [_ref, k] -> k != "HEAD" end)
-    |> Stream.map(fn [ref, k] -> {k, ref} end)
+    |> Stream.map(fn [ref, k] when is_binary(ref)-> {k, ref} end)
     |> Enum.into(%{})
   end
 
