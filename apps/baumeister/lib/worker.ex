@@ -101,9 +101,9 @@ defmodule Baumeister.Worker do
   def init([coordinator]) do
     Logger.debug "Initializing Worker"
     Process.flag(:trap_exit, true)
-    EventCenter.sync_notify({:worker, :start, self})
-    :ok = Coordinator.register(self)
-    :ok = Coordinator.update_capabilities(self, detect_capabilities())
+    EventCenter.sync_notify({:worker, :start, self()})
+    :ok = Coordinator.register(self())
+    :ok = Coordinator.update_capabilities(self(), detect_capabilities())
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
     base = Application.get_env(:baumeister, :workspace_base, System.tmp_dir!)
     state = %__MODULE__{coordinator: coordinator,
@@ -121,7 +121,7 @@ defmodule Baumeister.Worker do
     EventCenter.sync_notify({:worker, :execute, {:start, coordinate}})
     {state, workspace} = workspace_path(state)
     {:ok, exec_pid} = Task.start_link(fn ->
-      EventCenter.sync_notify({:worker_job, :spawned, self})
+      EventCenter.sync_notify({:worker_job, :spawned, self()})
       {out, rc} = execute_bmf(coordinate, bmf, workspace)
       case rc do
         0 -> EventCenter.sync_notify({:worker, :execute, {:ok, coordinate}})
@@ -147,7 +147,7 @@ defmodule Baumeister.Worker do
   @spec workspace_path(t) :: {t, String.t}
   def workspace_path(state = %__MODULE__{job_counter: job, workspace_base: base}) do
     new_state = %__MODULE__{state | job_counter: job + 1}
-    path = Path.join([base, Atom.to_string(node), "#{job}"])
+    path = Path.join([base, Atom.to_string(node()), "#{job}"])
     {new_state, path}
   end
 

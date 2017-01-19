@@ -17,7 +17,7 @@ defmodule Baumeister.Mixfile do
       extra_section: "Baumeister Guides"
      ],
      test_coverage: [tool: Coverex.Task],
-     deps: deps]
+     deps: deps()]
   end
 
   # Specifies which paths to compile per environment

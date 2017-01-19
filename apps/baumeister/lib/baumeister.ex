@@ -61,9 +61,9 @@ defmodule Baumeister do
           [project_name])
         # spawn a process that monitors the observers and
         # updates the status in the config database
-        pid = spawn(fn -> ref = Process.monitor(observer)
+        _pid = spawn(fn -> ref = Process.monitor(observer)
           receive do
-            {:DOWN, ^ref,:process, _pid, _reason} -> put_disabled_project(project_name)
+            {:DOWN, ^ref, :process, _whatever_pid, _reason} -> put_disabled_project(project_name)
           end
         end)
         :ok = Observer.configure(observer, project.plugins)
