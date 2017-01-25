@@ -37,6 +37,6 @@ defmodule BmWorker.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    []
+    [{:baumeister, in_umbrella: true}]
   end
 end

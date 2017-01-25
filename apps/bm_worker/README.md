@@ -1,6 +1,8 @@
 # BmWorker
 
-**TODO: Add description**
+This is the OTP application for a worker node. Currently, it is only a
+small layer around the `baumeister` application, since we need this application
+only for an easy setup with `distillery` for release handling.
 
 ## Installation
 
@@ -16,4 +18,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/bm_worker](https://hexdocs.pm/bm_worker).
-

@@ -9,10 +9,7 @@ defmodule BmWorker.Application do
     import Supervisor.Spec, warn: false
 
     # Define workers and child supervisors to be supervised
-    children = [
-      # Starts a worker by calling: BmWorker.Worker.start_link(arg1, arg2, arg3)
-      # worker(BmWorker.Worker, [arg1, arg2, arg3]),
-    ]
+    children = Baumeister.App.setup_worker()
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
