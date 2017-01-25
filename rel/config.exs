@@ -45,3 +45,9 @@ release :baumeister do
   ]
 end
 
+release :bm_worker do
+  set version: "0.1.0"
+  set applications: [
+    bm_worker: :permanent
+  ]
+end
