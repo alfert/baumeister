@@ -28,7 +28,12 @@ defmodule Baumeister.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:sasl, :logger, :yaml_elixir, :git_cli, :elixometer],
+    [applications: [:sasl, :logger, :yaml_elixir, :git_cli,
+      :elixometer, # and elixometers undeclared apps
+      :edown, :folsom, :parse_trans,
+      # gen_stage is also there
+      :gen_stage
+      ],
      mod: {Baumeister.App, []}]
   end
 
