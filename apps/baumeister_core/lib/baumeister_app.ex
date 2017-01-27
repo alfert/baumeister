@@ -8,10 +8,7 @@ defmodule Baumeister.App do
 
   def start(_type, _args) do
     # Define workers and child supervisors to be supervised
-    # children = case Application.get_env(:baumeister, :role, :coordinator) |> IO.inspect() do
-    #   :coordinator -> setup_coordinator()
-    #   :worker -> setup_worker()
-    # end
+    children = []
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
@@ -34,7 +31,7 @@ defmodule Baumeister.App do
         strategy: :simple_one_for_one, name: Baumeister.ObserverSupervisor]]),
       worker(Baumeister.Coordinator, [[name: Baumeister.Coordinator.name()]]),
       worker(Baumeister.EventCenter, []),
-      worker(Baumeister.EventLogger, [[subscribe_to: Baumeister.EventCenter, verbose: false]]),
+      worker(Baumeister.EventLogger, [[subscribe_to: Baumeister.EventCenter.name(), verbose: false]]),
       worker(Baumeister.Config, [Application.get_env(:baumeister, :persistence)])
     ]
   end
