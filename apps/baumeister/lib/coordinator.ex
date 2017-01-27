@@ -59,7 +59,7 @@ defmodule Baumeister.Coordinator do
   ##############################################################################
 
   @doc "The name of the Coordinator Server"
-  def name(), do: __MODULE__
+  def name(), do: {:global, __MODULE__}
 
   def start_link(opts \\ []) do
     Logger.info "Start the coordinator server"
