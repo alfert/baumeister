@@ -2,7 +2,7 @@ defmodule BmWorker.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :bm_worker,
+    [app: :baumeister_worker,
      version: "0.1.0",
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -37,6 +37,6 @@ defmodule BmWorker.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:baumeister, in_umbrella: true}]
+    [{:baumeister_core, in_umbrella: true}]
   end
 end
