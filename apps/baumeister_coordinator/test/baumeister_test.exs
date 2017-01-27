@@ -24,10 +24,10 @@ defmodule BaumeisterTest do
   # Setup the repository and the paths to their working spaces
   setup do
     Logger.info "Stop the Baumeister App for a fresh start"
-    :ok = Application.stop(:baumeister)
+    :ok = Application.stop(:baumeister_coordinator)
     repos = GitRepos.make_temp_git_repo_with_some_content()
     Logger.info "Start the Baumeister Application"
-    :ok= Application.ensure_started(:baumeister)
+    :ok= Application.ensure_started(:baumeister_coordinator)
     Utils.wait_for fn -> nil != Process.whereis(Baumeister.ObserverSupervisor) end
 
     Logger.info "Start a worker"
@@ -49,7 +49,7 @@ defmodule BaumeisterTest do
     assert Config.keys() == []
 
     {:ok, listener} = TestListener.start()
-    GenStage.sync_subscribe(listener, to: EventCenter)
+    GenStage.sync_subscribe(listener, to: EventCenter.name())
 
     :ok = Baumeister.add_project(project, repo_url, plugs)
 
