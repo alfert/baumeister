@@ -105,7 +105,7 @@ defmodule Baumeister.Worker do
     :ok = Coordinator.register(self())
     :ok = Coordinator.update_capabilities(self(), detect_capabilities())
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
-    base = Application.get_env(:baumeister, :workspace_base, System.tmp_dir!)
+    base = Application.get_env(:baumeister_core, :workspace_base, System.tmp_dir!)
     state = %__MODULE__{coordinator: coordinator,
       coordinator_ref: ref,
       workspace_base: base

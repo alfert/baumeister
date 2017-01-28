@@ -32,7 +32,7 @@ defmodule Baumeister.App do
       worker(Baumeister.Coordinator, [[name: Baumeister.Coordinator.name()]]),
       worker(Baumeister.EventCenter, []),
       worker(Baumeister.EventLogger, [[subscribe_to: Baumeister.EventCenter.name(), verbose: false]]),
-      worker(Baumeister.Config, [Application.get_env(:baumeister, :persistence)])
+      worker(Baumeister.Config, [Application.get_env(:baumeister_core, :persistence)])
     ]
   end
 

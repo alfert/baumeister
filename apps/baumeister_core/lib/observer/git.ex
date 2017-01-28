@@ -97,7 +97,7 @@ defmodule Baumeister.Observer.Git do
   defp init_repos(url) do
     repo = Git.new(url)
 
-    admin_path = Application.get_env(:baumeister, :admin_data_dir,
+    admin_path = Application.get_env(:baumeister_core, :admin_data_dir,
       Path.join(System.tmp_dir!(), "baumeister_admin"))
     local_path = Path.join(admin_path, Path.basename(url))
     # remove the directory, if it already exists otherwise clone will fail
@@ -113,8 +113,8 @@ defmodule Baumeister.Observer.Git do
   `git_user`.
   """
   def set_user_config(repo) do
-    email = Application.get_env(:baumeister, :git_email, "baumeister@example.com")
-    user = Application.get_env(:baumeister, :git_user, "Baumeister")
+    email = Application.get_env(:baumeister_core, :git_email, "baumeister@example.com")
+    user = Application.get_env(:baumeister_core, :git_user, "Baumeister")
     {:ok, _} = Git.config(repo, ["--local", "user.email", email])
     {:ok, _} = Git.config(repo, ["--local", "user.name", user])
   end
