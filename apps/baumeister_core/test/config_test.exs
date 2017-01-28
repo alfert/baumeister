@@ -26,7 +26,7 @@ defmodule ConfigTest do
 
   property "source holds all keys" do
     Config.start_link()
-    forall values <- [{atom, utf8}] do
+    forall values <- [{atom(), utf8()}] do
         Config.remove_all()
         m = values |> Enum.into(%{})
         values |> Enum.each(fn({k, v}) -> Config.put(k, v) end)
@@ -37,7 +37,7 @@ defmodule ConfigTest do
 
   property "source holds all values of existing keys" do
     Config.start_link()
-    forall values <- [{atom, utf8}] do
+    forall values <- [{atom(), utf8()}] do
         Config.remove_all()
         m = values |> Enum.into(%{})
         values |> Enum.each(fn({k, v}) -> Config.put(k, v) end)
