@@ -20,6 +20,7 @@ defmodule Baumeister.WorkerTest do
   # Ensures that the coordinator is running and puts the pid in the environment
   setup do
     Application.ensure_started(:baumeister_core)
+    Application.stop(:baumeister_coordinator)
     {:ok, pid} = Coordinator.start_link(name: Coordinator.name())
     {:ok,  _ec_pid} = EventCenter.start_link()
     {:ok, listener} = EventLogger.start_link([subscribe_to: Baumeister.EventCenter.name(),
