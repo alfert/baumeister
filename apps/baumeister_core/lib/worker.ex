@@ -92,24 +92,43 @@ defmodule Baumeister.Worker do
     GenServer.call(pid, {:execute, coordinate, bmf})
   end
 
+  @doc """
+  Connects to the global coordinator, thereby enabling the worker to
+  receive jobs to work on.
+
+  It requires that a connection to the node with the coordinator is established,
+  thus this function is usually called during the internal startup process of the
+  worker only.
+  """
+  @spec connect(pid) :: :ok
+  def connect(pid) do
+    GenServer.call(pid, :connect)
+  end
+
   ##############################################################################
   ##
   ## Callbacks and internals
   ##
   ##############################################################################
 
+
   def init([coordinator]) do
     Logger.debug "Initializing Worker"
     Process.flag(:trap_exit, true)
-    EventCenter.sync_notify({:worker, :start, self()})
-    :ok = Coordinator.register(self())
-    :ok = Coordinator.update_capabilities(self(), detect_capabilities())
-    ref = Process.monitor(GenServer.whereis(Coordinator.name))
+    ############
+    #
+    # TODO: we should use fuse as a circuit breaker
+    # to handle net splits properly for calls to EventCenter
+    # and to the Coordinator
+    #
+    #############
+
     base = Application.get_env(:baumeister_core, :workspace_base, System.tmp_dir!)
     state = %__MODULE__{coordinator: coordinator,
-      coordinator_ref: ref,
       workspace_base: base
     }
+    me = self()
+    spawn_link(fn -> register(me) end)
     {:ok, state}
   end
 
@@ -132,6 +151,13 @@ defmodule Baumeister.Worker do
     end)
     new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, coordinate)}
     {:reply, {:ok, ref}, new_state}
+  end
+  def handle_call(:connect, _from, state = %__MODULE__{}) do
+    EventCenter.sync_notify({:worker, :start, self()})
+    :ok = Coordinator.register(self())
+    :ok = Coordinator.update_capabilities(self(), detect_capabilities())
+    ref = Process.monitor(GenServer.whereis(Coordinator.name))
+    {:reply, :ok, %__MODULE__{ state | coordinator_ref: ref}}
   end
 
   defp send_exec_return({pid, _from_ref} , out, rc, ref) do
@@ -182,6 +208,37 @@ defmodule Baumeister.Worker do
     EventCenter.sync_notify({:worker, :terminate, reason})
     :ok
   end
+
+  def register(worker) do
+    master = Application.get_env(:baumeister_core, :coordinator_node, :unknown)
+    # if connect fails, we can also fail.
+    true = connect_to_coordinator(master, 5)
+    :ok = connect(worker)
+  end
+
+  def connect_to_coordinator(_, 0) do
+    Logger.warn("No success in contacting the coordinator node. Giving up")
+    false
+   end
+  def connect_to_coordinator(:unknown, _count) do
+    Logger.warn("No coordinator node configured. Trying local coordinator")
+    nil != Process.whereis(Coordinator.name())
+  end
+  def connect_to_coordinator(master, count) do
+    case Node.connect(master) do
+      true ->
+        Logger.info("Connected to coordinator node #{inspect master}")
+        :global.sync()
+        pid = GenServer.whereis(Coordinator.name())
+        Logger.info("Coordinator #{inspect Coordinator.name()} is #{inspect pid}")
+        is_pid(pid)
+      _ ->
+        Logger.warn("Failed to connect to the coordinator node #{inspect master}.")
+        Process.sleep(30_000)
+        connect_to_coordinator(master, count - 1)
+    end
+  end
+
 
   @doc """
     __Internal function!__
