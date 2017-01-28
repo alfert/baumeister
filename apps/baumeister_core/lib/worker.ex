@@ -153,10 +153,12 @@ defmodule Baumeister.Worker do
     {:reply, {:ok, ref}, new_state}
   end
   def handle_call(:connect, _from, state = %__MODULE__{}) do
+    Logger.debug("Worker #{inspect self()} connects to Coordinator")
     EventCenter.sync_notify({:worker, :start, self()})
-    :ok = Coordinator.register(self())
-    :ok = Coordinator.update_capabilities(self(), detect_capabilities())
+    :ok = Coordinator.register(self(), detect_capabilities())
+    # :ok = Coordinator.update_capabilities(self(), detect_capabilities())
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
+    Logger.debug("Worker #{inspect self()} has properly connected to Coordinator")
     {:reply, :ok, %__MODULE__{ state | coordinator_ref: ref}}
   end
 
@@ -222,16 +224,13 @@ defmodule Baumeister.Worker do
    end
   def connect_to_coordinator(:unknown, _count) do
     Logger.warn("No coordinator node configured. Trying local coordinator")
-    nil != Process.whereis(Coordinator.name())
+    ensure_coordinator_processes()
   end
   def connect_to_coordinator(master, count) do
     case Node.connect(master) do
       true ->
         Logger.info("Connected to coordinator node #{inspect master}")
-        :global.sync()
-        pid = GenServer.whereis(Coordinator.name())
-        Logger.info("Coordinator #{inspect Coordinator.name()} is #{inspect pid}")
-        is_pid(pid)
+        ensure_coordinator_processes()
       _ ->
         Logger.warn("Failed to connect to the coordinator node #{inspect master}.")
         Process.sleep(30_000)
@@ -239,6 +238,14 @@ defmodule Baumeister.Worker do
     end
   end
 
+  defp ensure_coordinator_processes() do
+    :global.sync()
+    pid = GenServer.whereis(Coordinator.name())
+    Logger.info("Coordinator #{inspect Coordinator.name()} is #{inspect pid}")
+    ec_pid = GenServer.whereis(EventCenter.name())
+    Logger.info("EventCenter #{inspect EventCenter.name()} is #{inspect ec_pid}")
+    is_pid(pid) and is_pid(ec_pid)
+  end
 
   @doc """
     __Internal function!__
