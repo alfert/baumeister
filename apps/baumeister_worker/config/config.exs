@@ -21,7 +21,7 @@ use Mix.Config
 #     config :logger, level: :info
 #
 
-config :baumeister, role: :worker
+config :baumeister_core, role: :worker
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
