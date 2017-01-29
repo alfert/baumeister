@@ -1,13 +1,9 @@
-defmodule BaumeisterTest do
+defmodule Test.BM.CoordinatorTest do
   use ExUnit.Case
-  doctest Baumeister
-  doctest Baumeister.BaumeisterFile
 
   alias Baumeister.Config
   alias Baumeister.Observer.Delay
   alias Baumeister.Observer.Git
-  alias Baumeister.Observer.FailPlugin
-  alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
   alias Baumeister.EventCenter
   alias Baumeister.Worker
