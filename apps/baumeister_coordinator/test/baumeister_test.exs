@@ -20,15 +20,19 @@ defmodule Test.BM.CoordinatorTest do
   # Setup the repository and the paths to their working spaces
   setup do
     Logger.info "Stop the Baumeister App for a fresh start"
-    :ok = Application.stop(:baumeister_coordinator)
+    Application.stop(:baumeister_coordinator)
     repos = GitRepos.make_temp_git_repo_with_some_content()
     Logger.info "Start the Baumeister Application"
-    :ok= Application.ensure_started(:baumeister_coordinator)
+    :ok = Application.ensure_started(:baumeister_core)
+    {:ok, _} = Application.ensure_all_started(:baumeister_coordinator)
     Utils.wait_for fn -> nil != Process.whereis(Baumeister.ObserverSupervisor) end
 
     Logger.info "Start a worker"
     {:ok, worker} = Worker.start_link()
     Logger.info "Worker process is #{inspect worker}"
+    # Wait for registration
+    Utils.wait_for fn -> Baumeister.Coordinator.all_workers()
+      |> Enum.count() > 0 end
 
     # Drain the event queue of old events.
     Logger.info "Clear the event center"
