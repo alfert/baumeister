@@ -74,7 +74,11 @@ defmodule Baumeister.ObserverTest do
     TestListener.clear(listener)
     :ok = Observer.run(pid)
 
-    Utils.wait_for fn -> length(TestListener.get(listener)) >= 5 end
+    # wait until at least 5 observer related messages arrive
+    Utils.wait_for fn -> listener
+      |> TestListener.get()
+      |> Enum.filter(fn {_, _, n} -> n == name end)
+      |> Enum.count() >= 5 end
     l = TestListener.get(listener)
 
     plug_events = l
