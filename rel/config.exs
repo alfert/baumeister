@@ -41,13 +41,13 @@ end
 release :baumeister do
   set version: "0.1.0"
   set applications: [
-    baumeister: :permanent
+    baumeister_coordinator: :permanent
   ]
 end
 
 release :bm_worker do
   set version: "0.1.0"
   set applications: [
-    bm_worker: :permanent
+    baumeister_worker: :permanent
   ]
 end
