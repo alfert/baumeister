@@ -212,7 +212,12 @@ defmodule Baumeister.Worker do
   end
 
   def register(worker) do
-    master = Application.get_env(:baumeister_core, :coordinator_node, :unknown)
+    # master = Application.get_env(:baumeister_core, :coordinator_node, :unknown)
+    master =  case Confex.get(:baumeister_core, :coordinator_node, :unknown) do
+      m when is_binary(m) -> String.to_atom(m)
+      m when is_list(m) -> List.to_atom(m)
+      m -> m
+    end
     # if connect fails, we can also fail.
     true = connect_to_coordinator(master, 5)
     :ok = connect(worker)

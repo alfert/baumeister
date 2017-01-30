@@ -31,7 +31,8 @@ config :baumeister_core, admin_data_dir: "/tmp/baumeister_admin"
 config :baumeister_core, git_email: "baumeister@example.com"
 config :baumeister_core, git_user: "Baumeister User"
 # Define the default role of this node: a coordinator process
-config :baumeister_core, coordinator_node: :"baumeister_coordinator@kals-mac"
+config :baumeister_core,
+  coordinator_node: {:system, "COORDINATOR", :"baumeister_coordinator@kals-mac"}
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
