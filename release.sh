@@ -26,7 +26,7 @@ ORIG='.orig'
 sed -i $ORIG "s/\(version: \"\)$old_version\",/\\1$release_version\",/" mix.exs apps/*/mix.exs
 
 # add to git
-git commit -m "bump version to $release_version" mix.exs
+git commit -m "bump version to $release_version" mix.exs apps/*/mix.exs
 
 # tag the commit
 git tag -a -m "new release version v$release_version" v$release_version
@@ -34,13 +34,13 @@ git tag -a -m "new release version v$release_version" v$release_version
 read -p "Check the commits. Press Ctrl-C for exit, return for continuing"
 
 # Upload to Hex.PM (both package and docs)
-mix hex.publish
+# mix hex.publish
 
 # update version in all mix.exs files
 sed -i $ORIG "s/\(version: \"\)$release_version\",/\\1$new_version\",/" mix.exs apps/*/mix.exs
 
 # add to git
-git commit -m "bump version to $new_version" mix.exs
+git commit -m "bump version to $new_version" mix.exs apps/*/mix.exs
 
 # push to github
 git push origin master --tags
