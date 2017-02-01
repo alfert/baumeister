@@ -59,7 +59,7 @@ defmodule Baumeister.Coordinator do
   ##############################################################################
 
   @doc "The name of the Coordinator Server"
-  def name(), do: __MODULE__
+  def name(), do: {:global, __MODULE__}
 
   def start_link(opts \\ []) do
     Logger.info "Start the coordinator server"
@@ -67,11 +67,13 @@ defmodule Baumeister.Coordinator do
   end
 
   @doc """
-  Registers a new worker
+  Registers a new worker with its capabilities. The capabilities
+  can be updated if required later. 
   """
-  @spec register(pid | tuple) :: :ok | {:error, any}
-  def register(worker) do
-    GenServer.call(name(), {:register, worker})
+  @spec register(pid | tuple, Worker.capabilities_t) :: :ok | {:error, any}
+  def register(worker, capabilities) do
+    Logger.debug "Will now register worker #{inspect worker}"
+    GenServer.call(name(), {:register, worker, capabilities})
   end
 
   @doc """
@@ -127,11 +129,11 @@ defmodule Baumeister.Coordinator do
   end
 
   @doc false
-  def handle_call({:register, worker}, _from, state) do
+  def handle_call({:register, worker, capa}, from, state) do
     Logger.debug "Register worker #{inspect worker}"
     EventCenter.sync_notify({:coordinator, :register, worker})
-    do_register(worker, state)
-    |> reply(:ok)
+    new_state = do_register(worker, state)
+    Baumeister.Coordinator.handle_call({:update_capabilities, worker, capa}, from, new_state)
   end
   def handle_call({:unregister, worker}, _from, state) do
     Logger.debug "Unregister worker #{inspect worker}"

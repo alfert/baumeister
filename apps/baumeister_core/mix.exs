@@ -2,7 +2,7 @@ defmodule Baumeister.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :baumeister,
+    [app: :baumeister_core,
      version: "0.1.0",
      build_path: "../../_build",
      config_path: "../../config/config.exs",
@@ -28,7 +28,10 @@ defmodule Baumeister.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:sasl, :logger, :yaml_elixir, :git_cli, :elixometer],
+    [ # Specify extra applications you'll use from Erlang/Elixir
+      extra_applications: [:sasl, :logger,
+        # and elixometers undeclared apps
+        :edown, :folsom, :parse_trans],
      mod: {Baumeister.App, []}]
   end
 
@@ -48,7 +51,8 @@ defmodule Baumeister.Mixfile do
   defp deps do
     [
       {:propcheck, "~> 0.0.1", only: :test},
-      { :yaml_elixir, "~> 1.3.0" },
+      {:yaml_elixir, "~> 1.3.0" },
+      {:confex, "~> 1.4.1"},
       {:gen_stage, "~> 0.10.0"},
       {:git_cli, "~> 0.2.2"},
       {:elixometer, "~> 1.2"},

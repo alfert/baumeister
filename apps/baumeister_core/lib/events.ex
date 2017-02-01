@@ -12,12 +12,13 @@ defmodule Baumeister.EventCenter do
   """
 
   use GenStage
+  require Logger
 
   @typedoc """
   Holds the internal state of the `EventCenter`.
 
   * `queue`: the queue of events
-  * `demand`: the current demand of events to consume 
+  * `demand`: the current demand of events to consume
   """
   @type t :: %__MODULE__{
     queue: :queue.queue,
@@ -31,10 +32,15 @@ defmodule Baumeister.EventCenter do
 ##
 ###################################################
 
+@doc "Name of the EventCenter process"
+def name, do: {:global, __MODULE__}
+
+
  @doc "Starts the EventCenter registered with the module's name."
  @spec start_link() :: {:ok, pid}
  def start_link() do
-   GenStage.start_link(__MODULE__, :ok, name: __MODULE__)
+   Logger.info "Start the EventCenter server"
+   GenStage.start_link(__MODULE__, :ok, name: name())
  end
  @doc """
  Starts the EventCenter as an anonymous process which is not registered.
@@ -47,20 +53,21 @@ defmodule Baumeister.EventCenter do
 
  @doc "Sends an event and returns only after the event is dispatched."
  @spec sync_notify(any, pos_integer | :infinity) :: :ok
- @spec sync_notify(pid | atom, any, pos_integer | :infinity) :: :ok
- def sync_notify(pid \\ __MODULE__, event, timeout \\ 5000) do
+ @spec sync_notify(pid | atom | {atom, any}, any, pos_integer | :infinity) :: :ok
+ def sync_notify(pid \\ name(), event, timeout \\ 5000) do
+   Logger.debug("Sent sync_notify to Stage #{inspect pid} with event: #{inspect event}")
    GenStage.call(pid, {:notify, event}, timeout)
  end
 
  @doc """
  Empties the queue of events.
  """
- def clear(pid \\ __MODULE__) do
+ def clear(pid \\ name()) do
    GenStage.call(pid, :clear)
  end
 
  @doc "Stops the EventCenter"
- def stop(pid \\ __MODULE__) do
+ def stop(pid \\ name()) do
    GenStage.stop(pid)
  end
 

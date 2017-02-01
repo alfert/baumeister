@@ -11,6 +11,9 @@ build engine
 match of job requirements and worker capabilities.
 * the `Baumeister.BaumeisterFile`, defining the language of Baumeister to
 define a build job.
+* the `Baumeister.Observer.Coordinate`, defining a coordinate to version in a
+repository, where Observer-Plugins can extend the version specification for
+their need.
 
 
 ## Installation

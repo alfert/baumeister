@@ -17,10 +17,18 @@ defmodule Baumeister.ObserverTest do
 
   setup context do
     IO.inspect(context)
+    sup_name = Baumeister.Supervisor
+    opts = [strategy: :one_for_one, name: sup_name]
+    children = Baumeister.App.setup_coordinator()
+    if (GenServer.whereis(sup_name) != nil), do: :ok = Supervisor.stop(sup_name)
+    {:ok, sup_pid} = Supervisor.start_link(children, opts)
+    counts = Supervisor.count_children(sup_pid)
+    assert counts[:specs] == counts[:active]
+
     # need process flag, because Observer will crash
     Process.flag(:trap_exit, true)
     {:ok, listener} = TestListener.start()
-    GenStage.sync_subscribe(listener, to: Baumeister.EventCenter)
+    GenStage.sync_subscribe(listener, to: Baumeister.EventCenter.name())
     # set the observer name to the test name
     {:ok, pid} = Observer.start_link(context[:test] |> Atom.to_string())
     assert is_pid(pid)
@@ -66,7 +74,11 @@ defmodule Baumeister.ObserverTest do
     TestListener.clear(listener)
     :ok = Observer.run(pid)
 
-    Utils.wait_for fn -> length(TestListener.get(listener)) >= 5 end
+    # wait until at least 5 observer related messages arrive
+    Utils.wait_for fn -> listener
+      |> TestListener.get()
+      |> Enum.filter(fn {_, _, n} -> n == name end)
+      |> Enum.count() >= 5 end
     l = TestListener.get(listener)
 
     plug_events = l

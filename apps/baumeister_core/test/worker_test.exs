@@ -11,6 +11,7 @@ defmodule Baumeister.WorkerTest do
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Test.TestListener
   alias Baumeister.EventCenter
+  alias Baumeister.EventLogger
 
   alias Baumeister.Test.Utils
 
@@ -18,15 +19,26 @@ defmodule Baumeister.WorkerTest do
 
   # Ensures that the coordinator is running and puts the pid in the environment
   setup do
-    Application.ensure_started(:baumeister)
-    m = wait_for_coordinator
-    {:ok, coordinator: m}
+    Application.ensure_started(:baumeister_core)
+    Application.stop(:baumeister_coordinator)
+    {:ok, pid} = Coordinator.start_link(name: Coordinator.name())
+    {:ok,  _ec_pid} = EventCenter.start_link()
+    {:ok, listener} = EventLogger.start_link([subscribe_to: Baumeister.EventCenter.name(),
+      verbose: false])
+    :global.sync()
+    Logger.warn("Coordinator is #{inspect Coordinator.name()}")
+    Logger.warn("Global registered names are: #{inspect :global.registered_names()}")
+
+    m = wait_for_coordinator()
+    assert [] == Coordinator.all_workers()
+    assert 0 == EventCenter.clear()
+    {:ok, coordinator: pid}
   end
 
   def wait_for_coordinator(wait\\ 5)
   def wait_for_coordinator(0), do: flunk "Coordinator is not available :-("
   def wait_for_coordinator(wait) do
-    m = GenServer.whereis(Coordinator.name)
+    m = GenServer.whereis(Coordinator.name())
     if not is_pid(m) do
       # only 1 ms, to let the scheduler recover. This is to
       # prevent a concurrency issue on Travis-CI
@@ -42,16 +54,23 @@ defmodule Baumeister.WorkerTest do
     NoopPlugin.make_coordinate(tmp_dir)
   end
 
+  def wait_for_worker() do
+    # registration is async, there we wait for that eveent
+    Utils.wait_for(fn -> Coordinator.all_workers() |> Enum.count() > 0 end)
+  end
+
   @tag timeout: 1_000
   test "Start a worker", _env do
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
     assert is_pid(worker)
     assert Process.alive?(worker)
+    wait_for_worker()
+
     all_workers = Coordinator.all_workers()
     Logger.debug "all workers: #{inspect all_workers}"
     assert Enum.any?(all_workers, fn(w) -> w.pid == worker end)
-    Process.exit(worker, :normal)
+    # Process.exit(worker, :normal)
     remaining_workers = Coordinator.all_workers()
     assert not Enum.member?(remaining_workers, worker)
   end
@@ -61,6 +80,8 @@ defmodule Baumeister.WorkerTest do
     Process.flag(:trap_exit, true)
     {:ok, worker} = Worker.start_link()
     assert Process.alive?(worker)
+    wait_for_worker()
+
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
     ref_worker = Process.monitor(worker)
 
@@ -155,11 +176,12 @@ defmodule Baumeister.WorkerTest do
     {bmf, _local_os} = Utils.create_parsed_bmf("echo Hallo")
     coord = make_tmp_coordinate()
     {:ok, listener} = TestListener.start()
-    GenStage.sync_subscribe(listener, to: EventCenter)
-    {:ok, worker} = Worker.start_link()
+    GenStage.sync_subscribe(listener, to: EventCenter.name())
+    {:ok, _worker} = Worker.start_link()
+    wait_for_worker()
     Logger.debug "Worker is started"
 
-    {:ok, ref} = Coordinator.add_job(coord, bmf)
+    {:ok, _ref} = Coordinator.add_job(coord, bmf)
     ################
     #
     # Why is the event sent to the coordinator? Only
@@ -188,6 +210,7 @@ defmodule Baumeister.WorkerTest do
   @tag timeout: 120_000
   property "run many worker executions", [:verbose] do
     {:ok, worker} = Worker.start_link()
+    wait_for_worker()
     Logger.debug "Worker is started"
     # use size to achieve smaller lists
     forall delays <- vector(10, float(0.0,0.1))  do
