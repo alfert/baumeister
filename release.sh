@@ -18,7 +18,7 @@ if [ 1 -eq $? ]; then
 	exit 1
 fi
 
-read -p "Check the variables. Press Ctrl-C for exit, return for continuing"
+read -p "Check the variables. Press Ctrl-C for exit, return for continueing"
 
 ORIG='.orig'
 
@@ -31,10 +31,11 @@ git commit -m "bump version to $release_version" mix.exs apps/*/mix.exs
 # tag the commit
 git tag -a -m "new release version v$release_version" v$release_version
 
-read -p "Check the commits. Press Ctrl-C for exit, return for continuing"
+read -p "Check the commits. Press Ctrl-C for exit, return for continueing"
 
 # Upload to Hex.PM (both package and docs)
 # mix hex.publish
+echo "No Upload to Hex.PM since they do not support Umbrella Projects!"
 
 # update version in all mix.exs files
 sed -i $ORIG "s/\(version: \"\)$release_version\",/\\1$new_version\",/" mix.exs apps/*/mix.exs
