@@ -18,3 +18,6 @@ erl_crash.dump
 
 # log files from lager
 /log
+
+# from sed actions
+*.orig
