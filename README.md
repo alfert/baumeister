@@ -4,6 +4,9 @@ Baumeister is a build management system, inspired by Jenkins, Travis CI and Buil
 
 [![Build Status](https://travis-ci.org/alfert/baumeister.svg?branch=master)](https://travis-ci.org/alfert/baumeister)
 
+Currently, Baumeister is in statu nascendi and merely usefull. While moving
+from release 0.1.0 towards 1.0.0 this will change...
+
 ## Binary Releases and Configuration
 
 Baumeister uses `distillery`(https://hexdocs.pm/distillery/getting-started.html)
