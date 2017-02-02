@@ -33,10 +33,10 @@ defmodule BaumeisterWeb.ConnCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(BaumeisterWeb.Repo)
+     # :ok = Ecto.Adapters.SQL.Sandbox.checkout(BaumeisterWeb.Repo)
 
     unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(BaumeisterWeb.Repo, {:shared, self()})
+      # Ecto.Adapters.SQL.Sandbox.mode(BaumeisterWeb.Repo, {:shared, self()})
     end
 
     {:ok, conn: Phoenix.ConnTest.build_conn()}
