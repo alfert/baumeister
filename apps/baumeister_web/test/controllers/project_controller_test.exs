@@ -5,6 +5,15 @@ defmodule BaumeisterWeb.ProjectControllerTest do
   @valid_attrs %{name: "some content", plugins: "some content", url: "some content"}
   @invalid_attrs %{}
 
+  @doc """
+  Creates unique and valid attributes, i.e. the unique constraint on `name`
+  is fullfilled by appending a unique integer.
+  """
+  def unique_attributes do
+    count = "#{System.unique_integer([:positive])}"
+    %{@valid_attrs | name: @valid_attrs.name <> count}
+  end
+
   test "lists all entries on index", %{conn: conn} do
     conn = get conn, project_path(conn, :index)
     assert html_response(conn, 200) =~ "Listing projects"
@@ -16,9 +25,10 @@ defmodule BaumeisterWeb.ProjectControllerTest do
   end
 
   test "creates resource and redirects when data is valid", %{conn: conn} do
-    conn = post conn, project_path(conn, :create), project: @valid_attrs
+    attributes = unique_attributes()
+    conn = post conn, project_path(conn, :create), project: attributes
     assert redirected_to(conn) == project_path(conn, :index)
-    assert Repo.get_by(Project, @valid_attrs)
+    assert Repo.get_by(Project, attributes)
   end
 
   test "does not create resource and renders errors when data is invalid", %{conn: conn} do
@@ -46,9 +56,10 @@ defmodule BaumeisterWeb.ProjectControllerTest do
 
   test "updates chosen resource and redirects when data is valid", %{conn: conn} do
     project = Repo.insert! %Project{}
-    conn = put conn, project_path(conn, :update, project), project: @valid_attrs
+    attributes = unique_attributes()
+    conn = put conn, project_path(conn, :update, project), project: attributes
     assert redirected_to(conn) == project_path(conn, :show, project)
-    assert Repo.get_by(Project, @valid_attrs)
+    assert Repo.get_by(Project, attributes)
   end
 
   test "does not update chosen resource and renders errors when data is invalid", %{conn: conn} do
