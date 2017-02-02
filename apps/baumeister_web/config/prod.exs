@@ -19,6 +19,11 @@ config :baumeister_web, BaumeisterWeb.Endpoint,
 # Do not print debug messages in production
 config :logger, level: :info
 
+# Configure your database (no passwords for Mnesia, so
+# no need to configure in prod.secret.exs)
+config :baumeister_web, BaumeisterWeb.Repo,
+  adapter: Ecto.Adapters.Mnesia
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key
