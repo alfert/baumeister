@@ -22,3 +22,8 @@ erl_crash.dump
 
 # from sed actions
 *.orig
+
+# Data files from mnesia
+apps/baumeister_web/priv/data/mnesia/*.LOG
+apps/baumeister_web/priv/data/mnesia/*.DCD
+apps/baumeister_web/priv/data/mnesia/*.DAT
