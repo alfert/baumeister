@@ -25,7 +25,8 @@ defmodule BaumeisterWeb.Mixfile do
      applications: [:phoenix, :phoenix_pubsub, :phoenix_html, :cowboy, :logger, :gettext,
                     :phoenix_ecto,
                     # :postgrex,
-                    :ecto_mnesia]]
+                    :ecto_mnesia,
+                    :mnesia]]
   end
 
   # Specifies which paths to compile per environment.
