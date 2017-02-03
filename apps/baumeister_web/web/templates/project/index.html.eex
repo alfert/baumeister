@@ -6,6 +6,8 @@
       <th>Name</th>
       <th>Url</th>
       <th>Plugins</th>
+      <th>Delay</th>
+      <th>Enabled?</th>
 
       <th></th>
     </tr>
@@ -16,6 +18,8 @@
       <td><%= project.name %></td>
       <td><%= project.url %></td>
       <td><%= project.plugins %></td>
+      <td><%= project.delay %></td>
+      <td><%= checkbox :enabled, project.enabled, value: project.enabled %></td>
 
       <td class="text-right">
         <%= link "Show", to: project_path(@conn, :show, project), class: "btn btn-default btn-xs" %>

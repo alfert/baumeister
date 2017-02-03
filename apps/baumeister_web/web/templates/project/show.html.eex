@@ -17,6 +17,16 @@
     <%= @project.plugins %>
   </li>
 
+  <li>
+    <strong>Delay:</strong>
+    <%= @project.delay %>
+  </li>
+
+  <li>
+    <strong>Enabled:</strong>
+    <%= checkbox :enabled, @project.enabled, value: @project.enabled %>
+  </li>
+
 </ul>
 
 <%= link "Edit", to: project_path(@conn, :edit, @project) %>
