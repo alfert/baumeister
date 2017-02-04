@@ -3,7 +3,8 @@ defmodule BaumeisterWeb.ProjectTest do
 
   alias BaumeisterWeb.Project
 
-  @valid_attrs %{name: "some content", plugins: "some content", url: "some content"}
+  @valid_attrs %{name: "some content", plugins: "some content", url: "some content",
+    enabled: false, delay: 5}
   @invalid_attrs %{}
 
   test "changeset with valid attributes" do

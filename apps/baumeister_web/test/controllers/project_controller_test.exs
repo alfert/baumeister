@@ -2,7 +2,8 @@ defmodule BaumeisterWeb.ProjectControllerTest do
   use BaumeisterWeb.ConnCase
 
   alias BaumeisterWeb.Project
-  @valid_attrs %{name: "some content", plugins: "some content", url: "some content"}
+  @valid_attrs %{name: "some content", plugins: "some content", url: "some content",
+    enabled: false, delay: 5}
   @invalid_attrs %{}
 
   @doc """
