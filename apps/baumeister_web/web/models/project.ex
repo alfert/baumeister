@@ -18,5 +18,6 @@ defmodule BaumeisterWeb.Project do
     struct
     |> cast(params, [:name, :url, :plugins, :enabled, :delay])
     |> validate_required([:name, :url, :plugins, :enabled, :delay])
+    |> unique_constraint(:name)
   end
 end
