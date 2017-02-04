@@ -55,7 +55,7 @@ defmodule Baumeister do
   """
   @spec enable(String.t) :: bool
   def enable(project_name) do
-    with {:ok, project} = Config.config(project_name),
+    with {:ok, project} <- Config.config(project_name),
       false <- project.enabled
       do
         {:ok, observer} = Supervisor.start_child(Baumeister.ObserverSupervisor,

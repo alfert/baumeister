@@ -34,7 +34,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   Updates the settings of project in the coordinator
   """
   def update(project = %Project{name: name, url: url, plugins: plugins}) do
-    with {:ok, plugin_list} = plugins(project),
+    with {:ok, plugin_list} <- plugins(project),
       :ok <- Baumeister.update(project.name, project.url, plugin_list)
     do
       :ok
