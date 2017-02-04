@@ -9,6 +9,8 @@ defmodule BaumeisterWeb.ProjectBridge do
   alias Baumeister.Observer.NoopPlugin
   alias BaumeisterWeb.Project
 
+  require Logger
+
   @doc """
   Adds a project to the coordinator and prepares for the observers.
   """
@@ -29,6 +31,17 @@ defmodule BaumeisterWeb.ProjectBridge do
   end
 
   @doc """
+  Updates the settings of project in the coordinator
+  """
+  def update(project = %Project{name: name, url: url, plugins: plugins}) do
+    with {:ok, plugin_list} = plugins(project),
+      :ok <- Baumeister.update(project.name, project.url, plugin_list)
+    do
+      :ok
+    end
+  end
+
+  @doc """
   Derives the list of plugins from the settings of a project
   """
   @spec plugins(Project.t) :: [Baumeister.Observer.plugin_config_t]
@@ -41,7 +54,11 @@ defmodule BaumeisterWeb.ProjectBridge do
 
   @spec delete_project_from_coordinator!(Project.t) :: :ok | no_return
   def delete_project_from_coordinator!(project) do
-    :ok = Baumeister.delete!(project.name)
+    case Baumeister.delete(project.name) do
+      :error -> Logger.error("Project #{inspect project.name} not available in Baumeister")
+        :ok
+      :ok -> :ok
+    end
   end
 
 end

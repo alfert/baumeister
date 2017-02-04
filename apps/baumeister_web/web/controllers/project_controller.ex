@@ -59,7 +59,7 @@ defmodule BaumeisterWeb.ProjectController do
 
     case Repo.update(changeset) do
       {:ok, project} ->
-        ProjectBridge.set_status(project)
+        ProjectBridge.update(project)
         conn
         |> put_flash(:info, "Project updated successfully.")
         |> redirect(to: project_path(conn, :show, project))

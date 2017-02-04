@@ -98,11 +98,29 @@ defmodule Baumeister do
   end
 
   @doc """
-  Disables and deletes a project.
+  Disables and deletes a project. Returns `:error` if the project does
+  not exist.
   """
-  @spec delete!(String.t) :: :ok | no_return
-  def delete!(project_name) do
+  @spec delete(String.t) :: :ok | :error
+  def delete(project_name) do
     unless :error == disable(project_name), do:
-      :ok = Config.remove(project_name)
+      Config.remove(project_name)
+  end
+
+  @doc """
+  Updates the project. For that reason the project is disabled,
+  to stop observers and workers. After that, the project is updated
+  in the configuration and and the project in enabled again, if it
+  enabled before.
+  """
+  def update(project_name, url, plugin_list) do
+    case Config.config(project_name) do
+      {:ok, project} ->
+        disable(project_name)
+        :ok = Config.put(project_name,
+          %__MODULE__{name: project_name, url: url, plugins: plugin_list})
+        enable(project.enabled)
+      _ -> add_project(project_name, url, plugin_list)
+    end
   end
 end
