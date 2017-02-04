@@ -2,6 +2,8 @@ defmodule BaumeisterWeb.ProjectControllerTest do
   use BaumeisterWeb.ConnCase
 
   alias BaumeisterWeb.Project
+  alias BaumeisterWeb.ProjectController
+
   @valid_attrs %{name: "some content", plugins: "some content", url: "some content",
     enabled: false, delay: 5}
   @invalid_attrs %{}
@@ -56,8 +58,8 @@ defmodule BaumeisterWeb.ProjectControllerTest do
   end
 
   test "updates chosen resource and redirects when data is valid", %{conn: conn} do
-    project = Repo.insert! %Project{}
     attributes = unique_attributes()
+    {:ok, project} = ProjectController.insert(%Project{name: attributes[:name]})
     conn = put conn, project_path(conn, :update, project), project: attributes
     assert redirected_to(conn) == project_path(conn, :show, project)
     assert Repo.get_by(Project, attributes)
@@ -70,7 +72,9 @@ defmodule BaumeisterWeb.ProjectControllerTest do
   end
 
   test "deletes chosen resource", %{conn: conn} do
-    project = Repo.insert! %Project{}
+    # project = Repo.insert! %Project{}
+    attributes = unique_attributes()
+    {:ok, project} = ProjectController.insert(%Project{name: attributes[:name]})
     conn = delete conn, project_path(conn, :delete, project)
     assert redirected_to(conn) == project_path(conn, :index)
     refute Repo.get(Project, project.id)
