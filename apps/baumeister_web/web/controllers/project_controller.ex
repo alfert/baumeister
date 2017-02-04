@@ -2,6 +2,7 @@ defmodule BaumeisterWeb.ProjectController do
   use BaumeisterWeb.Web, :controller
 
   alias BaumeisterWeb.Project
+  alias BaumeisterWeb.ProjectBridge
 
   def index(conn, _params) do
     projects = Repo.all(Project)
@@ -16,13 +17,28 @@ defmodule BaumeisterWeb.ProjectController do
   def create(conn, %{"project" => project_params}) do
     changeset = Project.changeset(%Project{}, project_params)
 
-    case Repo.insert(changeset) do
-      {:ok, _project} ->
+    case insert(changeset) do
+      {:ok, project} ->
         conn
         |> put_flash(:info, "Project created successfully.")
         |> redirect(to: project_path(conn, :index))
       {:error, changeset} ->
         render(conn, "new.html", changeset: changeset)
+    end
+  end
+
+  @doc """
+  Inserts the project into the database and the baumeister coordinator.
+  """
+  @spec insert(Project.t | %{}) :: {:ok, Project.t} | {:error, any}
+  def insert(project) do
+    case Repo.insert(project) do
+      {:ok, project} ->
+        :ok = ProjectBridge.add_project_to_coordinator(project)
+        enabled = project.enabled
+        ^enabled = ProjectBridge.set_status(project)
+        {:ok, project}
+      {:error, changeset} -> {:error, changeset}
     end
   end
 
@@ -43,6 +59,7 @@ defmodule BaumeisterWeb.ProjectController do
 
     case Repo.update(changeset) do
       {:ok, project} ->
+        ProjectBridge.set_status(project)
         conn
         |> put_flash(:info, "Project updated successfully.")
         |> redirect(to: project_path(conn, :show, project))
@@ -57,6 +74,7 @@ defmodule BaumeisterWeb.ProjectController do
     # Here we use delete! (with a bang) because we expect
     # it to always work (and if it does not, it will raise).
     Repo.delete!(project)
+    ProjectBridge.delete_project_from_coordinator!(project)
 
     conn
     |> put_flash(:info, "Project deleted successfully.")
