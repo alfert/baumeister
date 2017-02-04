@@ -53,9 +53,10 @@ defmodule Baumeister do
   @doc """
   Enables the project and let the observer do its work.
   """
+  @spec enable(String.t) :: bool
   def enable(project_name) do
     with {:ok, project} = Config.config(project_name),
-      false = project.enabled
+      false <- project.enabled
       do
         {:ok, observer} = Supervisor.start_child(Baumeister.ObserverSupervisor,
           [project_name])
@@ -70,6 +71,7 @@ defmodule Baumeister do
         :ok = Config.put(project_name, %__MODULE__{project | enabled: true,
           observer: observer})
         :ok = Observer.run(observer)
+        true
       end
   end
 
@@ -85,12 +87,22 @@ defmodule Baumeister do
   @doc """
   Disables the project and stop the observer's work.
   """
+  @spec disable(String.t) :: bool | :error
   def disable(project_name) do
     with {:ok, project} = Config.config(project_name),
-      true = project.enabled
+      true <- project.enabled
       do
         :ok = Observer.stop(project.observer, :stop)
         put_disabled_project(project_name, project)
       end
+  end
+
+  @doc """
+  Disables and deletes a project.
+  """
+  @spec delete!(String.t) :: :ok | no_return
+  def delete!(project_name) do
+    unless :error == disable(project_name), do:
+      :ok = Config.remove(project_name)
   end
 end
