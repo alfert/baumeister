@@ -58,7 +58,7 @@ defmodule Test.BM.CoordinatorTest do
     assert Config.keys() == [project]
 
     # enable the observer
-    :ok = Baumeister.enable(project)
+    true = Baumeister.enable(project)
     Logger.info("Project is enabled, observer is running")
     :timer.sleep(100)
     {bmf, _local_os} = Utils.create_bmf("echo Hello")
