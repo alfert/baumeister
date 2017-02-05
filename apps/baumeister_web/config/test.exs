@@ -14,7 +14,7 @@ config :baumeister_web, BaumeisterWeb.Repo,
   adapter: Ecto.Adapters.Mnesia
 config :ecto_mnesia,
     host: {:system, :atom, "MNESIA_HOST", Kernel.node()},
-    storage_type: {:system, :atom, "MNESIA_STORAGE_TYPE", :ram_copies}
+    storage_type: {:system, :atom, "MNESIA_STORAGE_TYPE", :disc_copies}
 
   # adapter: Ecto.Adapters.Postgres,
   # username: "postgres",
