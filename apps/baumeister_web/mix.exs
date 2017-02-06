@@ -55,6 +55,18 @@ defmodule BaumeisterWeb.Mixfile do
   defp aliases do
     ["ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
      "ecto.reset": ["ecto.drop", "ecto.setup"],
-     "test": ["ecto.create --quiet", "ecto.migrate", "test"]]
+     "ecto.create": [&ensure_dirs/1, "ecto.create"],
+     "test": ["ecto.create", "ecto.migrate", "test"]]
+  end
+
+  defp ensure_dirs(_) do
+    dir = "#{Application.get_env(:mnesia, :dir)}" |> Path.absname()
+    Mix.shell.info "Ensure the existence of Mnesia Data: #{dir}"
+    if (File.exists?(dir)) do
+      Mix.shell.info("Mnesia Data Dir exists")
+    else
+      :ok = File.mkdir_p("#{dir}")
+      Mix.shell.info("Mnesia Data Dir created")
+    end
   end
 end
