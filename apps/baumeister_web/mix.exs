@@ -60,13 +60,17 @@ defmodule BaumeisterWeb.Mixfile do
   end
 
   defp ensure_dirs(_) do
-    dir = "#{Application.get_env(:mnesia, :dir)}" |> Path.absname()
-    Mix.shell.info "Ensure the existence of Mnesia Data: #{dir}"
-    if (File.exists?(dir)) do
-      Mix.shell.info("Mnesia Data Dir exists")
-    else
-      :ok = File.mkdir_p("#{dir}")
-      Mix.shell.info("Mnesia Data Dir created")
-    end
+    dir = "#{Application.get_env(:mnesia, :dir)}"
+    all_dirs = [dir, Path.join(["..", "..", dir])]
+     |> Enum.map(&Path.absname/1)
+     |> Enum.each(fn dir ->
+       Mix.shell.info "Ensure the existence of Mnesia Data: #{dir}"
+       if (File.exists?(dir)) do
+         Mix.shell.info("Mnesia Data Dir exists")
+       else
+         :ok = File.mkdir_p("#{dir}")
+         Mix.shell.info("Mnesia Data Dir created")
+       end
+     end)
   end
 end
