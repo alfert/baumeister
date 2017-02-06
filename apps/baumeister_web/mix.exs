@@ -60,6 +60,7 @@ defmodule BaumeisterWeb.Mixfile do
   end
 
   defp ensure_dirs(_) do
+    Mix.shell.info "mnesia default type is: #{inspect Application.get_env(:ecto_mnesia, :storage_type)}"
     dir = "#{Application.get_env(:mnesia, :dir)}"
     all_dirs = [dir, Path.join(["..", "..", dir])]
      |> Enum.map(&Path.absname/1)
