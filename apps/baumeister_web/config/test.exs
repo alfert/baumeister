@@ -16,6 +16,12 @@ config :ecto_mnesia,
     host: {:system, :atom, "MNESIA_HOST", Kernel.node()},
     storage_type: {:system, :atom, "MNESIA_STORAGE_TYPE", :disc_copies}
 
+config :mnesia,
+  dir: Mix.Project.deps_path()
+    |> Path.join("..")
+    |> Path.join("priv/data/mnesia")
+    |> Path.expand()
+    |> String.to_charlist()
   # adapter: Ecto.Adapters.Postgres,
   # username: "postgres",
   # password: "postgres",
