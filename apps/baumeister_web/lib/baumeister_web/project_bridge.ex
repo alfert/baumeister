@@ -17,7 +17,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   @spec add_project_to_coordinator(Project.t) :: :ok | {:error, any}
   def add_project_to_coordinator(project) do
     with {:ok, plugin_list} = plugins(project) do
-      :ok = Baumeister.add_project(project.name, project.url, plugin_list)
+      Baumeister.add_project(project.name, project.url, plugin_list)
     end
   end
 
