@@ -4,6 +4,8 @@ defmodule BaumeisterWeb.ProjectController do
   alias BaumeisterWeb.Project
   alias BaumeisterWeb.ProjectBridge
 
+  require Logger
+
   def index(conn, _params) do
     projects = Repo.all(Project)
     render(conn, "index.html", projects: projects)
@@ -18,11 +20,12 @@ defmodule BaumeisterWeb.ProjectController do
     changeset = Project.changeset(%Project{}, project_params)
 
     case insert(changeset) do
-      {:ok, project} ->
+      {:ok, _project} ->
         conn
         |> put_flash(:info, "Project created successfully.")
         |> redirect(to: project_path(conn, :index))
       {:error, changeset} ->
+        Logger.error("Error inserting project: #{inspect changeset}")
         render(conn, "new.html", changeset: changeset)
     end
   end
@@ -31,14 +34,21 @@ defmodule BaumeisterWeb.ProjectController do
   Inserts the project into the database and the baumeister coordinator.
   """
   @spec insert(Project.t | %{}) :: {:ok, Project.t} | {:error, any}
-  def insert(project) do
-    case Repo.insert(project) do
+  def insert(changeset) do
+    case Repo.insert(changeset) do
       {:ok, project} ->
-        :ok = ProjectBridge.add_project_to_coordinator(project)
-        enabled = project.enabled
-        ^enabled = ProjectBridge.set_status(project)
-        {:ok, project}
-      {:error, changeset} -> {:error, changeset}
+        case ProjectBridge.add_project_to_coordinator(project) do
+          :ok -> enabled = project.enabled
+                 ^enabled = ProjectBridge.set_status(project)
+                 {:ok, project}
+          {:error, msg} ->
+            Logger.error("Error inserting project into core: #{inspect changeset}")
+            Repo.delete!(project)
+            {:error, %{changeset | action: :insert}
+            |> Ecto.Changeset.add_error(:name, msg)
+          }
+        end
+      {:error, new_changeset} -> {:error, new_changeset}
     end
   end
 
