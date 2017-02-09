@@ -79,4 +79,19 @@ defmodule BaumeisterWeb.ProjectControllerTest do
     assert redirected_to(conn) == project_path(conn, :index)
     refute Repo.get(Project, project.id)
   end
+
+  test "does not create two projects with the same name", %{conn: conn}  do
+    # create first project
+    attributes = unique_attributes()
+    conn = post conn, project_path(conn, :create), project: attributes
+    # assert redirect means that creation was succesfull
+    assert redirected_to(conn) == project_path(conn, :index)
+
+    # create second project with same attributes
+    conn = post conn, project_path(conn, :create), project: attributes
+    assert html_response(conn, 200) =~ "New project"
+
+    # Ensure that only one project with the name exists in Mnesia
+    assert nil != Repo.get_by(Project, name: attributes[:name])
+  end
 end
