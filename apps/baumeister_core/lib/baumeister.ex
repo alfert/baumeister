@@ -43,7 +43,7 @@ defmodule Baumeister do
   @spec add_project(String.t, String.t, [Observer.plugin_config_t]) :: :ok
   def add_project(project_name, url, plugin_list) when is_binary(project_name) do
     case Config.config(project_name) do
-      {:ok, _} -> {:error, "Project #{project_name} already exists"}
+      {:ok, _} -> {:error, "Project '#{project_name}' already exists"}
       _ ->
         :ok = Config.put(project_name,
           %__MODULE__{name: project_name, url: url, plugins: plugin_list})
