@@ -24,6 +24,10 @@ config :logger, level: :info
 config :baumeister_web, BaumeisterWeb.Repo,
   adapter: Ecto.Adapters.Mnesia
 
+# Where to find the data
+config :mnesia,
+    dir: '${MNESIA_DATA_DIR}' # Make sure this directory exists
+
 # ## SSL Support
 #
 # To get SSL working, you will need to add the `https` key
