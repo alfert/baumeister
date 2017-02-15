@@ -23,6 +23,7 @@ defmodule BaumeisterWeb.Mixfile do
   def application do
     [mod: {BaumeisterWeb, []},
      extra_applications: [:logger],
+     start_phases: [mnesia_up: [], operational: []]
     ]
   end
 
