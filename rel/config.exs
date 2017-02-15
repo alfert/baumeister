@@ -33,6 +33,7 @@ environment :prod do
   set include_src: false
   set cookie: :"B(Ao*)$,;<z;O}P9e8;WG<GspL^SKMA6;Fz.rrA8S:y2z?CXA<qtCL}!}X@FnixC"
   set vm_args: "rel/vm.args"
+  # set pre_start_hook: "rel/hooks/post_start"
 end
 
 # You may define one or more releases in this file.
@@ -41,14 +42,16 @@ end
 # will be used by default
 
 release :baumeister do
-  set version: "0.1.0"
+  set version: current_version(:baumeister_web)
+  set version: "0.2.0-dev"
   set applications: [
-    baumeister_coordinator: :permanent
+    # baumeister_coordinator: :permanent,
+    baumeister_web: :permanent
   ]
 end
 
 release :bm_worker do
-  set version: "0.1.0"
+  set version: current_version(:baumeister_worker)
   set applications: [
     baumeister_worker: :permanent
   ]
