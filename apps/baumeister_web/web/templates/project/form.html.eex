@@ -5,31 +5,31 @@
     </div>
   <% end %>
 
-  <div class="form-group">
+  <%= form_group f, :name %>
     <%= label f, :name, class: "control-label" %>
     <%= text_input f, :name, class: "form-control" %>
     <%= error_tag f, :name %>
   </div>
 
-  <div class="form-group">
+  <%= form_group f, :url %>
     <%= label f, :url, class: "control-label" %>
     <%= text_input f, :url, class: "form-control" %>
     <%= error_tag f, :url %>
   </div>
 
-  <div class="form-group">
+  <%= form_group f, :plugins %>
     <%= label f, :plugins, class: "control-label" %>
     <%= text_input f, :plugins, class: "form-control" %>
     <%= error_tag f, :plugins %>
   </div>
 
-  <div class="form-group">
+  <%= form_group f, :delay %>
     <%= label f, :delay, class: "control-label" %>
     <%= text_input f, :delay, class: "form-control" %>
     <%= error_tag f, :delay %>
   </div>
 
-  <div class="form-group">
+  <%= form_group f, :enabled %>
     <%= label f, :enabled, class: "control-label" %>
     <%= checkbox f, :enabled, class: "form-control" %>
     <%= error_tag f, :enabled %>
