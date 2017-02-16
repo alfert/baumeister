@@ -1,33 +1,38 @@
 <h2>Show project</h2>
 
-<ul>
+<%= tag :div, class: ".container-fluid" %>
 
-  <li>
-    <strong>Name:</strong>
-    <%= @project.name %>
-  </li>
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :name, class: "control-label" %>
+    <%= content_tag :div, @project.name, class: "well well-sm" %>
+  </div>
 
-  <li>
-    <strong>Url:</strong>
-    <%= @project.url %>
-  </li>
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :url, class: "control-label" %>
+    <%= content_tag :div, @project.url, class: "well well-sm" %>
+  </div>
 
-  <li>
-    <strong>Plugins:</strong>
-    <%= @project.plugins %>
-  </li>
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :plugins, class: "control-label" %>
+    <%= content_tag :div, @project.plugins, class: "well well-sm" %>
+  </div>
 
-  <li>
-    <strong>Delay:</strong>
-    <%= @project.delay %>
-  </li>
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :delay, class: "control-label" %>
+    <%= content_tag :div, @project.delay, class: "well well-sm" %>
+  </div>
 
-  <li>
-    <strong>Enabled:</strong>
-    <%= checkbox :enabled, @project.enabled, value: @project.enabled %>
-  </li>
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :enabled, class: "control-label" %>
+    <%= content_tag :div, @project.enabled, class: "well well-sm" %>
+</div>
 
-</ul>
-
-<%= link "Edit", to: project_path(@conn, :edit, @project) %>
-<%= link "Back", to: project_path(@conn, :index) %>
+</div>
+<div class="btn-group">
+  <button class="btn">
+    <%= link "Edit", to: project_path(@conn, :edit, @project) %>
+  </button>
+  <button class="btn">
+    <%= link "Back", to: project_path(@conn, :index) %>
+  </button>
+</div>
