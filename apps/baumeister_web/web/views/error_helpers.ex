@@ -15,6 +15,19 @@ defmodule BaumeisterWeb.ErrorHelpers do
   end
 
   @doc """
+  Creates the opening div tag for form group containing the `field`
+  of the `form`. It takes the `error` of the field into account to
+  use the correct classes to show errors in the field content.
+  """
+  def form_group(form, field) do
+    if form.errors[field] == nil do
+      tag :div, class: "form-group"
+    else
+      tag :div, class: "form-group has-error"
+    end
+  end
+
+  @doc """
   Translates an error message using gettext.
   """
   def translate_error({msg, opts}) do
