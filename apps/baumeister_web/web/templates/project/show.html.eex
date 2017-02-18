@@ -24,11 +24,11 @@
 
   <%= tag :div, class: "form-group" %>
     <%= label :project, :enabled, class: "control-label" %>
-    <%= content_tag :div, @project.enabled, class: "well well-sm" %>
+    <%= content_tag :div, checkbox_btn(@project.enabled), class: "well well-sm" %>
 </div>
 
 </div>
 <div class="btn-group">
-    <%= link ["Edit ", glyph "pencil"], to: project_path(@conn, :edit, @project), class: "btn btn-default" %>
-    <%= link ["Overview ", glyph "th-list"], to: project_path(@conn, :index), class: "btn btn-default" %>
+    <%= link edit_label, to: project_path(@conn, :edit, @project), class: "btn btn-default" %>
+    <%= link overview_label, to: project_path(@conn, :index), class: "btn btn-default" %>
 </div>
