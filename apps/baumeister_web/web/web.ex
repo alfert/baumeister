@@ -50,6 +50,7 @@ defmodule BaumeisterWeb.Web do
       use Phoenix.HTML
 
       import BaumeisterWeb.Router.Helpers
+      import BaumeisterWeb.ButtonHelpers
       import BaumeisterWeb.ErrorHelpers
       import BaumeisterWeb.Gettext
     end

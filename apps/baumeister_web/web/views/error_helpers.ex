@@ -4,13 +4,14 @@ defmodule BaumeisterWeb.ErrorHelpers do
   """
 
   use Phoenix.HTML
+  use BaumeisterWeb.ButtonHelpers
 
   @doc """
   Generates tag for inlined form input errors.
   """
   def error_tag(form, field) do
     if error = form.errors[field] do
-      content_tag :span, [info_icon, translate_error(error)], class: "help-block"
+      content_tag :span, [info_icon(), translate_error(error)], class: "help-block"
     end
   end
 
@@ -18,26 +19,6 @@ defmodule BaumeisterWeb.ErrorHelpers do
   Create the info icon from the glyphicon set.
   """
   def info_icon, do: glyph "info-sign"
-
-  @doc """
-  Creates a `span` tag with a glyphicon. Only the postfix of the glyphicon
-  name is required.
-  """
-  def glyph(icon_postfix), do:
-    content_tag :span, "", class:  "glyphicon glyphicon-#{icon_postfix}"
-
-  @doc """
-  Creates the opening div tag for form group containing the `field`
-  of the `form`. It takes the `error` of the field into account to
-  use the correct classes to show errors in the field content.
-  """
-  def form_group(form, field) do
-    if form.errors[field] == nil do
-      tag :div, class: "form-group"
-    else
-      tag :div, class: "form-group has-error"
-    end
-  end
 
   @doc """
   Translates an error message using gettext.
