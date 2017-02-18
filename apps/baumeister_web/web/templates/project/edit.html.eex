@@ -1,0 +1,6 @@
+<h2>Edit project</h2>
+
+<%= render "form.html", changeset: @changeset,
+                        action: project_path(@conn, :update, @project) %>
+
+<%= link overview_label, to: project_path(@conn, :index), class: "btn btn-default" %>

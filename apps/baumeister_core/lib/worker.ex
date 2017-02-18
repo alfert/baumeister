@@ -159,7 +159,7 @@ defmodule Baumeister.Worker do
     # :ok = Coordinator.update_capabilities(self(), detect_capabilities())
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
     Logger.debug("Worker #{inspect self()} has properly connected to Coordinator")
-    {:reply, :ok, %__MODULE__{ state | coordinator_ref: ref}}
+    {:reply, :ok, %__MODULE__{state | coordinator_ref: ref}}
   end
 
   defp send_exec_return({pid, _from_ref} , out, rc, ref) do
@@ -207,7 +207,7 @@ defmodule Baumeister.Worker do
   end
 
   def terminate(reason, _state) do
-    EventCenter.sync_notify({:worker, :terminate, reason})
+    if EventCenter.is_running(), do: EventCenter.sync_notify({:worker, :terminate, reason})
     :ok
   end
 

@@ -119,7 +119,7 @@ defmodule Baumeister.Observer do
   Starts the oberver process with the given name. The observer
   is not configured yet.
   """
-  @spec start_link(String.t, (Coordinate.t, String.t -> :ok) ) :: {:ok, pid}
+  @spec start_link(String.t, (Coordinate.t, String.t -> :ok)) :: {:ok, pid}
   def start_link(name \\ "anonymous observer", exec_fun \\ &run_baumeister/2)
   def start_link(name, exec_fun)  do
     # Logger.debug "Start Observer #{name} with exec_fun #{inspect exec_fun}"

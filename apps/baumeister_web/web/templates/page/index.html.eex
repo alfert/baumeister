@@ -1,0 +1,40 @@
+<div class="jumbotron">
+  <h2><%= gettext "Welcome to %{name}", name: "Baumeister!" %></h2>
+  <p class="lead">A web-based build and continuous integration system <br />
+     implemented in Elixir.</p>
+</div>
+
+<div class="col-lg-6">
+  <h4>Manage your Projects</h4>
+  <ul>
+    <li>
+      <a href="/projects">All Projects</a>
+    </li>
+  </ul>
+</div>
+<div class="row marketing">
+  <div class="col-lg-6">
+    <h4>Development Resources</h4>
+    <ul>
+      <li>
+        <a href="https://github.com/alfert/baumeister">Source</a>
+      </li>
+    </ul>
+  </div>
+  <div class="col-lg-6">
+    <h4>Standing on the shoulders of giants</h4>
+    <ul>
+      <li>
+        <a href="http://elixir-lang.org">Elixir</a>
+      </li>
+      <li>
+        <a href="http://phoenixframework.org/docs/overview">Phoenix Framework</a>
+      </li>
+      <li>
+        <a href="http://www.erlang.org/docs">Erlang OTP &amp; Mnesia</a>
+      </li>
+
+    </ul>
+  </div>
+
+</div>

@@ -1,0 +1,42 @@
+<%= form_for @changeset, @action, fn f -> %>
+  <%= if @changeset.action do %>
+    <div class="alert alert-danger">
+      <p><span class="glyphicon glyphicon-info-sign" ></span>
+        Oops, something went wrong! Please check the errors below.</p>
+    </div>
+  <% end %>
+
+  <%= form_group f, :name %>
+    <%= label f, :name, class: "control-label" %>
+    <%= text_input f, :name, class: "form-control" %>
+    <%= error_tag f, :name %>
+  </div>
+
+  <%= form_group f, :url %>
+    <%= label f, :url, class: "control-label" %>
+    <%= text_input f, :url, class: "form-control" %>
+    <%= error_tag f, :url %>
+  </div>
+
+  <%= form_group f, :plugins %>
+    <%= label f, :plugins, class: "control-label" %>
+    <%= text_input f, :plugins, class: "form-control" %>
+    <%= error_tag f, :plugins %>
+  </div>
+
+  <%= form_group f, :delay %>
+    <%= label f, :delay, class: "control-label" %>
+    <%= text_input f, :delay, class: "form-control" %>
+    <%= error_tag f, :delay %>
+  </div>
+
+  <%= form_group f, :enabled %>
+    <%= label f, :enabled, class: "control-label" %>
+    <%= checkbox f, :enabled, class: "form-control" %>
+    <%= error_tag f, :enabled %>
+  </div>
+
+  <div class="form-group">
+    <%= submit "Submit", class: "btn btn-primary" %>
+  </div>
+<% end %>

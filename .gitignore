@@ -22,3 +22,10 @@ erl_crash.dump
 
 # from sed actions
 *.orig
+
+# Data files from mnesia
+*.LOG
+*.DCD
+*.DCL
+*.DAT
+*.BUP

@@ -20,7 +20,9 @@ defmodule Baumeister.ObserverTest do
     sup_name = Baumeister.Supervisor
     opts = [strategy: :one_for_one, name: sup_name]
     children = Baumeister.App.setup_coordinator()
-    if (GenServer.whereis(sup_name) != nil), do: :ok = Supervisor.stop(sup_name)
+    Logger.info "ObserverTest.setup: Stopping Supervisor"
+    if GenServer.whereis(sup_name) != nil, do: :ok = Supervisor.stop(sup_name)
+    Logger.info "ObserverTest.setup: (Re)starting Supervisor"
     {:ok, sup_pid} = Supervisor.start_link(children, opts)
     counts = Supervisor.count_children(sup_pid)
     assert counts[:specs] == counts[:active]
@@ -51,7 +53,9 @@ defmodule Baumeister.ObserverTest do
 
     Utils.wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
-    l = TestListener.get(listener) |> Enum.take(3)
+    l = listener
+    |> TestListener.get()
+    |> Enum.take(3)
     assert length(l) == 3
     assert [{_, :start_observer, _}, {_, :exec_observer, _},
         {_, :failed_observer, _}] = l
@@ -106,7 +110,9 @@ defmodule Baumeister.ObserverTest do
 
     Utils.wait_for fn -> length(TestListener.get(listener)) >= 3 end
 
-    l = TestListener.get(listener) |> Enum.take(3)
+    l = listener
+    |> TestListener.get()
+    |> Enum.take(3)
     assert length(l) == 3
     assert [{_, :start_observer, _}, {_, :exec_observer, _}, {_, :stopped_observer, _}] = l
   end
@@ -128,7 +134,9 @@ defmodule Baumeister.ObserverTest do
 
     # take only the first two elements, since noop is extremely fast
     # and produces a huge amount of events.
-    l = TestListener.get(listener) |> Enum.take(2)
+    l = listener
+    |> TestListener.get()
+    |> Enum.take(2)
     assert [{_, :start_observer, _}, {_, :exec_observer, _}] = l
   end
 

@@ -35,7 +35,7 @@ defmodule Baumeister.WorkerTest do
     {:ok, coordinator: pid}
   end
 
-  def wait_for_coordinator(wait\\ 5)
+  def wait_for_coordinator(wait \\ 5)
   def wait_for_coordinator(0), do: flunk "Coordinator is not available :-("
   def wait_for_coordinator(wait) do
     m = GenServer.whereis(Coordinator.name())
@@ -126,7 +126,8 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a failing command" do
-    name =  Path.wildcard("*")
+    name =  "*"
+    |> Path.wildcard()
     |> Enum.max_by(fn s -> String.length(s) end)
     |> Path.absname()
     non_existing_file = "#{name}-xxx"
@@ -151,7 +152,8 @@ defmodule Baumeister.WorkerTest do
   end
 
   test "execute a failing command from a Worker process" do
-    name =  Path.wildcard("*")
+    name = "*"
+    |> Path.wildcard()
     |> Enum.max_by(fn s -> String.length(s) end)
     |> Path.absname()
     non_existing_file = "#{name}-xxx"
@@ -224,7 +226,8 @@ defmodule Baumeister.WorkerTest do
       end)
       Logger.warn("Returns = #{inspect returns}")
       Logger.warn("Delays  = #{inspect delays}")
-      (Enum.count(returns) == Enum.count(delays))
+      test_result = (Enum.count(returns) == Enum.count(delays))
+      test_result
       |> measure("Statistics about Delays", delays)
       |> collect(Enum.sum(delays))
     end

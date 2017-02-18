@@ -43,7 +43,7 @@ defmodule Baumeister do
   @spec add_project(String.t, String.t, [Observer.plugin_config_t]) :: :ok
   def add_project(project_name, url, plugin_list) when is_binary(project_name) do
     case Config.config(project_name) do
-      {:ok, _} -> {:error, "Project #{project_name} already exists"}
+      {:ok, _} -> {:error, "Project '#{project_name}' already exists"}
       _ ->
         :ok = Config.put(project_name,
           %__MODULE__{name: project_name, url: url, plugins: plugin_list})
@@ -53,9 +53,10 @@ defmodule Baumeister do
   @doc """
   Enables the project and let the observer do its work.
   """
+  @spec enable(String.t) :: bool
   def enable(project_name) do
-    with {:ok, project} = Config.config(project_name),
-      false = project.enabled
+    with {:ok, project} <- Config.config(project_name),
+      false <- project.enabled
       do
         {:ok, observer} = Supervisor.start_child(Baumeister.ObserverSupervisor,
           [project_name])
@@ -70,6 +71,7 @@ defmodule Baumeister do
         :ok = Config.put(project_name, %__MODULE__{project | enabled: true,
           observer: observer})
         :ok = Observer.run(observer)
+        true
       end
   end
 
@@ -85,12 +87,40 @@ defmodule Baumeister do
   @doc """
   Disables the project and stop the observer's work.
   """
+  @spec disable(String.t) :: bool | :error
   def disable(project_name) do
     with {:ok, project} = Config.config(project_name),
-      true = project.enabled
+      true <- project.enabled
       do
         :ok = Observer.stop(project.observer, :stop)
         put_disabled_project(project_name, project)
       end
+  end
+
+  @doc """
+  Disables and deletes a project. Returns `:error` if the project does
+  not exist.
+  """
+  @spec delete(String.t) :: :ok | :error
+  def delete(project_name) do
+    unless :error == disable(project_name), do:
+      Config.remove(project_name)
+  end
+
+  @doc """
+  Updates the project. For that reason the project is disabled,
+  to stop observers and workers. After that, the project is updated
+  in the configuration and and the project in enabled again, if it
+  enabled before.
+  """
+  def update(project_name, url, plugin_list) do
+    case Config.config(project_name) do
+      {:ok, project} ->
+        disable(project_name)
+        :ok = Config.put(project_name,
+          %__MODULE__{name: project_name, url: url, plugins: plugin_list})
+        enable(project.enabled)
+      _ -> add_project(project_name, url, plugin_list)
+    end
   end
 end

@@ -35,6 +35,9 @@ defmodule Baumeister.EventCenter do
 @doc "Name of the EventCenter process"
 def name, do: {:global, __MODULE__}
 
+def is_running() do
+  nil != GenServer.whereis(name())
+end
 
  @doc "Starts the EventCenter registered with the module's name."
  @spec start_link() :: {:ok, pid}

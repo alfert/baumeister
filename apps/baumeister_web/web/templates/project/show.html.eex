@@ -1,0 +1,34 @@
+<h2>Show project</h2>
+
+<%= tag :div, class: ".container-fluid" %>
+
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :name, class: "control-label" %>
+    <%= content_tag :div, @project.name, class: "well well-sm" %>
+  </div>
+
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :url, class: "control-label" %>
+    <%= content_tag :div, @project.url, class: "well well-sm" %>
+  </div>
+
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :plugins, class: "control-label" %>
+    <%= content_tag :div, @project.plugins, class: "well well-sm" %>
+  </div>
+
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :delay, class: "control-label" %>
+    <%= content_tag :div, @project.delay, class: "well well-sm" %>
+  </div>
+
+  <%= tag :div, class: "form-group" %>
+    <%= label :project, :enabled, class: "control-label" %>
+    <%= content_tag :div, checkbox_btn(@project.enabled), class: "well well-sm" %>
+</div>
+
+</div>
+<div class="btn-group">
+    <%= link edit_label, to: project_path(@conn, :edit, @project), class: "btn btn-default" %>
+    <%= link overview_label, to: project_path(@conn, :index), class: "btn btn-default" %>
+</div>
