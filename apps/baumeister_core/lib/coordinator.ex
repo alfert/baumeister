@@ -68,7 +68,7 @@ defmodule Baumeister.Coordinator do
 
   @doc """
   Registers a new worker with its capabilities. The capabilities
-  can be updated if required later. 
+  can be updated if required later.
   """
   @spec register(pid | tuple, Worker.capabilities_t) :: :ok | {:error, any}
   def register(worker, capabilities) do
@@ -138,7 +138,8 @@ defmodule Baumeister.Coordinator do
   def handle_call({:unregister, worker}, _from, state) do
     Logger.debug "Unregister worker #{inspect worker}"
     EventCenter.sync_notify({:coordinator, :runegister, worker})
-    do_unregister(worker, state)
+    worker
+    |> do_unregister(state)
     |> reply(:ok)
   end
   def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do

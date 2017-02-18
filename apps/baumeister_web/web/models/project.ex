@@ -1,6 +1,10 @@
 defmodule BaumeisterWeb.Project do
   use BaumeisterWeb.Web, :model
 
+  @moduledoc """
+  The ecto-based model for a project
+  """
+
   schema "projects" do
     field :name, :string
     field :url, :string

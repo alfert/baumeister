@@ -1,6 +1,12 @@
 defmodule BaumeisterWeb do
   use Application
 
+  @moduledoc """
+  Application callback module. We use different start phases to
+  separate out the initialization with mnesia updates from
+  the regular operating mode.
+  """
+
   require Logger
 
   # See http://elixir-lang.org/docs/stable/elixir/Application.html

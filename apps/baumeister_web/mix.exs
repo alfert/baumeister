@@ -65,7 +65,7 @@ defmodule BaumeisterWeb.Mixfile do
      |> Enum.map(&Path.absname/1)
      |> Enum.each(fn dir ->
        Mix.shell.info "Ensure the existence of Mnesia Data: #{dir}"
-       if (File.exists?(dir)) do
+       if File.exists?(dir) do
          Mix.shell.info("Mnesia Data Dir exists")
        else
          :ok = File.mkdir_p("#{dir}")

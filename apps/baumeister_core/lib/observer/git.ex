@@ -200,7 +200,7 @@ defmodule Baumeister.Observer.Git do
     # this filters the origin address information (without \t)
     |> Stream.filter(&match?([_,_], &1))
     |> Stream.filter(fn [_ref, k] -> k != "HEAD" end)
-    |> Stream.map(fn [ref, k] when is_binary(ref)-> {k, ref} end)
+    |> Stream.map(fn [ref, k] when is_binary(ref) -> {k, ref} end)
     |> Enum.into(%{})
   end
 

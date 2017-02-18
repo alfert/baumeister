@@ -14,7 +14,7 @@ defmodule BaumeisterWeb.Release.Tasks do
 
     # ensure the database directory
     dir = "#{Confex.get(:mnesia, :dir)}"
-    dir = if (Path.relative(dir)), do: Path.expand(dir)
+    dir = if Path.relative(dir), do: Path.expand(dir)
     Logger.info "Create the mnesia dir at: #{dir}"
     File.mkdir_p!(dir)
 
