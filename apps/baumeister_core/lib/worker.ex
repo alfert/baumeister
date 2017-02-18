@@ -207,7 +207,7 @@ defmodule Baumeister.Worker do
   end
 
   def terminate(reason, _state) do
-    EventCenter.sync_notify({:worker, :terminate, reason})
+    if EventCenter.is_running(), do: EventCenter.sync_notify({:worker, :terminate, reason})
     :ok
   end
 
