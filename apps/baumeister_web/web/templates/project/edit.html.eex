@@ -3,4 +3,4 @@
 <%= render "form.html", changeset: @changeset,
                         action: project_path(@conn, :update, @project) %>
 
-<%= link "Back", to: project_path(@conn, :index) %>
+<%= link ["Overview ", glyph "th-list"], to: project_path(@conn, :index), class: "btn btn-default" %>

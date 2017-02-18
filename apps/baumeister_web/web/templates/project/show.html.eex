@@ -29,10 +29,6 @@
 
 </div>
 <div class="btn-group">
-  <button class="btn">
-    <%= link "Edit", to: project_path(@conn, :edit, @project) %>
-  </button>
-  <button class="btn">
-    <%= link "Back", to: project_path(@conn, :index) %>
-  </button>
+    <%= link ["Edit ", glyph "pencil"], to: project_path(@conn, :edit, @project), class: "btn btn-default" %>
+    <%= link ["Overview ", glyph "th-list"], to: project_path(@conn, :index), class: "btn btn-default" %>
 </div>

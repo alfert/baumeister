@@ -10,9 +10,21 @@ defmodule BaumeisterWeb.ErrorHelpers do
   """
   def error_tag(form, field) do
     if error = form.errors[field] do
-      content_tag :span, translate_error(error), class: "help-block"
+      content_tag :span, [info_icon, translate_error(error)], class: "help-block"
     end
   end
+
+  @doc """
+  Create the info icon from the glyphicon set.
+  """
+  def info_icon, do: glyph "info-sign"
+
+  @doc """
+  Creates a `span` tag with a glyphicon. Only the postfix of the glyphicon
+  name is required.
+  """
+  def glyph(icon_postfix), do:
+    content_tag :span, "", class:  "glyphicon glyphicon-#{icon_postfix}"
 
   @doc """
   Creates the opening div tag for form group containing the `field`
