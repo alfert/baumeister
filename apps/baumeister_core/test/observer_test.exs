@@ -20,7 +20,9 @@ defmodule Baumeister.ObserverTest do
     sup_name = Baumeister.Supervisor
     opts = [strategy: :one_for_one, name: sup_name]
     children = Baumeister.App.setup_coordinator()
+    Logger.info "ObserverTest.setup: Stopping Supervisor"
     if GenServer.whereis(sup_name) != nil, do: :ok = Supervisor.stop(sup_name)
+    Logger.info "ObserverTest.setup: (Re)starting Supervisor"
     {:ok, sup_pid} = Supervisor.start_link(children, opts)
     counts = Supervisor.count_children(sup_pid)
     assert counts[:specs] == counts[:active]
