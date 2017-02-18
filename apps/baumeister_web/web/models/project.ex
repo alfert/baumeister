@@ -2,7 +2,7 @@ defmodule BaumeisterWeb.Project do
   use BaumeisterWeb.Web, :model
 
   @moduledoc """
-  The ecto-based model for a project
+  The ecto-based model for a project.
   """
 
   schema "projects" do
