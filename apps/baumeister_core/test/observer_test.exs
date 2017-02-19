@@ -16,7 +16,7 @@ defmodule Baumeister.ObserverTest do
   alias Baumeister.Observer.Delay
 
   setup context do
-    IO.inspect(context)
+    Logger.info("setup: context = #{inspect context}")
     sup_name = Baumeister.Supervisor
     opts = [strategy: :one_for_one, name: sup_name]
     children = Baumeister.App.setup_coordinator()
@@ -86,9 +86,9 @@ defmodule Baumeister.ObserverTest do
     l = TestListener.get(listener)
 
     plug_events = l
-    |> IO.inspect()
+    |> log_inspect()
     |> Enum.filter(fn {_, _, n} -> n == name end)
-    |> IO.inspect()
+    |> log_inspect()
     |> Enum.map(fn {_, action, _} -> action end)
     assert length(plug_events) >= 5
     assert [:start_observer,
@@ -140,5 +140,10 @@ defmodule Baumeister.ObserverTest do
     assert [{_, :start_observer, _}, {_, :exec_observer, _}] = l
   end
 
+
+  def log_inspect(value, level \\ :info) do
+    apply(Logger, :bare_log, [level, "#{inspect value}"])
+    value
+  end
 
 end
