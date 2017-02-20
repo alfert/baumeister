@@ -7,6 +7,17 @@
 # details.
 ---
 styleguide: plataformatec/linters
+subapps:
+  - baumeister_web
+    path: apps/baumeister_web
+    excluded_paths:
+      - priv/static
+  - baumeister_core
+    path: apps/baumeister_core
+  - baumeister_worker
+    path: apps/baumeister_worker
+  - baumeister_coordinator
+    path: apps/baumeister_coordinator
 engines:
   credo:
     enabled: true
