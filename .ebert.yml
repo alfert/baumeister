@@ -19,8 +19,8 @@ exclude_paths:
 - node_modules
 - apps/baumeister_web/priv/static
 subapps:
-  - baumeister_web
-    path: apps/baumeister_web
+  - name: 'baumeister_web'
+    path: 'apps/baumeister_web'
     engines:
       credo:
         enabled: true
@@ -31,9 +31,9 @@ subapps:
     excluded_paths:
       - priv/static
       - web/static/vendor
-  - baumeister_core
-    path: apps/baumeister_core
-  - baumeister_worker
-    path: apps/baumeister_worker
-  - baumeister_coordinator
-    path: apps/baumeister_coordinator
+  - name: 'baumeister_core'
+    path: 'apps/baumeister_core'
+  - name: 'baumeister_worker'
+    path: 'apps/baumeister_worker'
+  - name: 'baumeister_coordinator'
+    path: 'apps/baumeister_coordinator'
