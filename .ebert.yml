@@ -7,6 +7,9 @@
 # details.
 ---
 styleguide: plataformatec/linters
+engines:
+  credo:
+    enabled: true
   fixme:
     enabled: true
   shellcheck:
@@ -22,8 +25,6 @@ subapps:
   - name: 'baumeister_web'
     path: 'apps/baumeister_web'
     engines:
-      credo:
-        enabled: true
       eslint:
         enabled: true
       csslint:
