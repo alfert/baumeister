@@ -7,31 +7,8 @@
 # details.
 ---
 styleguide: plataformatec/linters
-subapps:
-  - baumeister_web
-    path: apps/baumeister_web
-    excluded_paths:
-      - priv/static
-  - baumeister_core
-    path: apps/baumeister_core
-  - baumeister_worker
-    path: apps/baumeister_worker
-  - baumeister_coordinator
-    path: apps/baumeister_coordinator
-engines:
-  credo:
-    enabled: true
   fixme:
     enabled: true
-  eslint:
-    enabled: true
-    excluded_paths:
-      - apps/baumeister_web/web/static/js/socket.js
-      - apps/baumeister_web/web/static/vendor
-  csslint:
-    enabled: true
-    excluded_paths:
-      - apps/baumeister_web/web/static/css/phoenix.css
   shellcheck:
     enabled: true
   remark-lint:
@@ -41,3 +18,22 @@ exclude_paths:
 - cover
 - node_modules
 - apps/baumeister_web/priv/static
+subapps:
+  - baumeister_web
+    path: apps/baumeister_web
+    engines:
+      credo:
+        enabled: true
+      eslint:
+        enabled: true
+      csslint:
+        enabled: true
+    excluded_paths:
+      - priv/static
+      - web/static/vendor
+  - baumeister_core
+    path: apps/baumeister_core
+  - baumeister_worker
+    path: apps/baumeister_worker
+  - baumeister_coordinator
+    path: apps/baumeister_coordinator
