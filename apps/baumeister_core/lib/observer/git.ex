@@ -196,7 +196,7 @@ defmodule Baumeister.Observer.Git do
   def parse_refs(refs) do
     refs
     |> String.split("\n")
-    |> Stream.map(fn s -> s |> String.split("\t") end)
+    |> Stream.map(fn s -> String.split(s, "\t") end)
     # this filters the origin address information (without \t)
     |> Stream.filter(&match?([_,_], &1))
     |> Stream.filter(fn [_ref, k] -> k != "HEAD" end)

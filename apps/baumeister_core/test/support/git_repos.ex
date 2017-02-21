@@ -13,8 +13,7 @@ defmodule Baumeister.Test.GitRepos do
   def update_the_bmf(parent_repo, branch_name \\ "master", content) do
     # use "-B" to create the branch if it does not exist
     {:ok, _} = GitLib.checkout(parent_repo, ["-B", branch_name])
-    ~w(BaumeisterFile)
-    |> Enum.each(fn filename ->
+    Enum.each(~w(BaumeisterFile), fn filename ->
       file = Path.join(parent_repo.path, filename)
       :ok = File.write(file, content)
       {:ok, _} = GitLib.add(parent_repo, file)
@@ -27,8 +26,7 @@ defmodule Baumeister.Test.GitRepos do
   """
   def update_the_parent(parent_repo, branch_name) do
     {:ok, _} = GitLib.checkout(parent_repo, ["-b", branch_name])
-    ~w(README.md BaumeisterFile)
-    |> Enum.each(fn filename ->
+    Enum.each(~w(README.md BaumeisterFile), fn filename ->
       file = Path.join(parent_repo.path, filename)
       :ok = File.write(file, filename)
       {:ok, _} = GitLib.add(parent_repo, file)
@@ -50,7 +48,7 @@ defmodule Baumeister.Test.GitRepos do
       assert is_binary(path)
       path
     end
-    parent_path = dirs |> Enum.at(0)
+    parent_path = Enum.at(dirs, 0)
     {:ok, parent_repo} = GitLib.init(parent_path)
     GitObs.set_user_config(parent_repo)
 
@@ -60,7 +58,7 @@ defmodule Baumeister.Test.GitRepos do
     {:ok, _} = GitLib.add(parent_repo, readme)
     {:ok, _} = GitLib.commit(parent_repo, ~w(-a -m initial-commit))
 
-    path = dirs |> Enum.at(1)
+    path = Enum.at(dirs, 1)
     {:ok, repo} = GitLib.clone([parent_path, path])
     GitObs.set_user_config(repo)
     [repo: repo, parent_repo: parent_repo, repo_path: path, parent_repo_path: parent_path]

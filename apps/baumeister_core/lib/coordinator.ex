@@ -143,8 +143,7 @@ defmodule Baumeister.Coordinator do
     |> reply(:ok)
   end
   def handle_call(:workers, _from, state = %__MODULE__{workers: workers}) do
-    state
-    |> reply(workers |> Map.values())
+    reply(state, Map.values(workers))
   end
   def handle_call({:update_capabilities, worker, capa}, _from,
                             state = %__MODULE__{workers: workers}) do
@@ -152,7 +151,7 @@ defmodule Baumeister.Coordinator do
       {:ok, spec} ->
           s = %WorkerSpec{spec | capabilities: capa}
           state
-          |> Map.put(:workers, workers |> Map.put(worker, s))
+          |> Map.put(:workers, Map.put(workers, worker, s))
           |> reply(:ok)
       :error -> {:replay, {:error, :unknown_worker}, state}
     end
@@ -191,11 +190,11 @@ defmodule Baumeister.Coordinator do
   Handles a crashed worker, i.e. where the monitor returns a
   `DOWN` message.
   """
-  def do_crashed_worker(ref, %__MODULE__{workers: workers} = s) do
+  def do_crashed_worker(ref, s = %__MODULE__{workers: workers}) do
    crashed_worker =
-     workers
-     |> Enum.find(fn{_k, %WorkerSpec{monitor_ref: ^ref}} -> true
-                                                      _ -> false end)
+     Enum.find(workers,
+              fn{_k, %WorkerSpec{monitor_ref: ^ref}} -> true
+                                                   _ -> false end)
    case crashed_worker do
            nil -> s # we don't know the worker, just ignore it
            {pid, _spec} -> do_unregister(pid, s)
@@ -214,7 +213,7 @@ defmodule Baumeister.Coordinator do
     spec = %WorkerSpec{monitor_ref: monitor, pid: worker}
     new_workers = Map.put(workers, worker, spec)
     new_monitors = Map.put(monitors, monitor, worker)
-    worker_no = new_workers |> Enum.count
+    worker_no = Enum.count(new_workers)
     update_gauge(@nb_of_workers, worker_no)
     %__MODULE__{state | workers: new_workers, monitors: new_monitors}
   end
@@ -227,11 +226,11 @@ defmodule Baumeister.Coordinator do
   @spec do_unregister(worker :: pid, state :: %__MODULE__{}) :: %__MODULE__{}
   def do_unregister(worker, state = %__MODULE__{workers: workers, monitors: monitors}) do
     # remove the worker and its associated data from workers
-    worker_spec = workers |> Map.get(worker, %WorkerSpec{})
+    worker_spec = Map.get(workers, worker, %WorkerSpec{})
     Process.demonitor worker_spec.monitor_ref
-    new_workers = workers |> Map.delete(worker)
-    new_monitors = monitors |> Map.delete(worker_spec.monitor_ref)
-    worker_no = new_workers |> Enum.count
+    new_workers = Map.delete(workers, worker)
+    new_monitors = Map.delete(monitors, worker_spec.monitor_ref)
+    worker_no = Enum.count(new_workers)
     update_gauge(@nb_of_workers, worker_no)
     %__MODULE__{state | workers: new_workers, monitors: new_monitors}
   end

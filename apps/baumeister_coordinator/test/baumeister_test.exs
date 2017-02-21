@@ -31,8 +31,7 @@ defmodule Test.BM.CoordinatorTest do
     {:ok, worker} = Worker.start_link()
     Logger.info "Worker process is #{inspect worker}"
     # Wait for registration
-    Utils.wait_for fn -> Baumeister.Coordinator.all_workers()
-      |> Enum.count() > 0 end
+    Utils.wait_for fn -> Enum.count(Baumeister.Coordinator.all_workers()) > 0 end
 
     # Drain the event queue of old events.
     Logger.info "Clear the event center"
@@ -73,8 +72,7 @@ defmodule Test.BM.CoordinatorTest do
       worker_ev_cnt = events
       |> Enum.filter(fn {w, _a, _} -> w == :worker end)
       |> Enum.count()
-      stopped_observer? = events
-      |>  Enum.any?(fn {_, a, _} -> a == :stopped_observer end)
+      stopped_observer? = Enum.any?(events, fn {_, a, _} -> a == :stopped_observer end)
 
       # And the condition
       (stopped_observer? and (worker_ev_cnt >= 3))
@@ -83,7 +81,7 @@ defmodule Test.BM.CoordinatorTest do
     {ol, w_list} = listener
     |> TestListener.get()
     |> Enum.partition(fn {_, _, v} -> v == project end)
-    obs_actions = ol |> Enum.map(fn {_, a, _} -> a end)
+    obs_actions = Enum.map(ol, fn {_, a, _} -> a end)
     worker_actions = w_list
     |> Enum.filter(fn {w, _, _} -> w == :worker end)
     |> Enum.map(fn

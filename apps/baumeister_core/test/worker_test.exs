@@ -56,7 +56,7 @@ defmodule Baumeister.WorkerTest do
 
   def wait_for_worker() do
     # registration is async, there we wait for that eveent
-    Utils.wait_for(fn -> Coordinator.all_workers() |> Enum.count() > 0 end)
+    Utils.wait_for(fn -> Enum.count(Coordinator.all_workers()) > 0 end)
   end
 
   @tag timeout: 1_000

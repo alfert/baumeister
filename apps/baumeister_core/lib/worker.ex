@@ -88,7 +88,7 @@ defmodule Baumeister.Worker do
   about the result of the asynchronous running BaumeisterFile execution process.
   """
   @spec execute(pid, Coordinate.t, Baumeister.BaumeisterFile.t) :: {:ok, reference}
-  def execute(pid, %Coordinate{} = coordinate, bmf) do
+  def execute(pid, coordinate = %Coordinate{}, bmf) do
     GenServer.call(pid, {:execute, coordinate, bmf})
   end
 
@@ -149,7 +149,7 @@ defmodule Baumeister.Worker do
       EventCenter.sync_notify({:worker, :execute, {:log, coordinate, out}})
       send_exec_return(from, out, rc, ref)
     end)
-    new_state = %__MODULE__{state | processes: processes |> Map.put(exec_pid, coordinate)}
+    new_state = %__MODULE__{state | processes: Map.put(processes, exec_pid, coordinate)}
     {:reply, {:ok, ref}, new_state}
   end
   def handle_call(:connect, _from, state = %__MODULE__{}) do
@@ -163,7 +163,7 @@ defmodule Baumeister.Worker do
   end
 
   defp send_exec_return({pid, _from_ref} , out, rc, ref) do
-    pid |> send({:executed, {out, rc, ref}})
+  send(pid, {:executed, {out, rc, ref}})
   end
 
   @doc """
@@ -190,14 +190,14 @@ defmodule Baumeister.Worker do
     end
   end
   def handle_info({:EXIT, pid, reason}, state = %__MODULE__{processes: processes}) do
-    new_state = case processes |> Map.get(pid) do
+    new_state = case Map.get(processes, pid) do
       nil -> Logger.error ("Unknown linked pid #{inspect pid}")
              Logger.error "State: #{inspect state}"
              state
       coordinate ->
              if reason != :normal, do:
               EventCenter.sync_notify({:worker, :crashed, {reason, coordinate}})
-             %__MODULE__{state | processes: processes |> Map.delete(pid)}
+             %__MODULE__{state | processes: Map.delete(processes, pid)}
     end
     {:noreply, new_state}
   end
