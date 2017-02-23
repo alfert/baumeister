@@ -2,7 +2,8 @@ defmodule BaumeisterWeb.BuildControllerTest do
   use BaumeisterWeb.ConnCase
 
   alias BaumeisterWeb.Build
-  @valid_attrs %{config: "some content", coordinate: "some content", log: "some content", number: 42, project_id: 42}
+  @valid_attrs %{config: "some content", coordinate: "some content",
+    log: "some content", number: 42, project_id: 42}
   @invalid_attrs %{}
 
   test "lists all entries on index", %{conn: conn} do

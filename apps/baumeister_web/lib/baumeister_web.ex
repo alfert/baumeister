@@ -51,6 +51,7 @@ defmodule BaumeisterWeb do
   def start_phase(start_phase, start_type, args) do
     Logger.info("BaumeisterWeb.start_phase(start_phase=#{inspect start_phase}, "
         <> "start_type=#{inspect start_type}, args=#{inspect args})")
+    BaumeisterWeb.ProjectBridge.load_all_projects()
     :ok
   end
 end

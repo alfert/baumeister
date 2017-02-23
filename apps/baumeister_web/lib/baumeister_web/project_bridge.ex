@@ -49,16 +49,35 @@ defmodule BaumeisterWeb.ProjectBridge do
     {:ok, [{GitPlugin, repo_url}, {DelayPlugin, delay}]}
   end
   def plugins(_) do
-    {:ok, [{NoopPlugin, :nothing_to_do}]}
+    {:ok, [{NoopPlugin, {"no_url:///", "command: false"}}]}
   end
 
+  @doc """
+  Deletes the given `project` from Baumeister core coordinator.
+  """
   @spec delete_project_from_coordinator!(Project.t) :: :ok | no_return
   def delete_project_from_coordinator!(project) do
     case Baumeister.delete(project.name) do
       :error -> Logger.error("Project #{inspect project.name} not available in Baumeister")
         :ok
-      :ok -> :ok
+      :ok -> set_status(project)
     end
   end
 
+  def initialize_coordinator(all_projects) do
+    all_projects
+    |> Stream.each(fn project ->
+        case add_project_to_coordinator(project) do
+          {:error, msg} -> Logger.error "Cannot add project #{project.name} to the coordinator"
+          :ok           -> set_status(project)
+            Logger.info "Project #{project.name} loaded into the coordinator"
+        end
+      end)
+    |> Stream.run()
+  end
+
+  def load_all_projects() do
+    BaumeisterWeb.Repo.all(Project)
+    |> initialize_coordinator()
+  end
 end
