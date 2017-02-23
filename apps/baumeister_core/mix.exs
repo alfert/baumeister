@@ -59,7 +59,7 @@ defmodule Baumeister.Mixfile do
       #lager 3.2.1 is needed for erl19 because of
       # https://github.com/basho/lager/pull/321
       {:lager, ">= 3.2.1", override: true},
-      {:credo, "~> 0.5.0", only: :dev},
+      {:credo, "~> 0.6.0", only: :dev},
       {:dialyze, "~> 0.2.1", only: :dev},
       {:ex_doc, "~> 0.14.0", only: :dev},
       {:coverex, "~> 1.4.0", only: :test}

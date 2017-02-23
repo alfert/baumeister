@@ -7,7 +7,7 @@ defmodule Baumeister.Test.Utils do
 
   def create_bmf(cmd \\ "true") do
     {_, local_os} = :os.type()
-    local_os = local_os |> Atom.to_string
+    local_os = Atom.to_string(local_os)
     bmf = """
       os: #{local_os}
       language: elixir
@@ -18,7 +18,7 @@ defmodule Baumeister.Test.Utils do
 
   def create_parsed_bmf(cmd \\ "true") do
     {src, os} = create_bmf(cmd)
-    {src |> BaumeisterFile.parse!(), os}
+    {BaumeisterFile.parse!(src), os}
   end
 
   def wait_for(pred) do

@@ -44,9 +44,7 @@ defmodule BaumeisterWeb.ProjectController do
           {:error, msg} ->
             Logger.error("Error inserting project into core: #{inspect changeset}")
             Repo.delete!(project)
-            {:error, %{changeset | action: :insert}
-            |> Ecto.Changeset.add_error(:name, msg)
-          }
+            {:error, Ecto.Changeset.add_error(%{changeset | action: :insert}, :name, msg)}
         end
       {:error, new_changeset} -> {:error, new_changeset}
     end

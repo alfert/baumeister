@@ -28,8 +28,8 @@ defmodule ConfigTest do
     Config.start_link()
     forall values <- [{atom(), utf8()}] do
         Config.remove_all()
-        m = values |> Enum.into(%{})
-        values |> Enum.each(fn({k, v}) -> Config.put(k, v) end)
+        m =  Enum.into(values, %{})
+        Enum.each(values, fn({k, v}) -> Config.put(k, v) end)
         keys = Config.keys
         keys == Map.keys(m)
     end
@@ -39,13 +39,15 @@ defmodule ConfigTest do
     Config.start_link()
     forall values <- [{atom(), utf8()}] do
         Config.remove_all()
-        m = values |> Enum.into(%{})
-        values |> Enum.each(fn({k, v}) -> Config.put(k, v) end)
+        m = Enum.into(values, %{})
+        Enum.each(values, fn({k, v}) -> Config.put(k, v) end)
 
-        source_values = Config.keys
-        |> Enum.map(fn(k) -> {:ok, v} = Config.config(k)
+        source_values = Enum.map(Config.keys,
+          fn(k) -> {:ok, v} = Config.config(k)
             v end)
-        m_values = m |> Map.keys() |> Enum.map(&(Map.fetch!(m, &1)))
+        m_values = m
+        |> Map.keys()
+        |> Enum.map(&(Map.fetch!(m, &1)))
 
         source_values == m_values
     end

@@ -195,8 +195,8 @@ defmodule Baumeister.Observer do
   @doc false
   def handle_call({:configure, plug_list}, _from, state) do
     # create pipelines of plugins
-    {observer_fun, init_fun} = plug_list
-    |> Enum.reduce({fn s -> {:ok, s} end, fn s -> s end},
+    {observer_fun, init_fun} =
+        Enum.reduce(plug_list, {fn s -> {:ok, s} end, fn s -> s end},
     fn {plug, config}, {combined_plug, combined_init} ->
       obs = fn(s) -> case do_observe(plug, s) do
           {:ok, s_new} ->
@@ -287,7 +287,7 @@ defmodule Baumeister.Observer do
           |> Enum.each(fn {coordinate, baumeister_file} ->
             Observer.execute(observer, coordinate, baumeister_file)
           end)
-          plug_state = new_s |> Map.drop([:"$result"])
+          plug_state = Map.drop(new_s, [:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)
       {:error, _reason, _new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
           Observer.stop(observer, :error)

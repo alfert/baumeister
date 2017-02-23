@@ -53,7 +53,7 @@ defmodule Baumeister do
   @doc """
   Enables the project and let the observer do its work.
   """
-  @spec enable(String.t) :: bool
+  @spec enable(String.t) :: boolean
   def enable(project_name) do
     with {:ok, project} <- Config.config(project_name),
       false <- project.enabled
@@ -87,7 +87,7 @@ defmodule Baumeister do
   @doc """
   Disables the project and stop the observer's work.
   """
-  @spec disable(String.t) :: bool | :error
+  @spec disable(String.t) :: boolean | :error
   def disable(project_name) do
     with {:ok, project} = Config.config(project_name),
       true <- project.enabled
