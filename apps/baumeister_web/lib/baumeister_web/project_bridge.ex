@@ -7,6 +7,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   alias Baumeister.Observer.DelayPlugin
   alias Baumeister.Observer.GitPlugin
   alias Baumeister.Observer.NoopPlugin
+  alias Baumeister.Observer.Take
   alias BaumeisterWeb.Project
 
   require Logger
@@ -49,7 +50,7 @@ defmodule BaumeisterWeb.ProjectBridge do
     {:ok, [{GitPlugin, repo_url}, {DelayPlugin, delay}]}
   end
   def plugins(_) do
-    {:ok, [{NoopPlugin, {"no_url:///", "command: false"}}]}
+    {:ok, [{NoopPlugin, {"no_url:///", "command: false"}}, {Take, 5}]}
   end
 
   @doc """
