@@ -4,7 +4,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   project management from `:baumeister_core`. In particular, it translates
   between the project's plugins and the settable metadata from the Web UI.
   """
-  alias Baumeister.Observer.DelayPlugin
+  alias Baumeister.Observer.Delay
   alias Baumeister.Observer.GitPlugin
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
@@ -17,7 +17,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   """
   @spec add_project_to_coordinator(Project.t) :: :ok | {:error, any}
   def add_project_to_coordinator(project) do
-    with {:ok, plugin_list} = plugins(project) do
+    with {:ok, plugin_list} <- plugins(project) do
       Baumeister.add_project(project.name, project.url, plugin_list)
     end
   end
@@ -47,11 +47,22 @@ defmodule BaumeisterWeb.ProjectBridge do
   """
   @spec plugins(Project.t) :: [Baumeister.Observer.plugin_config_t]
   def plugins(%Project{plugins: "Git", url: repo_url, delay: delay}) do
-    {:ok, [{GitPlugin, repo_url}, {DelayPlugin, delay}]}
+    {:ok, [{GitPlugin, repo_url}, {Delay, delay}]}
   end
-  def plugins(_) do
-    {:ok, [{NoopPlugin, {"no_url:///", "command: false"}}, {Take, 5}]}
+  def plugins(%Project{url: repo_url, delay: delay}) do
+    {:ok, [{NoopPlugin, {repo_url, failing_build_config}}, {Delay, delay},
+      {Take, 5}]}
   end
+  def plugins(_), do: {:error, "URL or delay is empty"}
+
+  def failing_build_config do
+    """
+    command: false
+    os: darwin
+    language: elixir
+    """
+  end
+
 
   @doc """
   Deletes the given `project` from Baumeister core coordinator.
