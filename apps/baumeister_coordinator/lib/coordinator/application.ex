@@ -10,10 +10,10 @@ defmodule Coordinator.Application do
 
     # Define workers and child supervisors to be supervised
     children = Baumeister.App.setup_coordinator()
-
+    worker = if node() == :nonode@nohost, do: Baumeister.App.setup_worker(), else: []
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Coordinator.Supervisor]
-    Supervisor.start_link(children, opts)
+    Supervisor.start_link(children ++ worker, opts)
   end
 end
