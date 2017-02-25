@@ -1,10 +1,12 @@
 defmodule BaumeisterWeb.UserSocket do
   use Phoenix.Socket
 
+  require Logger
+
   ## Channels
   # channel "room:*", BaumeisterWeb.RoomChannel
   channel "build:lobby", BaumeisterWeb.BuildChannel
-  
+
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
   # transport :longpoll, Phoenix.Transports.LongPoll
@@ -21,6 +23,7 @@ defmodule BaumeisterWeb.UserSocket do
   # See `Phoenix.Token` documentation for examples in
   # performing token verification on connect.
   def connect(_params, socket) do
+    Logger.debug "Connect from socket #{inspect socket}"
     {:ok, socket}
   end
 
