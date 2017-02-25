@@ -11,6 +11,16 @@ defmodule BaumeisterWeb.BuildChannel do
   require Logger
 
   @doc """
+  Starts the `BuildChannel` as consumer of the `EventCenter`.
+  As parameter only `subscribe_to: prod` is
+  allowed, which automatically subscribes to producer `prod`.
+  """
+  @spec start_link(Keyword.t) :: {:ok, pid}
+  def start_link(opts \\ []) when is_list(opts) do
+    GenStage.start_link(__MODULE__, opts)
+  end
+
+  @doc """
   Initialize the `GenStage` consumer.
   """
   def init(_) do
