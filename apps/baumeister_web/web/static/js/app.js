@@ -19,4 +19,6 @@ import "phoenix_html"
 // paths "./socket" or full ones "web/static/js/socket".
 
 import socket from "./socket"
-import Build from "./build"
+import Build from  "./build"
+
+Build.init(socket, document.getElementById("build-msg-container"))
