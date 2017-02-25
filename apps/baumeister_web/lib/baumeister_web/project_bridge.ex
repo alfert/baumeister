@@ -25,18 +25,21 @@ defmodule BaumeisterWeb.ProjectBridge do
   @doc "Enables or disables the project under control of the coordinator"
   @spec set_status(Project.t) :: :ok
   def set_status(%Project{enabled: true, name: name}) do
+    Logger.debug "Enable project #{name}"
     Baumeister.enable(name)
   end
   def set_status(%Project{enabled: false, name: name}) do
+    Logger.debug "Disable project #{name}"
     Baumeister.disable(name)
   end
 
   @doc """
   Updates the settings of project in the coordinator
   """
-  def update(project = %Project{name: name, url: url, plugins: plugins}) do
+  @spec update(Project.t) :: :ok | {:error, any}
+  def update(project = %Project{name: name, url: url}) do
     with {:ok, plugin_list} <- plugins(project),
-      :ok <- Baumeister.update(project.name, project.url, plugin_list)
+      :ok <- Baumeister.update(name, url, plugin_list)
     do
       :ok
     end
@@ -45,12 +48,12 @@ defmodule BaumeisterWeb.ProjectBridge do
   @doc """
   Derives the list of plugins from the settings of a project
   """
-  @spec plugins(Project.t) :: [Baumeister.Observer.plugin_config_t]
+  @spec plugins(Project.t) :: {:ok, [Baumeister.Observer.plugin_config_t]} | {:error, any}
   def plugins(%Project{plugins: "Git", url: repo_url, delay: delay}) do
     {:ok, [{GitPlugin, repo_url}, {Delay, delay}]}
   end
   def plugins(%Project{url: repo_url, delay: delay}) do
-    {:ok, [{NoopPlugin, {repo_url, failing_build_config}}, {Delay, delay},
+    {:ok, [{NoopPlugin, {repo_url, failing_build_config()}}, {Delay, delay},
       {Take, 5}]}
   end
   def plugins(_), do: {:error, "URL or delay is empty"}
