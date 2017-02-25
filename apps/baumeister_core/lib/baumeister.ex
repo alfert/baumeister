@@ -89,7 +89,7 @@ defmodule Baumeister do
   """
   @spec disable(String.t) :: boolean | :error
   def disable(project_name) do
-    with {:ok, project} = Config.config(project_name),
+    with {:ok, project} <- Config.config(project_name),
       true <- project.enabled
       do
         :ok = Observer.stop(project.observer, :stop)
