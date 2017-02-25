@@ -25,4 +25,11 @@ defmodule BaumeisterWeb.BuildChannelTest do
     broadcast_from! socket, "broadcast", %{"some" => "data"}
     assert_push "broadcast", %{"some" => "data"}
   end
+
+  test "broadcast a build event", %{socket: socket} do
+    event = {:tester, :test_broadcast, :data}
+    BuildChannel.broadcast_event(event)
+    assert_broadcast "build_event", %{
+      "role" => "tester", "action" => "test_broadcast", "step" => ":data"}
+  end
 end
