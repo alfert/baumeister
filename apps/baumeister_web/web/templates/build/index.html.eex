@@ -23,12 +23,13 @@
 
       <td class="text-right">
         <%= link "Show", to: build_path(@conn, :show, build), class: "btn btn-default btn-xs" %>
-        <%= link "Edit", to: build_path(@conn, :edit, build), class: "btn btn-default btn-xs" %>
-        <%= link "Delete", to: build_path(@conn, :delete, build), method: :delete, data: [confirm: "Are you sure?"], class: "btn btn-danger btn-xs" %>
       </td>
     </tr>
 <% end %>
   </tbody>
 </table>
 
-<%= link "New build", to: build_path(@conn, :new) %>
+<div id="msg-container">
+</div>
+
+<script type="test/JavaScript">Build.init(socket, "lobby")</script>
