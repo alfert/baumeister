@@ -31,35 +31,4 @@ defmodule BaumeisterWeb.BuildController do
     render(conn, "show.html", build: build)
   end
 
-  def edit(conn, %{"id" => id}) do
-    build = Repo.get!(Build, id)
-    changeset = Build.changeset(build)
-    render(conn, "edit.html", build: build, changeset: changeset)
-  end
-
-  def update(conn, %{"id" => id, "build" => build_params}) do
-    build = Repo.get!(Build, id)
-    changeset = Build.changeset(build, build_params)
-
-    case Repo.update(changeset) do
-      {:ok, build} ->
-        conn
-        |> put_flash(:info, "Build updated successfully.")
-        |> redirect(to: build_path(conn, :show, build))
-      {:error, changeset} ->
-        render(conn, "edit.html", build: build, changeset: changeset)
-    end
-  end
-
-  def delete(conn, %{"id" => id}) do
-    build = Repo.get!(Build, id)
-
-    # Here we use delete! (with a bang) because we expect
-    # it to always work (and if it does not, it will raise).
-    Repo.delete!(build)
-
-    conn
-    |> put_flash(:info, "Build deleted successfully.")
-    |> redirect(to: build_path(conn, :index))
-  end
 end
