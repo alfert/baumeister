@@ -23,12 +23,18 @@ defmodule BaumeisterWeb.BuildChannel do
   @doc """
   Initialize the `GenStage` consumer.
   """
-  def init(_) do
+  def init(opts) do
     Logger.debug "initialize the GenStage Consumer for Build Events"
-    {:consumer, []}
+    if Keyword.has_key?(opts, :subscribe_to) do
+      prod = Keyword.fetch!(opts, :subscribe_to)
+      {:consumer, opts, subscribe_to: [prod]}
+    else
+      {:consumer, opts}
+    end
   end
 
   def handle_events(events, _from, _state) do
+    Logger.debug("Build Channel received #{inspect Enum.count(events)} events")
     Enum.each(events, fn ev -> broadcast_event(ev) end)
     {:noreply, [], nil}
   end
@@ -45,6 +51,10 @@ defmodule BaumeisterWeb.BuildChannel do
   # by sending replies to requests from the client
   def handle_in("ping", payload, socket) do
     {:reply, {:ok, payload}, socket}
+  end
+  def handle_in("build_event", payload, socket) do
+    push(socket, "build_event", payload)
+    {:noreply, socket}
   end
 
   # It is also common to receive messages from the client and
