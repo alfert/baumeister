@@ -18,7 +18,7 @@ defmodule BaumeisterWeb.Router do
 
     get "/", PageController, :index
     resources "/projects", ProjectController
-    resources "/builds", BuildController
+    resources "/builds", BuildController, only: [:index, :show]
   end
 
   # Other scopes may use custom stacks.
