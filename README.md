@@ -8,6 +8,16 @@ Baumeister is a build management system, inspired by Jenkins, Travis CI and Buil
 Currently, Baumeister is in statu nascendi and merely useful. While moving
 from release 0.1.0 towards 1.0.0 this will change...
 
+## Next TODOs
+* [ ] Define a human readable build identifier (i.e. counting up) for each jobs
+* [ ] Attach the project name to each build job
+* [ ] Define a consistent event structure including a rendering function for HTML/JSON
+* [ ] Store build results in the Mnesia DB
+* [ ] Store the build log in a flat file per build
+* [ ] Retrieve the build status for each project and render nice icons
+* [ ] Introduce dedicated build views for each project and build number
+
+
 ## Binary Releases and Configuration
 
 Baumeister uses `distillery`(https://hexdocs.pm/distillery/getting-started.html)
@@ -57,7 +67,7 @@ same installed binary package.
 * Build results, i.e. metadata with time/date, project, version coordinate,
   build number (= sequential ordering), state (`:unknown`, `running`, `success`,
   `failed`) and URL for the entre log file are stored in a Mnesia database
-  and as part of the log files. 
+  and as part of the log files.
 * The log files can be compressed as a service scheme, e.g. as aggregated results
   as in a RDD database or only leaving official builds, such as PRs, releases
   or something similar.
