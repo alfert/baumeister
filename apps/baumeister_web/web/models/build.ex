@@ -1,6 +1,10 @@
 defmodule BaumeisterWeb.Build do
   use BaumeisterWeb.Web, :model
 
+  @moduledoc """
+  The model and schema definition for the Build representation.
+  """
+
   schema "builds" do
     field :project_id, :integer
     field :number, :integer

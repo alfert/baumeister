@@ -66,7 +66,6 @@ defmodule BaumeisterWeb.ProjectBridge do
     """
   end
 
-
   @doc """
   Deletes the given `project` from Baumeister core coordinator.
   """
@@ -92,7 +91,8 @@ defmodule BaumeisterWeb.ProjectBridge do
   end
 
   def load_all_projects() do
-    BaumeisterWeb.Repo.all(Project)
+    Project
+    |> BaumeisterWeb.Repo.all()
     |> initialize_coordinator()
   end
 end

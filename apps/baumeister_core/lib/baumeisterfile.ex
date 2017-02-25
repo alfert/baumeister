@@ -42,7 +42,6 @@ defmodule Baumeister.BaumeisterFile do
     assign!(map)
   end
 
-
   @doc """
   Takes a map of strings to any values and assigns it to a
   `BaumeisterFile` struct. Only known keys are converted,

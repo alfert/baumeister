@@ -4,8 +4,8 @@ defmodule BaumeisterWeb.BuildChannelTest do
   alias BaumeisterWeb.BuildChannel
 
   setup do
-    {:ok, _, socket} =
-      socket("user_id", %{some: :assign})
+    {:ok, _, socket} = "user_id"
+      |> socket(%{some: :assign})
       |> subscribe_and_join(BuildChannel, "build:lobby")
 
     {:ok, socket: socket}

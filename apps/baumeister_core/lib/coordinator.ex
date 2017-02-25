@@ -38,7 +38,6 @@ defmodule Baumeister.Coordinator do
       capabilities: %{}
  end
 
-
   use GenServer
   require Logger
   use Elixometer

@@ -78,7 +78,6 @@ defmodule Baumeister.Observer do
     {:error, any, any} |
     {:stop, any}
 
-
   @doc """
   Initializes the observer plugin. It is called with the observer's
   configuration as parameter. The return value is the state
@@ -94,7 +93,6 @@ defmodule Baumeister.Observer do
   which is used to determine the nodes to execute the build.
   """
   @callback observe(state :: plugin_state) :: observer_return_t
-
 
   @doc """
   Implements the checkout command for a build directory for

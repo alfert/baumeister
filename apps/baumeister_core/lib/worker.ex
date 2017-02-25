@@ -32,7 +32,6 @@ defmodule Baumeister.Worker do
     os: atom,
     }
 
-
   @typedoc """
   The internal state of a worker:
 
@@ -110,7 +109,6 @@ defmodule Baumeister.Worker do
   ## Callbacks and internals
   ##
   ##############################################################################
-
 
   def init([coordinator]) do
     Logger.debug "Initializing Worker"

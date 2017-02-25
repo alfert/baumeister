@@ -93,7 +93,6 @@ defmodule Test.BM.CoordinatorTest do
 
     assert worker_actions == [:start, :ok, :log]
 
-
     # After a stop, the project is disabled
     {:ok, p} = Config.config(project)
     assert nil == p.observer

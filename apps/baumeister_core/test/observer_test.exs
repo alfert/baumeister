@@ -140,7 +140,6 @@ defmodule Baumeister.ObserverTest do
     assert [{_, :start_observer, _}, {_, :exec_observer, _}] = l
   end
 
-
   def log_inspect(value, level \\ :info) do
     apply(Logger, :bare_log, [level, "#{inspect value}"])
     value

@@ -9,7 +9,7 @@ defmodule Baumeister.Observer.NoopPlugin do
 
   To use it, provide the `init` function with a repository URL and the
   content of a BaumeisterFile. When running the plugin, the return value
-  is a coordinate is created out of the URL and the BaumeisterFile. 
+  is a coordinate is created out of the URL and the BaumeisterFile.
   """
   @behaviour Baumeister.Observer
 
