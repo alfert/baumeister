@@ -120,6 +120,7 @@ defmodule Baumeister do
         :ok = Config.put(project_name,
           %__MODULE__{name: project_name, url: url, plugins: plugin_list})
         enable(project.enabled)
+        :ok
       _ -> add_project(project_name, url, plugin_list)
     end
   end
