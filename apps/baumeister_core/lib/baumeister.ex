@@ -14,7 +14,8 @@ defmodule Baumeister do
 
   require Logger
 
-  defstruct name: "", url: "", plugins: [], enabled: false, observer: nil
+  defstruct name: "", url: "", plugins: [], enabled: false, observer: nil,
+    build_counter: 0
 
   @doc """
   Executes the commands defined in the BaumeisterFile on a node that
