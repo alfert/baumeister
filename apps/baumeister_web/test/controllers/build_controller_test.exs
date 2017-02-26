@@ -11,22 +11,6 @@ defmodule BaumeisterWeb.BuildControllerTest do
     assert html_response(conn, 200) =~ "Listing builds"
   end
 
-  test "renders form for new resources", %{conn: conn} do
-    conn = get conn, build_path(conn, :new)
-    assert html_response(conn, 200) =~ "New build"
-  end
-
-  test "creates resource and redirects when data is valid", %{conn: conn} do
-    conn = post conn, build_path(conn, :create), build: @valid_attrs
-    assert redirected_to(conn) == build_path(conn, :index)
-    assert Repo.get_by(Build, @valid_attrs)
-  end
-
-  test "does not create resource and renders errors when data is invalid", %{conn: conn} do
-    conn = post conn, build_path(conn, :create), build: @invalid_attrs
-    assert html_response(conn, 200) =~ "New build"
-  end
-
   test "shows chosen resource", %{conn: conn} do
     build = Repo.insert! %Build{}
     conn = get conn, build_path(conn, :show, build)
