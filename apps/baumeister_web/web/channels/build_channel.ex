@@ -24,11 +24,14 @@ defmodule BaumeisterWeb.BuildChannel do
   Initialize the `GenStage` consumer.
   """
   def init(opts) do
-    Logger.debug "initialize the GenStage Consumer for Build Events"
+    Logger.info "initialize the GenStage Consumer for Build Events"
     if Keyword.has_key?(opts, :subscribe_to) do
       prod = Keyword.fetch!(opts, :subscribe_to)
-      {:consumer, opts, subscribe_to: [prod]}
+      Logger.info "subscribe to #{inspect prod}"
+      {:consumer, opts, subscribe_to: [{prod, cancel: :temporary}]}
     else
+      Logger.error "Build Channel without subscription"
+      1 = 0
       {:consumer, opts}
     end
   end
