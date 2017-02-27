@@ -36,6 +36,15 @@ defmodule BaumeisterWeb.BuildChannel do
     end
   end
 
+  @doc """
+  We need to take care of subscription cancellations.
+  TODO: resubscribe of EventCenter dies.
+  """
+  def handle_subscribe(:producer, _options, _to_or_from, state) do
+    # this is the default implementation.
+    {:automatic, state}
+  end
+
   def handle_events(events, _from, _state) do
     Logger.debug("Build Channel received #{inspect Enum.count(events)} events")
     Enum.each(events, fn ev -> broadcast_event(ev) end)
