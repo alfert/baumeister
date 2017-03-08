@@ -37,6 +37,14 @@ defmodule Test.BM.CoordinatorTest do
     Logger.info "Clear the event center"
     Utils.wait_for fn -> 0 == EventCenter.clear() end
 
+    on_exit(fn ->
+      Application.stop(:baumeister_coordinator)
+      [worker, Baumeister.ObserverSupervisor]
+      |> Enum.map(fn p when is_pid(p) -> p
+                     p -> Process.whereis(p)
+         end)
+      |> Enum.each(fn p -> assert_down(p) end)
+    end)
     {:ok, repos}
   end
 
@@ -95,7 +103,7 @@ defmodule Test.BM.CoordinatorTest do
 
     # After a stop, the project is disabled
     {:ok, p} = Config.config(project)
-    assert nil == p.observer
+    assert_down(p.observer)
     assert false == p.enabled
   end
 
@@ -106,4 +114,9 @@ defmodule Test.BM.CoordinatorTest do
     assert nil != Process.whereis(Baumeister.ObserverTaskSupervisor)
   end
 
+  # asserts that the given process is down with 100 ms
+  defp assert_down(pid) do
+    ref = Process.monitor(pid)
+    assert_receive {:DOWN, ^ref, _, _, _}
+  end
 end

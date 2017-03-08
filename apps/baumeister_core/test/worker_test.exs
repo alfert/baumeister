@@ -32,6 +32,11 @@ defmodule Baumeister.WorkerTest do
     m = wait_for_coordinator()
     assert [] == Coordinator.all_workers()
     assert 0 == EventCenter.clear()
+
+    on_exit(fn ->
+      [pid, listener]
+      |> Enum.each(fn p -> assert_down(p) end)
+    end)
     {:ok, coordinator: pid}
   end
 
@@ -82,19 +87,13 @@ defmodule Baumeister.WorkerTest do
     assert Process.alive?(worker)
     wait_for_worker()
 
-    ref = Process.monitor(GenServer.whereis(Coordinator.name))
-    ref_worker = Process.monitor(worker)
-
     Logger.info "env is: #{inspect env}"
     Logger.debug "Registered workers: #{inspect Coordinator.all_workers}"
     Logger.debug "Killing Coordinator"
     Process.exit(env[:coordinator], :kill)
 
-    # Coordinator is down
-    assert_receive({:DOWN, ^ref, :process, _, _})
-    # Worker goes down
-    assert_receive({:DOWN, ^ref_worker, :process, _, _})
-    refute Process.alive?(worker)
+    assert_down(worker)
+    assert_down(Coordinator.name)
   end
 
   test "Check for the capabilities" do
@@ -233,4 +232,18 @@ defmodule Baumeister.WorkerTest do
     end
   end
 
+
+  # asserts that the given process is down with 100 ms
+  defp assert_down(pid) when is_pid(pid) do
+    Logger.debug "assert_down of #{inspect pid}"
+    ref = Process.monitor(pid)
+    assert_receive {:DOWN, ^ref, _, _, _}
+  end
+  defp assert_down(process) do
+    Logger.debug "assert_down of #{inspect process}"
+    case GenServer.whereis(process) do
+      p when is_pid(p) -> assert_down(p)
+      nil -> Logger.debug "already unnamed: #{inspect process}"
+    end
+  end
 end

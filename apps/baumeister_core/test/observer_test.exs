@@ -39,6 +39,11 @@ defmodule Baumeister.ObserverTest do
     Utils.wait_for fn -> 0 == EventCenter.clear() end
     # wait_for fn -> 0 == TestListener.clear(listener) end
 
+    on_exit(fn ->
+      [pid, listener, Baumeister.EventCenter.name(), sup_pid]
+      |> Enum.each(fn p -> assert_down(p) end)
+    end)
+
     # merge this with the context
     [pid: pid, listener: listener]
   end
@@ -62,7 +67,7 @@ defmodule Baumeister.ObserverTest do
 
     # It should really die, otherwise it's not implemented as it should
     Logger.debug "Test Observer"
-    refute Process.alive?(pid)
+    assert_down(pid)
   end
 
   @tag timeout: 1_000
@@ -145,4 +150,17 @@ defmodule Baumeister.ObserverTest do
     value
   end
 
+  # asserts that the given process is down with 100 ms
+  defp assert_down(pid) when is_pid(pid) do
+    Logger.debug "assert_down of #{inspect pid}"
+    ref = Process.monitor(pid)
+    assert_receive {:DOWN, ^ref, _, _, _}
+  end
+  defp assert_down(process) do
+    Logger.debug "assert_down of #{inspect process}"
+    case GenServer.whereis(process) do
+      p when is_pid(p) -> assert_down(p)
+      nil -> Logger.debug "already unnamed: #{inspect process}"
+    end
+  end
 end
