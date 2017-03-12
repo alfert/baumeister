@@ -34,11 +34,13 @@ defmodule Baumeister.Observer do
     @type t :: %__MODULE__{
       url: String.t,
       observer: module,
-      version: any
+      version: any,
+      project_name: String.t
     }
     defstruct url: "",
       observer: nil,
-      version: nil
+      version: nil,
+      project_name: ""
 
   end
 
@@ -282,8 +284,9 @@ defmodule Baumeister.Observer do
           # Logger.debug("exec_plugin: new_s = #{inspect new_s}")
           new_s
           |> Map.get(:"$result", [])
-          |> Enum.each(fn {coordinate, baumeister_file} ->
-            Observer.execute(observer, coordinate, baumeister_file)
+          |> Enum.each(fn {%Coordinate{} = coordinate, baumeister_file} ->
+            coord = %Coordinate{coordinate | project_name: observer_name}
+            Observer.execute(observer, coord, baumeister_file)
           end)
           plug_state = Map.drop(new_s, [:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)

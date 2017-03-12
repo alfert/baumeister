@@ -14,6 +14,7 @@ defmodule Baumeister.ObserverTest do
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
   alias Baumeister.Observer.Delay
+  alias Baumeister.Observer.Coordinate
 
   setup context do
     Logger.info("setup: context = #{inspect context}")
@@ -143,6 +144,35 @@ defmodule Baumeister.ObserverTest do
     |> TestListener.get()
     |> Enum.take(2)
     assert [{_, :start_observer, _}, {_, :exec_observer, _}] = l
+  end
+
+  @tag timeout: 1_000
+  test "coordinate has project", context do
+    pid = context[:pid]
+    listener = context[:listener]
+    bmf = """
+    command: echo "Ja, wir schaffen das"
+    """
+
+    Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}}, {Delay, 50}])
+    TestListener.clear(listener)
+    :ok = Observer.run(pid)
+
+    Utils.wait_for(fn -> listener
+      |> TestListener.get()
+      |> Enum.any?(fn {_, ev, _} -> ev == :execute end)
+    end)
+    Observer.stop(pid, :stop)
+
+    l = listener
+    |> TestListener.get()
+    |> Enum.filter(fn {_, ev, _} -> ev == :execute end)
+    |> Enum.take(1)
+    assert [{_, :execute, _}] = l
+    [{_who, ev, coord}] = l
+    IO.puts "#{inspect l}"
+    assert %Coordinate{} = coord
+    assert coord.project_name == context[:test] |> Atom.to_string()
   end
 
   def log_inspect(value, level \\ :info) do
