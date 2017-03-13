@@ -10,7 +10,7 @@ from release 0.1.0 towards 1.0.0 this will change...
 
 ## Next TODOs
 * [ ] Define a human readable build identifier (i.e. counting up) for each jobs
-* [ ] Attach the project name to each build job
+* [x] Attach the project name to each build job
 * [ ] Define a consistent event structure including a rendering function for HTML/JSON
 * [ ] Store build results in the Mnesia DB
 * [ ] Store the build log in a flat file per build
