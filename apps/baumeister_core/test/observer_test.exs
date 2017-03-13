@@ -14,6 +14,7 @@ defmodule Baumeister.ObserverTest do
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
   alias Baumeister.Observer.Delay
+  alias Baumeister.Observer.Coordinate
 
   setup context do
     Logger.info("setup: context = #{inspect context}")
@@ -39,6 +40,11 @@ defmodule Baumeister.ObserverTest do
     Utils.wait_for fn -> 0 == EventCenter.clear() end
     # wait_for fn -> 0 == TestListener.clear(listener) end
 
+    on_exit(fn ->
+      Enum.each([pid, listener, Baumeister.EventCenter.name(), sup_pid],
+        fn p -> assert_down(p) end)
+    end)
+
     # merge this with the context
     [pid: pid, listener: listener]
   end
@@ -62,7 +68,7 @@ defmodule Baumeister.ObserverTest do
 
     # It should really die, otherwise it's not implemented as it should
     Logger.debug "Test Observer"
-    refute Process.alive?(pid)
+    assert_down(pid)
   end
 
   @tag timeout: 1_000
@@ -140,10 +146,51 @@ defmodule Baumeister.ObserverTest do
     assert [{_, :start_observer, _}, {_, :exec_observer, _}] = l
   end
 
+  @tag timeout: 1_000
+  test "coordinate has project", context do
+    pid = context[:pid]
+    listener = context[:listener]
+    bmf = """
+    command: echo "Ja, wir schaffen das"
+    """
+
+    Observer.configure(pid, [{NoopPlugin, {"file:///", bmf}}, {Delay, 50}])
+    TestListener.clear(listener)
+    :ok = Observer.run(pid)
+
+    Utils.wait_for(fn -> listener
+      |> TestListener.get()
+      |> Enum.any?(fn {_, ev, _} -> ev == :execute end)
+    end)
+    Observer.stop(pid, :stop)
+
+    l = listener
+    |> TestListener.get()
+    |> Enum.filter(fn {_, ev, _} -> ev == :execute end)
+    |> Enum.take(1)
+    assert [{_, :execute, _}] = l
+    [{_who, ev, coord}] = l
+    IO.puts "#{inspect l}"
+    assert %Coordinate{} = coord
+    assert coord.project_name == context[:test] |> Atom.to_string()
+  end
 
   def log_inspect(value, level \\ :info) do
     apply(Logger, :bare_log, [level, "#{inspect value}"])
     value
   end
 
+  # asserts that the given process is down with 100 ms
+  defp assert_down(pid) when is_pid(pid) do
+    Logger.debug "assert_down of #{inspect pid}"
+    ref = Process.monitor(pid)
+    assert_receive {:DOWN, ^ref, _, _, _}
+  end
+  defp assert_down(process) do
+    Logger.debug "assert_down of #{inspect process}"
+    case GenServer.whereis(process) do
+      p when is_pid(p) -> assert_down(p)
+      nil -> Logger.debug "already unnamed: #{inspect process}"
+    end
+  end
 end

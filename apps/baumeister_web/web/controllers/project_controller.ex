@@ -64,10 +64,14 @@ defmodule BaumeisterWeb.ProjectController do
   def update(conn, %{"id" => id, "project" => project_params}) do
     project = Repo.get!(Project, id)
     changeset = Project.changeset(project, project_params)
+    Logger.debug "Changeset for project: #{inspect changeset}"
 
     case Repo.update(changeset) do
       {:ok, project} ->
-        ProjectBridge.update(project)
+        with :ok = ProjectBridge.update(project) do
+          Logger.debug "Set status of project #{inspect project}"
+          ProjectBridge.set_status(project)
+        end
         conn
         |> put_flash(:info, "Project updated successfully.")
         |> redirect(to: project_path(conn, :show, project))

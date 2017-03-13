@@ -73,7 +73,6 @@ defmodule Baumeister.Config do
   ##
   ###################################################
 
-
   # only `:in_memory` is currently supported
   def init([:in_memory]) do
     {:ok, %{}}
@@ -96,7 +95,5 @@ defmodule Baumeister.Config do
   def handle_cast(:remove_all, _state) do
     {:noreply, %{}}
   end
-
-
 
 end

@@ -64,5 +64,4 @@ defmodule Baumeister.Test.GitRepos do
     [repo: repo, parent_repo: parent_repo, repo_path: path, parent_repo_path: parent_path]
   end
 
-
 end

@@ -1,0 +1,35 @@
+<h2>Listing builds</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Project</th>
+      <th>Number</th>
+      <th>Log</th>
+      <th>Coordinate</th>
+      <th>Config</th>
+
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+<%= for build <- @builds do %>
+    <tr>
+      <td><%= build.project_id %></td>
+      <td><%= build.number %></td>
+      <td><%= build.log %></td>
+      <td><%= build.coordinate %></td>
+      <td><%= build.config %></td>
+
+      <td class="text-right">
+        <%= link "Show", to: build_path(@conn, :show, build), class: "btn btn-default btn-xs" %>
+      </td>
+    </tr>
+<% end %>
+  </tbody>
+</table>
+
+<div id="build-msg-container" build-id="lobby" class="well">
+  <div id="msg-container">
+  </div>
+</div>

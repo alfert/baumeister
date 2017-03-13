@@ -14,7 +14,6 @@ config :baumeister_web, BaumeisterWeb.Endpoint,
   watchers: [node: ["node_modules/brunch/bin/brunch", "watch", "--stdin",
                     cd: Path.expand("../", __DIR__)]]
 
-
 # Watch static and templates for browser reloading.
 config :baumeister_web, BaumeisterWeb.Endpoint,
   live_reload: [

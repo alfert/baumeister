@@ -3,5 +3,4 @@ defmodule BaumeisterTest do
   doctest Baumeister
   doctest Baumeister.BaumeisterFile
 
-
 end

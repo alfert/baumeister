@@ -41,5 +41,4 @@ defmodule BaumeisterWeb.ButtonHelpers do
     end
   end
 
-
 end

@@ -34,11 +34,13 @@ defmodule Baumeister.Observer do
     @type t :: %__MODULE__{
       url: String.t,
       observer: module,
-      version: any
+      version: any,
+      project_name: String.t
     }
     defstruct url: "",
       observer: nil,
-      version: nil
+      version: nil,
+      project_name: ""
 
   end
 
@@ -78,7 +80,6 @@ defmodule Baumeister.Observer do
     {:error, any, any} |
     {:stop, any}
 
-
   @doc """
   Initializes the observer plugin. It is called with the observer's
   configuration as parameter. The return value is the state
@@ -94,7 +95,6 @@ defmodule Baumeister.Observer do
   which is used to determine the nodes to execute the build.
   """
   @callback observe(state :: plugin_state) :: observer_return_t
-
 
   @doc """
   Implements the checkout command for a build directory for
@@ -284,8 +284,9 @@ defmodule Baumeister.Observer do
           # Logger.debug("exec_plugin: new_s = #{inspect new_s}")
           new_s
           |> Map.get(:"$result", [])
-          |> Enum.each(fn {coordinate, baumeister_file} ->
-            Observer.execute(observer, coordinate, baumeister_file)
+          |> Enum.each(fn {%Coordinate{} = coordinate, baumeister_file} ->
+            coord = %Coordinate{coordinate | project_name: observer_name}
+            Observer.execute(observer, coord, baumeister_file)
           end)
           plug_state = Map.drop(new_s, [:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)

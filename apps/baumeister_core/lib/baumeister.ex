@@ -14,7 +14,8 @@ defmodule Baumeister do
 
   require Logger
 
-  defstruct name: "", url: "", plugins: [], enabled: false, observer: nil
+  defstruct name: "", url: "", plugins: [], enabled: false, observer: nil,
+    build_counter: 0
 
   @doc """
   Executes the commands defined in the BaumeisterFile on a node that
@@ -89,7 +90,7 @@ defmodule Baumeister do
   """
   @spec disable(String.t) :: boolean | :error
   def disable(project_name) do
-    with {:ok, project} = Config.config(project_name),
+    with {:ok, project} <- Config.config(project_name),
       true <- project.enabled
       do
         :ok = Observer.stop(project.observer, :stop)
@@ -120,6 +121,7 @@ defmodule Baumeister do
         :ok = Config.put(project_name,
           %__MODULE__{name: project_name, url: url, plugins: plugin_list})
         enable(project.enabled)
+        :ok
       _ -> add_project(project_name, url, plugin_list)
     end
   end

@@ -5,8 +5,18 @@ Baumeister is a build management system, inspired by Jenkins, Travis CI and Buil
 [![Build Status](https://travis-ci.org/alfert/baumeister.svg?branch=master)](https://travis-ci.org/alfert/baumeister)
 [![Ebert](https://ebertapp.io/github/alfert/baumeister.svg)](https://ebertapp.io/github/alfert/baumeister)
 
-Currently, Baumeister is in statu nascendi and merely usefull. While moving
+Currently, Baumeister is in statu nascendi and merely useful. While moving
 from release 0.1.0 towards 1.0.0 this will change...
+
+## Next TODOs
+* [ ] Define a human readable build identifier (i.e. counting up) for each jobs
+* [x] Attach the project name to each build job
+* [ ] Define a consistent event structure including a rendering function for HTML/JSON
+* [ ] Store build results in the Mnesia DB
+* [ ] Store the build log in a flat file per build
+* [ ] Retrieve the build status for each project and render nice icons
+* [ ] Introduce dedicated build views for each project and build number
+
 
 ## Binary Releases and Configuration
 
@@ -48,6 +58,19 @@ same installed binary package.
 * Similarly, the build results (i.e. log files, ...) will be made available.
 * Standard reporting and user interface is a Baumeister Web application based on
   Phoenix.
+
+## Data Handling
+
+* Project definitions are stored in a Mnesia database.
+* Build log files are stored as JSON text files (with optional compressing) in
+  flat file storage, because they become very large very easily.
+* Build results, i.e. metadata with time/date, project, version coordinate,
+  build number (= sequential ordering), state (`:unknown`, `running`, `success`,
+  `failed`) and URL for the entre log file are stored in a Mnesia database
+  and as part of the log files.
+* The log files can be compressed as a service scheme, e.g. as aggregated results
+  as in a RDD database or only leaving official builds, such as PRs, releases
+  or something similar.
 
 ## Contributing
 

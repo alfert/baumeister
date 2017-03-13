@@ -185,7 +185,6 @@ defmodule Baumeister.Observer.Git do
     content
   end
 
-
   @doc """
   Parses the output of `git ls-remote` and returns a mapping
   of remote references and their sha1 values.

@@ -24,6 +24,7 @@ defmodule BaumeisterWeb do
       supervisor(BaumeisterWeb.Endpoint, []),
       # Start your own worker by calling: BaumeisterWeb.Worker.start_link(arg1, arg2, arg3)
       # worker(BaumeisterWeb.Worker, [arg1, arg2, arg3]),
+      worker(BaumeisterWeb.BuildChannel, [[subscribe_to: Baumeister.EventCenter.name()]])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html
@@ -51,6 +52,7 @@ defmodule BaumeisterWeb do
   def start_phase(start_phase, start_type, args) do
     Logger.info("BaumeisterWeb.start_phase(start_phase=#{inspect start_phase}, "
         <> "start_type=#{inspect start_type}, args=#{inspect args})")
+    BaumeisterWeb.ProjectBridge.load_all_projects()
     :ok
   end
 end
