@@ -16,6 +16,7 @@ from release 0.1.0 towards 1.0.0 this will change...
 * [ ] Store the build log in a flat file per build
 * [ ] Retrieve the build status for each project and render nice icons
 * [ ] Introduce dedicated build views for each project and build number
+* [ ] Have a dedicated build-run button for a project
 
 
 ## Binary Releases and Configuration
