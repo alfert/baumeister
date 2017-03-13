@@ -34,8 +34,7 @@ defmodule Baumeister.WorkerTest do
     assert 0 == EventCenter.clear()
 
     on_exit(fn ->
-      [pid, listener]
-      |> Enum.each(fn p -> assert_down(p) end)
+      Enum.each([pid, listener], fn p -> assert_down(p) end)
     end)
     {:ok, coordinator: pid}
   end

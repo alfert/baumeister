@@ -41,8 +41,8 @@ defmodule Baumeister.ObserverTest do
     # wait_for fn -> 0 == TestListener.clear(listener) end
 
     on_exit(fn ->
-      [pid, listener, Baumeister.EventCenter.name(), sup_pid]
-      |> Enum.each(fn p -> assert_down(p) end)
+      Enum.each([pid, listener, Baumeister.EventCenter.name(), sup_pid],
+        fn p -> assert_down(p) end)
     end)
 
     # merge this with the context
