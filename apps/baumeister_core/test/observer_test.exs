@@ -175,38 +175,6 @@ defmodule Baumeister.ObserverTest do
     assert coord.project_name == context[:test] |> Atom.to_string()
   end
 
-  @tag timeout: 1_000
-  test "observer and buildmaster run together", context do
-    pid = context[:pid]
-    listener = context[:listener]
-    project_name = context[:test] |> Atom.to_string()
-    {bmf, _os} = Utils.create_bmf """
-    command: echo "Ja, wir schaffen das"
-    """
-    url = "file:///"
-    {:ok, worker} = Baumeister.Worker.start_link()
-
-    TestListener.clear(listener)
-    assert :ok == Baumeister.add_project(project_name, url,
-      [{NoopPlugin, {url, bmf}}, {Delay, 50}, {Take, 2}])
-    assert true == Baumeister.enable(project_name)
-
-    # wait for first execution
-    Utils.wait_for(fn -> listener
-      |> TestListener.get()
-      |> Enum.any?(fn {_, ev, _} -> ev == :execute end)
-    end)
-    Baumeister.disable(project_name)
-
-    l = listener
-    |> TestListener.get()
-    |> Enum.filter(fn {_, ev, _} -> ev == :executed end)
-    |> Enum.take(1)
-    assert [{_, :executed, _}] = l
-
-    Process.kill(worker)
-    assert assert_down(worker)
-  end
 
   defp log_inspect(value, level \\ :info) do
     apply(Logger, :bare_log, [level, "#{inspect value}"])
