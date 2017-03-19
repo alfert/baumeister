@@ -33,20 +33,20 @@ defmodule Baumeister.ObserverTest do
     {:ok, listener} = TestListener.start()
     GenStage.sync_subscribe(listener, to: Baumeister.EventCenter.name())
     # set the observer name to the test name
-    {:ok, pid} = Observer.start_link(Atom.to_string(context[:test]))
-    assert is_pid(pid)
+    {:ok, obs_pid} = Observer.start_link(Atom.to_string(context[:test]))
+    assert is_pid(obs_pid)
 
     # Let the listener drain the event queue of old events.
     Utils.wait_for fn -> 0 == EventCenter.clear() end
     # wait_for fn -> 0 == TestListener.clear(listener) end
 
     on_exit(fn ->
-      Enum.each([pid, listener, Baumeister.EventCenter.name(), sup_pid],
+      Enum.each([obs_pid, listener, Baumeister.EventCenter.name(), sup_pid],
         fn p -> assert_down(p) end)
     end)
 
     # merge this with the context
-    [pid: pid, listener: listener]
+    [pid: obs_pid, listener: listener]
   end
 
   @tag timeout: 1_000
@@ -175,7 +175,40 @@ defmodule Baumeister.ObserverTest do
     assert coord.project_name == context[:test] |> Atom.to_string()
   end
 
-  def log_inspect(value, level \\ :info) do
+  @tag timeout: 1_000
+  test "observer and buildmaster run together", context do
+    pid = context[:pid]
+    listener = context[:listener]
+    project_name = context[:test] |> Atom.to_string()
+    bmf = Utils.create_bmf """
+    command: echo "Ja, wir schaffen das"
+    """
+    url = "file:///"
+    {:ok, worker} = Baumeister.Worker.start_link()
+
+    TestListener.clear(listener)
+    assert :ok == Baumeister.add_project(project_name, url,
+      [{NoopPlugin, {url, bmf}}, {Delay, 50}, {Take, 2}])
+    assert true == Baumeister.enable(project_name)
+
+    # wait for first execution
+    Utils.wait_for(fn -> listener
+      |> TestListener.get()
+      |> Enum.any?(fn {_, ev, _} -> ev == :execute end)
+    end)
+    Baumeister.disable(project_name)
+
+    l = listener
+    |> TestListener.get()
+    |> Enum.filter(fn {_, ev, _} -> ev == :executed end)
+    |> Enum.take(1)
+    assert [{_, :executed, _}] = l
+
+    Process.kill(worker)
+    assert assert_down(worker)
+  end
+
+  defp log_inspect(value, level \\ :info) do
     apply(Logger, :bare_log, [level, "#{inspect value}"])
     value
   end
