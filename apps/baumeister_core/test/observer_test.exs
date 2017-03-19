@@ -180,7 +180,7 @@ defmodule Baumeister.ObserverTest do
     pid = context[:pid]
     listener = context[:listener]
     project_name = context[:test] |> Atom.to_string()
-    bmf = Utils.create_bmf """
+    {bmf, _os} = Utils.create_bmf """
     command: echo "Ja, wir schaffen das"
     """
     url = "file:///"
