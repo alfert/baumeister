@@ -64,7 +64,7 @@ defmodule BaumeisterTest do
     # wait for first execution
     Utils.wait_for(fn -> listener
       |> TestListener.get()
-      |> Enum.any?(fn {w, _, data} -> w == :worker and match?({:ok, _}, data) end)
+      |> Enum.any?(fn {w, _, data} -> w == :worker and match?({:log, _, _}, data) end)
     end)
     Baumeister.disable(project_name)
 
