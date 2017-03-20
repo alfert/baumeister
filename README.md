@@ -9,7 +9,7 @@ Currently, Baumeister is in statu nascendi and merely useful. While moving
 from release 0.1.0 towards 1.0.0 this will change...
 
 ## Next TODOs
-* [ ] Define a human readable build identifier (i.e. counting up) for each jobs
+* [x] Define a human readable build identifier (i.e. counting up) for each jobs
 * [x] Attach the project name to each build job
 * [ ] Define a consistent event structure including a rendering function for HTML/JSON
 * [ ] Store build results in the Mnesia DB
