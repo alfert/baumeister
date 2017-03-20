@@ -58,7 +58,7 @@ defmodule BaumeisterTest do
 
     TestListener.clear(listener)
     assert :ok == Baumeister.add_project(project_name, url,
-      [{NoopPlugin, {url, bmf}}, {Delay, 50}, {Take, 2}])
+      [{NoopPlugin, {url, bmf}}, {Delay, 50}, {Take, 1}])
     assert true == Baumeister.enable(project_name)
 
     # wait for first execution
