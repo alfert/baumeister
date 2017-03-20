@@ -33,20 +33,20 @@ defmodule Baumeister.ObserverTest do
     {:ok, listener} = TestListener.start()
     GenStage.sync_subscribe(listener, to: Baumeister.EventCenter.name())
     # set the observer name to the test name
-    {:ok, pid} = Observer.start_link(Atom.to_string(context[:test]))
-    assert is_pid(pid)
+    {:ok, obs_pid} = Observer.start_link(Atom.to_string(context[:test]))
+    assert is_pid(obs_pid)
 
     # Let the listener drain the event queue of old events.
     Utils.wait_for fn -> 0 == EventCenter.clear() end
     # wait_for fn -> 0 == TestListener.clear(listener) end
 
     on_exit(fn ->
-      Enum.each([pid, listener, Baumeister.EventCenter.name(), sup_pid],
+      Enum.each([obs_pid, listener, Baumeister.EventCenter.name(), sup_pid],
         fn p -> assert_down(p) end)
     end)
 
     # merge this with the context
-    [pid: pid, listener: listener]
+    [pid: obs_pid, listener: listener]
   end
 
   @tag timeout: 1_000
@@ -172,10 +172,10 @@ defmodule Baumeister.ObserverTest do
     [{_who, ev, coord}] = l
     IO.puts "#{inspect l}"
     assert %Coordinate{} = coord
-    assert coord.project_name == context[:test] |> Atom.to_string()
+    assert coord.project_name == Atom.to_string(context[:test])
   end
 
-  def log_inspect(value, level \\ :info) do
+  defp log_inspect(value, level \\ :info) do
     apply(Logger, :bare_log, [level, "#{inspect value}"])
     value
   end

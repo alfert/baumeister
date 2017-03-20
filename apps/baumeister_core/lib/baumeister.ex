@@ -25,11 +25,13 @@ defmodule Baumeister do
   @spec execute(Coordinate.t, BaumeisterFile.t) :: {:ok, reference} | {:error, any}
   def execute(coordinate, bmf) do
     Logger.info("Execute bmf #{inspect bmf} for coord #{inspect coordinate}")
-    case Coordinator.add_job(coordinate, bmf) do
-      {:ok, ref} -> {:ok, ref}
-      {:unsupported_feature, feature} ->
-        Logger.error("An unsupported feature <#{inspect feature}> was requested for coordinate #{inspect coordinate}")
-        {:error, :unsupported_feature}
+    with {:ok, build} <- increment_build_counter(coordinate) do
+      case Coordinator.add_job(coordinate, bmf, build) do
+        {:ok, ref} -> {:ok, ref}
+        {:unsupported_feature, feature} ->
+          Logger.error("An unsupported feature <#{inspect feature}> was requested for coordinate #{inspect coordinate}")
+          {:error, :unsupported_feature}
+      end
     end
   end
 
@@ -123,6 +125,22 @@ defmodule Baumeister do
         enable(project.enabled)
         :ok
       _ -> add_project(project_name, url, plugin_list)
+    end
+  end
+
+  @doc """
+  Increments the build_job in the configuration and returns
+  the new build number.
+  """
+  @spec increment_build_counter(String.t | Coordinate.t) :: {:ok, pos_integer} | {:error, any}
+  def increment_build_counter(%Coordinate{project_name: project_name}) do
+    increment_build_counter(project_name)
+  end
+  def increment_build_counter(project_name) do
+    with {:ok, project} <- Config.config(project_name) do
+        new_project = %__MODULE__{project | build_counter: 1 + project.build_counter}
+        :ok = Config.put(project_name, new_project)
+        {:ok, new_project.build_counter}
     end
   end
 end

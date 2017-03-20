@@ -110,8 +110,9 @@ defmodule Baumeister.Coordinator do
   worker is found, the error `unsupported_feature` is returned and the
   job is neither executed nor enqueued for later execution.
   """
-  @spec add_job(Coordinate.t, BaumeisterFile.t) :: {:ok, reference} | {:unsupported_feature, any}
-  def add_job(coordinate, bmf) do
+  @spec add_job(Coordinate.t, BaumeisterFile.t, pos_integer) :: {:ok, reference} | {:unsupported_feature, any}
+  def add_job(coordinate, bmf, build_number \\ 1) do
+    Logger.error "Ignoring build number #{build_number}"
     GenServer.call(name(), {:add_job, coordinate, bmf})
   end
 
