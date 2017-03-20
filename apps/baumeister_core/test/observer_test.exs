@@ -172,9 +172,8 @@ defmodule Baumeister.ObserverTest do
     [{_who, ev, coord}] = l
     IO.puts "#{inspect l}"
     assert %Coordinate{} = coord
-    assert coord.project_name == context[:test] |> Atom.to_string()
+    assert coord.project_name == Atom.to_string(context[:test])
   end
-
 
   defp log_inspect(value, level \\ :info) do
     apply(Logger, :bare_log, [level, "#{inspect value}"])

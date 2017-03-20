@@ -45,11 +45,10 @@ defmodule BaumeisterTest do
     [listener: listener]
   end
 
-
   @tag timeout: 1_000
   test "observer and buildmaster run together", context do
     listener = context[:listener]
-    project_name = context[:test] |> Atom.to_string()
+    project_name = Atom.to_string(context[:test])
     {bmf, _os} = Utils.create_bmf """
     echo "Ja, wir schaffen das"
     """
