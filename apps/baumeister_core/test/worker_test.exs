@@ -190,7 +190,7 @@ defmodule Baumeister.WorkerTest do
     # consider only worker messages
     l = listener
     |> TestListener.get()
-    |> Enum.filter( &(match?(%BuildEvent{}, &1)))
+    |> Enum.filter(&(match?(%BuildEvent{}, &1)))
     |> Enum.map(fn be -> {be.action, be.coordinate, be.data} end)
     # |> Enum.filter(fn {w, a, _} -> w == :worker and a == :execute end)
     # |> Enum.map(fn {_, _, data} -> data end)
