@@ -58,7 +58,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   end
   def plugins(_), do: {:error, "URL or delay is empty"}
 
-  def failing_build_config do
+  defp failing_build_config do
     """
     command: false
     os: darwin
