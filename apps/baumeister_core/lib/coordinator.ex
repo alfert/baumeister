@@ -112,8 +112,8 @@ defmodule Baumeister.Coordinator do
   """
   @spec add_job(Coordinate.t, BaumeisterFile.t, pos_integer) :: {:ok, reference} | {:unsupported_feature, any}
   def add_job(coordinate, bmf, build_number \\ 1) do
-    Logger.error "Ignoring build number #{build_number}"
-    GenServer.call(name(), {:add_job, coordinate, bmf})
+    # Logger.error "Ignoring build number #{build_number}"
+    GenServer.call(name(), {:add_job, coordinate, bmf, build_number})
   end
 
   ##############################################################################
@@ -156,14 +156,14 @@ defmodule Baumeister.Coordinator do
       :error -> {:replay, {:error, :unknown_worker}, state}
     end
   end
-  def handle_call({:add_job, coord, bmf}, _from,
+  def handle_call({:add_job, coord, bmf, build_number}, _from,
                             state = %__MODULE__{workers: workers}) do
     case match_workers(workers, bmf) do
       [] -> {:reply, {:unsupported_feature, :no_idea}, state}
       pids ->
         return_value = pids
           |> Enum.random()
-          |> Worker.execute(coord, bmf)
+          |> Worker.execute(coord, bmf, build_number)
         reply(state, return_value)
     end
   end

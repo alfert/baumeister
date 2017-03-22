@@ -21,6 +21,7 @@ defmodule Baumeister.Worker do
   alias Baumeister.Coordinator
   alias Baumeister.EventCenter
   alias Baumeister.Observer.Coordinate
+  alias Baumeister.BuildEvent
 
   @typedoc """
   The capabilities are a map of keys of type `atom` to any value.
@@ -86,9 +87,9 @@ defmodule Baumeister.Worker do
   `{:executed, {out, rc, ref}}` is send to the current process, to inform
   about the result of the asynchronous running BaumeisterFile execution process.
   """
-  @spec execute(pid, Coordinate.t, Baumeister.BaumeisterFile.t) :: {:ok, reference}
-  def execute(pid, coordinate = %Coordinate{}, bmf) do
-    GenServer.call(pid, {:execute, coordinate, bmf})
+  @spec execute(pid, Coordinate.t, Baumeister.BaumeisterFile.t, pos_integer) :: {:ok, reference}
+  def execute(pid, coordinate = %Coordinate{}, bmf, build_number) do
+    GenServer.call(pid, {:execute, coordinate, bmf, build_number})
   end
 
   @doc """
@@ -133,18 +134,24 @@ defmodule Baumeister.Worker do
   def handle_call(:capabilities, _from, state) do
     {:reply, detect_capabilities(), state}
   end
-  def handle_call({:execute, coordinate, bmf}, from, state = %__MODULE__{processes: processes}) do
+  def handle_call({:execute, coordinate, bmf, build_number}, from,
+          state = %__MODULE__{processes: processes}) do
     ref = make_ref()
-    EventCenter.sync_notify({:worker, :execute, {:start, coordinate}})
+    build_event = BuildEvent.new(coordinate, build_number)
+    build_event = build_event |> BuildEvent.action(:start) |> send_event()
+
     {state, workspace} = workspace_path(state)
     {:ok, exec_pid} = Task.start_link(fn ->
       EventCenter.sync_notify({:worker_job, :spawned, self()})
       {out, rc} = execute_bmf(coordinate, bmf, workspace)
-      case rc do
-        0 -> EventCenter.sync_notify({:worker, :execute, {:ok, coordinate}})
-        _ -> EventCenter.sync_notify({:worker, :execute, {:error, coordinate}})
+      build_event = case rc do
+        0 -> build_event |> BuildEvent.action(:result, :ok) |> send_event
+            # EventCenter.sync_notify({:worker, :execute, {:ok, coordinate}})
+        _ -> build_event |> BuildEvent.action(:result, rc) |> send_event
+            # EventCenter.sync_notify({:worker, :execute, {:error, coordinate}})
       end
-      EventCenter.sync_notify({:worker, :execute, {:log, coordinate, out}})
+      build_event |> BuildEvent.action(:log, out) |> send_event
+      # EventCenter.sync_notify({:worker, :execute, {:log, coordinate, out}})
       send_exec_return(from, out, rc, ref)
     end)
     new_state = %__MODULE__{state | processes: Map.put(processes, exec_pid, coordinate)}
@@ -162,6 +169,11 @@ defmodule Baumeister.Worker do
 
   defp send_exec_return({pid, _from_ref} , out, rc, ref) do
   send(pid, {:executed, {out, rc, ref}})
+  end
+
+  defp send_event(%BuildEvent{} = be) do
+    :ok = EventCenter.sync_notify(be)
+    be
   end
 
   @doc """
