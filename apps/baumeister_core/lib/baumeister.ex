@@ -30,17 +30,32 @@ defmodule Baumeister do
     """
     @type action_type :: nil | :start | :log | :result
 
-    @type t :: %{build_counter: non_neg_integer,
-      coordinate: Coordinate.t, event_counter: non_neg_integer,
-      action: action_type, data: integer | String.t | [String.t] }
+    @type t :: %__MODULE__{
+      build_counter: non_neg_integer,
+      coordinate: Coordinate.t,
+      event_counter: non_neg_integer,
+      action: action_type,
+      data: nil | integer | String.t | [String.t]
+    }
     defstruct build_counter: 0, coordinate: %Coordinate{},
       event_counter: 0, action: nil, data: nil
 
-    def new(coordinate, build_number) do
+    @doc """
+    Creates a new build event, typically used as the start of of
+    sequence of actions.
+    """
+    @spec new(Coordinate.t, pos_integer) :: t
+    def new(%Coordinate{} = coordinate, build_number) when
+          is_integer(build_number) and build_number > 0 do
       %__MODULE__{coordinate: coordinate, build_counter: build_number}
     end
 
-    def action(%__MODULE__{event_counter: ec} = be, action, data \\ nil) do
+    @doc """
+    Takes a build event and adds build action information. The
+    `event_counter` is incremented.
+    """
+    @spec action(t, action_type, any) :: t
+    def action(be = %__MODULE__{event_counter: ec}, action, data \\ nil) do
       %__MODULE__{be | event_counter: ec + 1, action: action, data: data}
     end
   end
