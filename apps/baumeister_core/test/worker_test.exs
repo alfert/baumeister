@@ -12,6 +12,7 @@ defmodule Baumeister.WorkerTest do
   alias Baumeister.Test.TestListener
   alias Baumeister.EventCenter
   alias Baumeister.EventLogger
+  alias Baumeister.BuildEvent
 
   alias Baumeister.Test.Utils
 
@@ -145,7 +146,7 @@ defmodule Baumeister.WorkerTest do
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
 
-    {:ok, ref} = Worker.execute(worker, make_tmp_coordinate(), bmf)
+    {:ok, ref} = Worker.execute(worker, make_tmp_coordinate(), bmf, 1)
     assert_receive {:executed, {_out, 0, ^ref}}
   end
 
@@ -158,8 +159,9 @@ defmodule Baumeister.WorkerTest do
     {bmf, _local_os} = Utils.create_parsed_bmf("type #{non_existing_file}")
     {:ok, worker} = Worker.start_link()
     Logger.debug "Worker is started"
+    build_number = 1
 
-    {:ok, ref} = Worker.execute(worker, make_tmp_coordinate(), bmf)
+    {:ok, ref} = Worker.execute(worker, make_tmp_coordinate(), bmf, build_number)
 
     # return codes are different for various operating systems :-(
     assert_receive {:executed, {out, rc, ^ref}}
@@ -180,24 +182,21 @@ defmodule Baumeister.WorkerTest do
     {:ok, _worker} = Worker.start_link()
     wait_for_worker()
     Logger.debug "Worker is started"
+    build_number = 1
 
-    {:ok, _ref} = Coordinator.add_job(coord, bmf)
-    ################
-    #
-    # Why is the event sent to the coordinator? Only
-    # for testing purposes?
-    #
-    #################
+    {:ok, _ref} = Coordinator.add_job(coord, bmf, build_number)
     # wait for some events
     Utils.wait_for fn -> length(TestListener.get(listener)) >= 6 end
     # consider only worker messages
     l = listener
     |> TestListener.get()
-    |> Enum.filter(fn {w, a, _} -> w == :worker and a == :execute end)
-    |> Enum.map(fn {_, _, data} -> data end)
+    |> Enum.filter( &(match?(%BuildEvent{}, &1)))
+    |> Enum.map(fn be -> {be.action, be.coordinate, be.data} end)
+    # |> Enum.filter(fn {w, a, _} -> w == :worker and a == :execute end)
+    # |> Enum.map(fn {_, _, data} -> data end)
 
     assert l ==
-      [{:start, coord}, {:ok, coord}, {:log, coord, "Hallo\n"}]
+      [{:start, coord, nil}, {:result, coord, :ok}, {:log, coord, "Hallo\n"}]
   end
 
   ####################
@@ -217,7 +216,7 @@ defmodule Baumeister.WorkerTest do
       returns = delays
       |> Stream.map(fn f -> Utils.create_parsed_bmf("sleep #{f} && echo Hallo") end)
       # |> Stream.map(fn f -> create_bmf("echo Hallo")end)
-      |> Enum.map(fn {bmf, _} -> Worker.execute(worker, make_tmp_coordinate(), bmf) end)
+      |> Enum.map(fn {bmf, _} -> Worker.execute(worker, make_tmp_coordinate(), bmf, 1) end)
       |> Enum.map(fn {:ok, ref} -> receive do
           {:executed, {_, 0, ^ref}} = msg -> msg
          end

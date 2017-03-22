@@ -10,6 +10,7 @@ defmodule BaumeisterTest do
   alias Baumeister.Observer.Take
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Delay
+  alias Baumeister.BuildEvent
 
   doctest Baumeister
   doctest Baumeister.BaumeisterFile
@@ -63,17 +64,18 @@ defmodule BaumeisterTest do
     # wait for first execution
     Utils.wait_for(fn -> listener
       |> TestListener.get()
-      |> Enum.any?(fn {w, _, data} -> w == :worker and match?({:log, _, _}, data) end)
+      |> Enum.filter(&(match?(%BuildEvent{}, &1)))
+      |> Enum.any?(fn %BuildEvent{action: a} -> a == :log end)
     end)
     Baumeister.disable(project_name)
 
     # consider only worker messages
     l = listener
     |> TestListener.get()
-    |> Enum.filter(fn {w, a, _} -> w == :worker and a == :execute end)
-    |> Enum.map(fn {_, _, data} -> data end)
+    |> Enum.filter(&(match?(%BuildEvent{}, &1)))
+    |> Enum.map(fn be -> {be.action, be.coordinate, be.data} end)
 
-    assert [{:start, coord}, {:ok, coord}, {:log, coord, "Ja, wir schaffen das\n"}] = l
+    assert [{:start, coord, nil}, {:result, coord, :ok}, {:log, coord, "Ja, wir schaffen das\n"}] = l
     Process.exit(worker, :normal)
     assert assert_down(worker)
   end
