@@ -2,6 +2,9 @@ alias Experimental.GenStage
 defmodule BaumeisterWeb.BuildChannel do
   use BaumeisterWeb.Web, :channel
 
+  alias Baumeister.BuildEvent
+  alias Baumeister.Observer.Coordinate
+
   @moduledoc """
   The Channel for build events is listener of the EventCenter
   and a channel at the same time.
@@ -82,12 +85,22 @@ defmodule BaumeisterWeb.BuildChannel do
   end
 
   @doc """
-  Broadcast an event. Currently, we use the dewfault topic `build:lobby`.
+  Broadcast an event. Currently, we use the default topic `build:lobby`.
   """
-  def broadcast_event(ev = {role, action, step}) do
+  def broadcast_event(ev = %BuildEvent{}) do
     BaumeisterWeb.Endpoint.broadcast("build:lobby", "build_event", event_to_map(ev))
   end
+  def broadcast_event(ev = {role, action, step}) do
+    BaumeisterWeb.Endpoint.broadcast("build:lobby", "old_build_event", event_to_map(ev))
+  end
 
+  def event_to_map(%BuildEvent{action: action, data: data, coordinate: coord}) do
+    %{"role" => "worker",
+      "action" => Atom.to_string(action),
+      "data" => "#{inspect data}",
+      "coordinate" => "#{inspect coord}"
+    }
+  end
   def event_to_map({role, action, step}) do
     %{"role" => Atom.to_string(role),
       "action" => Atom.to_string(action),

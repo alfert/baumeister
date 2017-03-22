@@ -2,6 +2,8 @@ defmodule BaumeisterWeb.BuildChannelTest do
   use BaumeisterWeb.ChannelCase
 
   alias BaumeisterWeb.BuildChannel
+  alias Baumeister.Observer.NoopPlugin
+  alias Baumeister.BuildEvent
 
   setup do
     {:ok, _, socket} = "user_id"
@@ -26,10 +28,22 @@ defmodule BaumeisterWeb.BuildChannelTest do
     assert_push "broadcast", %{"some" => "data"}
   end
 
-  test "broadcast a build event", %{socket: socket} do
+  test "broadcast an old build event", %{socket: socket} do
     event = {:tester, :test_broadcast, :data}
     BuildChannel.broadcast_event(event)
-    assert_broadcast "build_event", %{
+    assert_broadcast "old_build_event", %{
       "role" => "tester", "action" => "test_broadcast", "step" => ":data"}
+  end
+
+  test "broadcast a build event", %{socket: socket} do
+    coord = NoopPlugin.make_coordinate("/tmp")
+    event = coord
+      |> BuildEvent.new(1)
+      |> BuildEvent.action(:log, "Hello")
+    BuildChannel.broadcast_event(event)
+    coord_s = "#{inspect coord}"
+    assert_broadcast "build_event", %{
+      "role" => "worker", "action" => "log", "data" => "\"Hello\"",
+      "coordinate" => ^coord_s}
   end
 end
