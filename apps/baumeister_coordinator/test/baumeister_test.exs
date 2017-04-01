@@ -93,7 +93,7 @@ defmodule Test.BM.CoordinatorTest do
     |> Enum.partition(fn ev -> match?(%BuildEvent{}, ev) end)
 
     obs_actions = ol
-    |> Enum.map(ol, fn {_, a, _} -> a end)
+    |> Enum.map(fn {_, a, _} -> a end)
     |> Enum.reject(&(&1 == :register))
     worker_actions = Enum.map(w_list, &(&1.action))
 
