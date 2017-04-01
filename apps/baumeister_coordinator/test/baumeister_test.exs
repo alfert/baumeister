@@ -91,13 +91,11 @@ defmodule Test.BM.CoordinatorTest do
     {w_list, ol} = listener
     |> TestListener.get()
     |> Enum.partition(fn ev -> match?(%BuildEvent{}, ev) end)
-    obs_actions = Enum.map(ol, fn {_, a, _} -> a end)
-    worker_actions = w_list
-    |> Enum.map(&(&1.action))
-    # |> Enum.filter(fn {w, _, _} -> w == :worker end)
-    # |> Enum.map(fn
-    #     {_, :execute, {a, _version, _out}} -> a
-    #     {_, :execute, {a, _version}} -> a end)
+
+    obs_actions = ol
+    |> Enum.map(ol, fn {_, a, _} -> a end)
+    |> Enum.reject(&(&1 == :register))
+    worker_actions = Enum.map(w_list, &(&1.action))
 
     assert obs_actions ==
       [:start_observer, :exec_observer, :exec_observer, :execute, :spawned, :exec_observer, :stopped_observer]
