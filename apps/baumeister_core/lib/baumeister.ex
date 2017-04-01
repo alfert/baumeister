@@ -14,6 +14,54 @@ defmodule Baumeister do
 
   require Logger
 
+  defmodule BuildEvent do
+    @moduledoc """
+    Defines the event structure emitted during a build.
+    """
+
+    @typedoc """
+    The action events during a build, counted by `event_counter`:
+    * `start`: the build has just started, nothing has happened yet
+    * `log`: some information about build activities. `data` is either a
+      a single row as string or many lines depending on the operating system
+      and build job running
+    * `result`: the final event, `data` contains the return code where
+      a `0` means success and anything else means failure.
+    """
+    @type action_type :: nil | :start | :log | :result
+
+    @type t :: %__MODULE__{
+      build_counter: non_neg_integer,
+      coordinate: Coordinate.t,
+      event_counter: non_neg_integer,
+      action: action_type,
+      data: nil | integer | String.t | [String.t]
+    }
+    defstruct build_counter: 0, coordinate: %Coordinate{},
+      event_counter: 0, action: nil, data: nil
+
+    @doc """
+    Creates a new build event, typically used as the start of of
+    sequence of actions.
+    """
+    @spec new(Coordinate.t, pos_integer) :: t
+    def new(%Coordinate{} = coordinate, build_number) when
+          is_integer(build_number) and build_number > 0 do
+      %__MODULE__{coordinate: coordinate, build_counter: build_number}
+    end
+
+    @doc """
+    Takes a build event and adds build action information. The
+    `event_counter` is incremented.
+    """
+    @spec action(t, action_type, any) :: t
+    def action(be = %__MODULE__{event_counter: ec}, action, data \\ nil) do
+      %__MODULE__{be | event_counter: ec + 1, action: action, data: data}
+    end
+  end
+
+
+  # Storing some information about projects in the in-memory configuration store.
   defstruct name: "", url: "", plugins: [], enabled: false, observer: nil,
     build_counter: 0
 

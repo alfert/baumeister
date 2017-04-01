@@ -11,7 +11,11 @@ defmodule BaumeisterWeb.Build do
     field :log, :string
     field :coordinate, :string
     field :config, :string
-
+    # 0: unknown state
+    # 1: build is running
+    # 2: build completed, ok
+    # 3: build completed with failures
+    field :status, :integer
     timestamps()
   end
 
@@ -20,7 +24,7 @@ defmodule BaumeisterWeb.Build do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:project_id, :number, :log, :coordinate, :config])
-    |> validate_required([:project_id, :number, :log, :coordinate, :config])
+    |> cast(params, [:project_id, :number, :log, :coordinate, :config, :status])
+    |> validate_required([:project_id, :number, :coordinate])
   end
 end

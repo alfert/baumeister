@@ -7,6 +7,7 @@ defmodule Test.BM.CoordinatorTest do
   alias Baumeister.Observer.Take
   alias Baumeister.EventCenter
   alias Baumeister.Worker
+  alias Baumeister.BuildEvent
 
   alias Baumeister.Test.GitRepos
   alias Baumeister.Test.TestListener
@@ -54,6 +55,8 @@ defmodule Test.BM.CoordinatorTest do
     plugs = [{Take, 2}, {Git, repo_url}, {Delay, 100}]
     project = "baumeister_test"
     assert Config.keys() == []
+    # ensure that there are no events in the event center
+    Utils.wait_for fn -> 0 == EventCenter.clear() end
 
     {:ok, listener} = TestListener.start()
     GenStage.sync_subscribe(listener, to: EventCenter.name())
@@ -76,30 +79,28 @@ defmodule Test.BM.CoordinatorTest do
     # events still in the queue. Therefore, we filter all events
     # for our current listener for `project`
     Utils.wait_for fn ->
-      events = TestListener.get(listener)
-      worker_ev_cnt = events
-      |> Enum.filter(fn {w, _a, _} -> w == :worker end)
-      |> Enum.count()
-      stopped_observer? = Enum.any?(events, fn {_, a, _} -> a == :stopped_observer end)
+      {build_events, obs_event} = TestListener.get(listener)
+      |> Enum.partition(fn ev -> match?(%BuildEvent{}, ev) end)
+      worker_ev_cnt = Enum.count(build_events)
+      stopped_observer? = Enum.any?(obs_event, fn {_, a, _} -> a == :stopped_observer end)
 
       # And the condition
       (stopped_observer? and (worker_ev_cnt >= 3))
     end
 
-    {ol, w_list} = listener
+    {w_list, ol} = listener
     |> TestListener.get()
-    |> Enum.partition(fn {_, _, v} -> v == project end)
-    obs_actions = Enum.map(ol, fn {_, a, _} -> a end)
-    worker_actions = w_list
-    |> Enum.filter(fn {w, _, _} -> w == :worker end)
-    |> Enum.map(fn
-        {_, :execute, {a, _version, _out}} -> a
-        {_, :execute, {a, _version}} -> a end)
+    |> Enum.partition(fn ev -> match?(%BuildEvent{}, ev) end)
+
+    obs_actions = ol
+    |> Enum.map(fn {_, a, _} -> a end)
+    |> Enum.reject(&(&1 == :register))
+    worker_actions = Enum.map(w_list, &(&1.action))
 
     assert obs_actions ==
-      [:start_observer, :exec_observer, :exec_observer, :exec_observer, :stopped_observer]
+      [:start_observer, :exec_observer, :exec_observer, :execute, :spawned, :exec_observer, :stopped_observer]
 
-    assert worker_actions == [:start, :ok, :log]
+    assert worker_actions == [:start, :result, :log]
 
     # After a stop, the project is disabled
     {:ok, p} = Config.config(project)

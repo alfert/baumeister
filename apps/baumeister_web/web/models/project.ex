@@ -12,6 +12,8 @@ defmodule BaumeisterWeb.Project do
     field :enabled, :boolean, default: false
     field :delay, :integer, default: 0
 
+    has_many :builds, BaumeisterWeb.Build
+
     timestamps()
   end
 

@@ -11,8 +11,8 @@ from release 0.1.0 towards 1.0.0 this will change...
 ## Next TODOs
 * [x] Define a human readable build identifier (i.e. counting up) for each jobs
 * [x] Attach the project name to each build job
-* [ ] Define a consistent event structure including a rendering function for HTML/JSON
-* [ ] Store build results in the Mnesia DB
+* [x] Define a consistent event structure including a rendering function for HTML/JSON
+* [x] Store build results in the Mnesia DB
 * [ ] Store the build log in a flat file per build
 * [ ] Retrieve the build status for each project and render nice icons
 * [ ] Introduce dedicated build views for each project and build number
