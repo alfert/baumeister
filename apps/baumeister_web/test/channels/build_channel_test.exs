@@ -38,7 +38,8 @@ defmodule BaumeisterWeb.BuildChannelTest do
   end
 
   test "broadcast a build event", %{socket: socket} do
-    coord = NoopPlugin.make_coordinate("/tmp")
+    coord = "/tmp"
+    |> NoopPlugin.make_coordinate()
     |> Map.put(:project_name, "test_project")
     changeset = Project.changeset(%Project{}, %{name: coord.project_name,
       url: coord.url, plugins: "noop", enabled: true, delay: 500})

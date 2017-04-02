@@ -79,7 +79,8 @@ defmodule Test.BM.CoordinatorTest do
     # events still in the queue. Therefore, we filter all events
     # for our current listener for `project`
     Utils.wait_for fn ->
-      {build_events, obs_event} = TestListener.get(listener)
+      {build_events, obs_event} = listener
+      |> TestListener.get()
       |> Enum.partition(fn ev -> match?(%BuildEvent{}, ev) end)
       worker_ev_cnt = Enum.count(build_events)
       stopped_observer? = Enum.any?(obs_event, fn {_, a, _} -> a == :stopped_observer end)
