@@ -2,19 +2,23 @@
 
 ## Design
 
-`BaumeisterWeb` uses the BaumeisterCoordinator and BaumeisterCore for all
+`BaumeisterWeb` uses the `BaumeisterCoordinator` and `BaumeisterCore` for all
 serious backend tasks. On the web frontend, a project is defined and updated,
 finally stored in a Mnesia database. At the same time, for each defined project
 a Baumeister configuration is added. An observer is started, after the
 project configuration is enabled from the web. The major task of BaumeisterWeb
 is to manage this connection, essentially translating the entries from a
-userfriendly form to the details required by the Baumeister backend.
+user-friendly form to the details required by the Baumeister backend.
 
 The second task is to listen to all the events that appear in the context
 of an project, streaming the results from the observer and the workers to the user
-interface and recognice each build together with pointers where the log output is
+interface and recognize each build together with pointers where the log output is
 currently stored. This offline log output is required if the user comes back to
 former builds or to a build which he was not observing online.
+
+To implements these tasks, `BaumeisterWeb` uses the `Baumeister.EventCenter`
+event broker to get informations about the running build jobs. For configuring
+projects the `Baumeister.Config` configurator is used.
 
 ## Trivia
 
