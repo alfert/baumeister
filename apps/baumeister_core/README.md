@@ -14,6 +14,14 @@ define a build job.
 * the `Baumeister.Observer.Coordinate`, defining a coordinate to version in a
 repository, where Observer-Plugins can extend the version specification for
 their need.
+* the `Baumeister.EventCenter`, collecting build events from the workers and
+  transferring them to any subscribed listeners. This is an important API piece
+  for connecting Web frontends and the like to the Baumeister Core.
+* the `Baumeister.EventLogger`, a simple event listener and helpful device
+  for debugging the Event Center.
+* the `Baumeister.Config` holding information about configured projects including
+  plugins, buildnumbers and the like. The name is somewhat misleading. It is
+  also an important API to connect a Web frontend to the Baumeister Core.
 
 
 ## Installation
