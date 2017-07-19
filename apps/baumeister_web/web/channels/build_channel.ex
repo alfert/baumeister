@@ -105,22 +105,25 @@ defmodule BaumeisterWeb.BuildChannel do
     |> Build.changeset(summerize_build_event(ev))
 
     case Repo.insert_or_update(changeset) do
-      {:ok, build} ->
+      {:ok, _build} ->
         BaumeisterWeb.Endpoint.broadcast("build:lobby", "build_event", event_to_map(ev))
       {:error, changeset} ->
         {:error, changeset}
     end
   end
-  def broadcast_event(ev = {role, action, step}) do
+  def broadcast_event(ev = {_role, _action, _step}) do
     BaumeisterWeb.Endpoint.broadcast("build:lobby", "old_build_event", event_to_map(ev))
   end
 
+  @doc """
+  Transforms a build event to a build struct to used in a changeset.
+  """
   def summerize_build_event(build_event = %BuildEvent{coordinate: coord}) do
     [coordinate: "#{inspect coord}",
       status: status(build_event),
       log: log(build_event)]
     |> Enum.reject(fn {_k, v} -> v == nil end)
-    |> Enum.into %{}
+    |> Enum.into(%{})
   end
 
   def get_build(project = %Project{}, build_counter) do
@@ -145,11 +148,11 @@ defmodule BaumeisterWeb.BuildChannel do
   @doc """
   Formats an event as a map for encoding as JSON object.
   """
-  def event_to_map(ev = %BuildEvent{action: action, data: data, coordinate: coord}) do
+  def event_to_map(%BuildEvent{action: action, data: data, coordinate: coord}) do
     %{"role" => "worker",
-      "action" => Atom.to_string(ev.action),
-      "data" => "#{inspect ev.data}",
-      "coordinate" => "#{inspect ev.coordinate}"
+      "action" => Atom.to_string(action),
+      "data" => "#{inspect data}",
+      "coordinate" => "#{inspect coord}"
     }
   end
   def event_to_map({role, action, step}) do
