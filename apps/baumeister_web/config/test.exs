@@ -11,7 +11,7 @@ config :logger, level: :warn
 
 # Configure your database
 config :baumeister_web, BaumeisterWeb.Repo,
-  adapter: Ecto.Adapters.Mnesia
+  adapter: EctoMnesia.Adapter
 config :ecto_mnesia,
     host: {:system, :atom, "MNESIA_HOST", Kernel.node()},
     storage_type: {:system, :atom, "MNESIA_STORAGE_TYPE", :disc_copies}
