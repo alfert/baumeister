@@ -13,6 +13,7 @@ defmodule BaumeisterWeb.Project do
     field :delay, :integer, default: 0
 
     has_many :builds, BaumeisterWeb.Build
+    has_one :last_build_id, BaumeisterWeb.Build, [defaults: -1]
 
     timestamps()
   end
@@ -23,6 +24,7 @@ defmodule BaumeisterWeb.Project do
   def changeset(struct, params \\ %{}) do
     struct
     |> cast(params, [:name, :url, :plugins, :enabled, :delay])
+    |> cast_assoc(:last_build_id)
     |> validate_required([:name, :url, :plugins, :enabled, :delay])
     |> unique_constraint(:name)
   end
