@@ -52,7 +52,7 @@ defmodule Baumeister.Mixfile do
     [
       {:propcheck, "~> 0.0.1", only: :test},
       {:yaml_elixir, "~> 1.3.0"},
-      {:confex, "~> 1.4.1"},
+      {:confex, "~> 1.5"},
       {:gen_stage, "~> 0.10.0"},
       {:git_cli, "~> 0.2.2"},
       {:elixometer, "~> 1.2"},
