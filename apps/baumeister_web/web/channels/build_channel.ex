@@ -3,7 +3,6 @@ defmodule BaumeisterWeb.BuildChannel do
   use BaumeisterWeb.Web, :channel
 
   alias Baumeister.BuildEvent
-  alias Baumeister.Observer.Coordinate
   alias BaumeisterWeb.Project
   alias BaumeisterWeb.Build
 
@@ -100,15 +99,25 @@ defmodule BaumeisterWeb.BuildChannel do
   Broadcast an event. Currently, we use the default topic `build:lobby`.
   """
   def broadcast_event(ev = %BuildEvent{build_counter: counter, coordinate: coord}) do
-    changeset = Repo.get_by!(Project, name: coord.project_name)
-    |> get_build(counter)
+    Logger.debug("broadcast_event called with ev=#{inspect ev}")
+    project = Repo.get_by!(Project, name: coord.project_name)
+    Logger.debug("Found project: #{inspect project}")
+    build_changeset = project
+    |> create_build(counter)
     |> Build.changeset(summerize_build_event(ev))
+    Logger.debug("build changeset: #{inspect build_changeset}")
 
-    case Repo.insert_or_update(changeset) do
-      {:ok, _build} ->
+    case Repo.insert_or_update(build_changeset) do
+      {:ok, build} ->
+        Logger.debug("Inserted that build: #{inspect build}")
+        {:ok, _pr} = project
+        |> IO.inspect()
+        |> Project.changeset(%{last_build_id: build.id})
+        |> IO.inspect()
+        |> Repo.update()
         BaumeisterWeb.Endpoint.broadcast("build:lobby", "build_event", event_to_map(ev))
-      {:error, changeset} ->
-        {:error, changeset}
+      {:error, build_changeset} ->
+        {:error, build_changeset}
     end
   end
   def broadcast_event(ev = {_role, _action, _step}) do
@@ -126,7 +135,13 @@ defmodule BaumeisterWeb.BuildChannel do
     |> Enum.into(%{})
   end
 
-  def get_build(project = %Project{}, build_counter) do
+  @doc """
+  Creates or retrieves an `Build` for the given `project` and the given
+  `build_counter`. If there already exists a build entity in the database,
+  it is returned otherwise a new build struct is created.
+  """
+  @spec create_build(Project.t, integer) :: Build.t
+  def create_build(project = %Project{}, build_counter) do
     case Repo.get_by(Build, [project_id: project.id, number: build_counter]) do
       nil -> %Build{project_id: project.id, number: build_counter}
       build -> build
