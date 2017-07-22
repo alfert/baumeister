@@ -42,12 +42,12 @@ defmodule BaumeisterWeb.BuildChannelTest do
     |> NoopPlugin.make_coordinate()
     |> Map.put(:project_name, "test_project")
     changeset = Project.changeset(%Project{}, %{name: coord.project_name,
-      url: coord.url, plugins: "noop", enabled: true, delay: 500})
-    project = Repo.insert_or_update! changeset
-
+      url: coord.url, plugins: "noop", enabled: true, delay: 500, builds: [], last_build: nil})
+    project = Repo.insert_or_update!(changeset)
+    IO.inspect(project)
     # last build id is not set => default value is -1
     last_build = project.last_build_id
-    assert %Ecto.Association.NotLoaded{} = last_build
+    assert nil == last_build
 
     build_number = 1
     event = coord
@@ -60,6 +60,7 @@ defmodule BaumeisterWeb.BuildChannelTest do
       "coordinate" => ^coord_s}
     all_builds = Repo.all Build
     assert Enum.count(all_builds) > 0
+    IO.inspect(all_builds)
     # assert all_builds == []
     build = Repo.get_by!(Build, [project_id: project.id, number: 1])
     assert build.coordinate == coord_s
