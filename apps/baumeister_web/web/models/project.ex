@@ -12,8 +12,11 @@ defmodule BaumeisterWeb.Project do
     field :enabled, :boolean, default: false
     field :delay, :integer, default: 0
 
-    has_many :builds, BaumeisterWeb.Build
-    has_one :last_build_id, BaumeisterWeb.Build, [defaults: -1]
+    has_many :builds, BaumeisterWeb.Build, [defaults: []]
+    # has_one :last_build, BaumeisterWeb.Build, [defaults: nil]
+    # has_one would introduce last_build_id, but requires preloading
+    # which is not supported by MnesiaEcto.
+    field :last_build_id, :integer, default: nil
 
     timestamps()
   end
@@ -23,8 +26,9 @@ defmodule BaumeisterWeb.Project do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :url, :plugins, :enabled, :delay])
-    |> cast_assoc(:last_build_id)
+    |> cast(params, [:name, :url, :plugins, :enabled, :delay, :last_build_id])
+    # |> cast_assoc(:last_build)
+    |> cast_assoc(:builds)
     |> validate_required([:name, :url, :plugins, :enabled, :delay])
     |> unique_constraint(:name)
   end
