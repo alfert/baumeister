@@ -82,8 +82,10 @@ defmodule BaumeisterWeb.ProjectBridge do
     all_projects
     |> Stream.each(fn project ->
         case add_project_to_coordinator(project) do
-          {:error, msg} -> Logger.error "Cannot add project #{project.name} to the coordinator"
-          :ok           -> set_status(project)
+          {:error, _msg} ->
+            Logger.error "Cannot add project #{project.name} to the coordinator"
+          :ok           ->
+            set_status(project)
             Logger.info "Project #{project.name} loaded into the coordinator"
         end
       end)
