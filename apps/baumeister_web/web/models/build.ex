@@ -1,12 +1,16 @@
 defmodule BaumeisterWeb.Build do
   use BaumeisterWeb.Web, :model
 
+  alias BaumeisterWeb.Project
   @moduledoc """
   The model and schema definition for the Build representation.
   """
 
   schema "builds" do
-    field :project_id, :integer
+    # field :project_id, :integer
+    # belongs_to introduces project_id and allows to preload to
+    # the project - which is not supported by MnesiaEcto
+    belongs_to :project, Project
     field :number, :integer
     field :log, :string
     field :coordinate, :string

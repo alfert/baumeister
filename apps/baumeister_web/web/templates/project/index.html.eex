@@ -8,7 +8,7 @@
       <th>Plugins</th>
       <th>Delay</th>
       <th>Enabled?</th>
-
+      <th>Last Build</th>
       <th></th>
     </tr>
   </thead>
@@ -20,6 +20,7 @@
       <td><%= project.plugins %></td>
       <td><%= project.delay %></td>
       <td><%= checkbox_btn project.enabled %></td>
+      <td><%= project.last_build_id %></td>
 
       <td class="text-right">
         <%= link "Show", to: project_path(@conn, :show, project), class: "btn btn-default btn-xs" %>

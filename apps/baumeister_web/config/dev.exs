@@ -35,7 +35,7 @@ config :phoenix, :stacktrace_depth, 20
 # Configure your database
 
 config :baumeister_web, BaumeisterWeb.Repo,
-  adapter: Ecto.Adapters.Mnesia
+  adapter: EctoMnesia.Adapter
   # adapter: Ecto.Adapters.Postgres,
   # username: "postgres",
   # password: "postgres",
