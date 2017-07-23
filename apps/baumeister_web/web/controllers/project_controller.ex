@@ -7,8 +7,34 @@ defmodule BaumeisterWeb.ProjectController do
   require Logger
 
   def index(conn, _params) do
+    #####################
+    ##
+    # Nochmal genauer schauen, wie und wo die
+    # Build-Nummer und der Build-Status abgelegt wird. Diese Informationen
+    # müssten eigentlich bei jedem Zugriff auf ein Projekt ermittelt
+    # und angezeigt werden. Sowas als `last_build_state` und `last_build_id`
+    # und wohl auch `last_build_date`
+    #
+    # ==> Reference the build number as `last_build` in `Project` and
+    # join via the reference. This gives explicit pairs.
+    #
+    # ==> Mechanismus ist ok, aber wg. EctoMnesia funktioniert es nicht
+    # auf die einfache Weise mit Assoziationen und preloads. D.h., diese
+    # Dinge müssen explizit mit eigenen Queries geladen werden, aber halt
+    # ohne JOINS (Einschränkung von EctoMnesia)
+    # >>>> Der Build ist dann: Repo.get_by!(Build, [project_id: project.id, number: project.last_build_id])
+    ##
+    #####################
     projects = Repo.all(Project)
     render(conn, "index.html", projects: projects)
+  end
+
+  # join of projects and builds order project_id, build.number
+  defp projects_and_builds() do
+    from p in Project,
+      join: b in Build
+      #### TODO: Joins do not work with MnesiaEcto
+      #### TODO: Select only the row with max(b.number)
   end
 
   def new(conn, _params) do
