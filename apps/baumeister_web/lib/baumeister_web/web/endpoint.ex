@@ -1,7 +1,7 @@
 defmodule BaumeisterWeb.Web.Endpoint do
   use Phoenix.Endpoint, otp_app: :baumeister_web
 
-  socket "/socket", BaumeisterWeb.UserSocket
+  socket "/socket", BaumeisterWeb.Web.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #
