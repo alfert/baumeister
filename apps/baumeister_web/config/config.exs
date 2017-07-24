@@ -7,14 +7,14 @@ use Mix.Config
 
 # General application configuration
 config :baumeister_web,
-  ecto_repos: [BaumeisterWeb.Repo]
+  ecto_repos: [BaumeisterWeb.Web.Repo]
 
 # Configures the endpoint
-config :baumeister_web, BaumeisterWeb.Endpoint,
+config :baumeister_web, BaumeisterWeb.Web.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "GUQyG6xy9iFCXA+MhEGSl6YiNebH8HFX/Yn+yzkM19Z8huITFq05oaxYZ9O4Mhjd",
-  render_errors: [view: BaumeisterWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: BaumeisterWeb.PubSub,
+  render_errors: [view: BaumeisterWeb.Web.ErrorView, accepts: ~w(html json)],
+  pubsub: [name: BaumeisterWeb.Web.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger

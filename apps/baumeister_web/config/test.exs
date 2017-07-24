@@ -2,7 +2,7 @@ use Mix.Config
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :baumeister_web, BaumeisterWeb.Endpoint,
+config :baumeister_web, BaumeisterWeb.Web.Endpoint,
   http: [port: 4001],
   server: false
 
@@ -10,7 +10,7 @@ config :baumeister_web, BaumeisterWeb.Endpoint,
 config :logger, level: :warn
 
 # Configure your database
-config :baumeister_web, BaumeisterWeb.Repo,
+config :baumeister_web, BaumeisterWeb.Web.Repo,
   adapter: EctoMnesia.Adapter
 config :ecto_mnesia,
     host: {:system, :atom, "MNESIA_HOST", Kernel.node()},
