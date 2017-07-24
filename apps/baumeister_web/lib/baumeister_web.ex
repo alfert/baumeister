@@ -21,7 +21,7 @@ defmodule BaumeisterWeb do
       # Start the Ecto repository
       supervisor(BaumeisterWeb.Repo, []),
       # Start the endpoint when the application starts
-      supervisor(BaumeisterWeb.Endpoint, []),
+      supervisor(BaumeisterWeb.Web.Endpoint, []),
       worker(BaumeisterWeb.BuildListener, [[subscribe_to: Baumeister.EventCenter.name()]])
     ]
 
