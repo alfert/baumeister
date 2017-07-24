@@ -16,7 +16,7 @@ defmodule BaumeisterWeb.Web.ModelCase do
 
   using do
     quote do
-      alias BaumeisterWeb.Web.Repo
+      alias BaumeisterWeb.Repo
 
       import Ecto
       import Ecto.Changeset

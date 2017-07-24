@@ -20,7 +20,7 @@ defmodule BaumeisterWeb.Web.ConnCase do
       # Import conveniences for testing with connections
       use Phoenix.ConnTest
 
-      alias BaumeisterWeb.Web.Repo
+      alias BaumeisterWeb.Repo
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
@@ -35,7 +35,7 @@ defmodule BaumeisterWeb.Web.ConnCase do
   setup tags do
     # :ok = Ecto.Adapters.SQL.Sandbox.checkout(BaumeisterWeb.Web.Repo)
 
-    {:ok, _} = Application.ensure_all_started(:baumeister_coordinator) 
+    {:ok, _} = Application.ensure_all_started(:baumeister_coordinator)
 
     unless tags[:async] do
       # Ecto.Adapters.SQL.Sandbox.mode(BaumeisterWeb.Web.Repo, {:shared, self()})

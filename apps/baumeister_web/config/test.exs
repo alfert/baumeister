@@ -10,7 +10,7 @@ config :baumeister_web, BaumeisterWeb.Web.Endpoint,
 config :logger, level: :warn
 
 # Configure your database
-config :baumeister_web, BaumeisterWeb.Web.Repo,
+config :baumeister_web, BaumeisterWeb.Repo,
   adapter: EctoMnesia.Adapter
 config :ecto_mnesia,
     host: {:system, :atom, "MNESIA_HOST", Kernel.node()},

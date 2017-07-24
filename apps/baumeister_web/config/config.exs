@@ -7,7 +7,7 @@ use Mix.Config
 
 # General application configuration
 config :baumeister_web,
-  ecto_repos: [BaumeisterWeb.Web.Repo]
+  ecto_repos: [BaumeisterWeb.Repo]
 
 # Configures the endpoint
 config :baumeister_web, BaumeisterWeb.Web.Endpoint,

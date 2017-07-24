@@ -20,7 +20,7 @@ defmodule BaumeisterWeb.Web.ChannelCase do
       # Import conveniences for testing with channels
       use Phoenix.ChannelTest
 
-      alias BaumeisterWeb.Web.Repo
+      alias BaumeisterWeb.Repo
       import Ecto
       import Ecto.Changeset
       import Ecto.Query

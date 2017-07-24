@@ -24,7 +24,7 @@ config :logger, level: :info
 
 # Configure your database (no passwords for Mnesia, so
 # no need to configure in prod.secret.exs)
-config :baumeister_web, BaumeisterWeb.Web.Repo,
+config :baumeister_web, BaumeisterWeb.Repo,
   adapter: EctoMnesia.Adapter
 
 # Where to find the data
