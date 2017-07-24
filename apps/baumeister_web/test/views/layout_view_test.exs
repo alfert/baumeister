@@ -1,3 +1,3 @@
-defmodule BaumeisterWeb.LayoutViewTest do
-  use BaumeisterWeb.ConnCase, async: true
+defmodule BaumeisterWeb.Web.LayoutViewTest do
+  use BaumeisterWeb.Web.ConnCase, async: true
 end

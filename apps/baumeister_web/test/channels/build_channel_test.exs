@@ -1,11 +1,11 @@
-defmodule BaumeisterWeb.BuildChannelTest do
-  use BaumeisterWeb.ChannelCase
+defmodule BaumeisterWeb.Web.BuildChannelTest do
+  use BaumeisterWeb.Web.ChannelCase
 
-  alias BaumeisterWeb.BuildChannel
+  alias BaumeisterWeb.Web.BuildChannel
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.BuildEvent
-  alias BaumeisterWeb.Project
-  alias BaumeisterWeb.Build
+  alias BaumeisterWeb.Web.Project
+  alias BaumeisterWeb.Web.Build
 
   setup do
     {:ok, _, socket} = "user_id"

@@ -1,12 +1,12 @@
-defmodule BaumeisterWeb.Test.Builds.Project do
+defmodule BaumeisterWeb.Web.Test.Builds.Project do
   @moduledoc """
   Tests of Projects and Builds within the Builds-Context.
   """
-  use BaumeisterWeb.ModelCase
+  use BaumeisterWeb.Web.ModelCase
 
-  alias BaumeisterWeb.Builds.Project
-  alias BaumeisterWeb.Builds.Build
-  alias BaumeisterWeb.Builds
+  alias BaumeisterWeb.Web.Builds.Project
+  alias BaumeisterWeb.Web.Builds.Build
+  alias BaumeisterWeb.Web.Builds
   require Logger
 
   test "insert a project" do

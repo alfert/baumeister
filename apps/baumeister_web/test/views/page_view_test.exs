@@ -1,3 +1,3 @@
-defmodule BaumeisterWeb.PageViewTest do
-  use BaumeisterWeb.ConnCase, async: true
+defmodule BaumeisterWeb.Web.PageViewTest do
+  use BaumeisterWeb.Web.ConnCase, async: true
 end

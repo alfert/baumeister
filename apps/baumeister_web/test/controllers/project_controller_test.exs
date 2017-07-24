@@ -1,8 +1,8 @@
-defmodule BaumeisterWeb.ProjectControllerTest do
-  use BaumeisterWeb.ConnCase
+defmodule BaumeisterWeb.Web.ProjectControllerTest do
+  use BaumeisterWeb.Web.ConnCase
 
-  alias BaumeisterWeb.Project
-  alias BaumeisterWeb.ProjectController
+  alias BaumeisterWeb.Web.Project
+  alias BaumeisterWeb.Web.ProjectController
 
   @valid_attrs %{name: "some content", plugins: "some content", url: "some content",
     enabled: false, delay: 5}
