@@ -19,7 +19,9 @@ config :baumeister_web, BaumeisterWeb.Web.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
-      ~r{priv/gettext/.*(po)$}
+      ~r{priv/gettext/.*(po)$},
+      ~r{lib/baumeister_web/web/views/.*(ex)$},
+      ~r{lib/baumeister_web/web/templates/.*(eex)$}
     ]
   ]
 
