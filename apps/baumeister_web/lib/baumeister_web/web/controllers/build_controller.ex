@@ -1,7 +1,7 @@
-defmodule BaumeisterWeb.BuildController do
+defmodule BaumeisterWeb.Web.BuildController do
   use BaumeisterWeb.Web, :controller
 
-  alias BaumeisterWeb.Build
+  alias BaumeisterWeb.Web.Build
 
   def index(conn, _params) do
     builds = Repo.all(Build)

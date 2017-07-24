@@ -1,4 +1,4 @@
-defmodule BaumeisterWeb.ButtonHelpers do
+defmodule BaumeisterWeb.Web.ButtonHelpers do
   @moduledoc """
   Conveniences for defining Buttons including Icons.
   """
@@ -9,7 +9,7 @@ defmodule BaumeisterWeb.ButtonHelpers do
   # Using this module means importing all functions.
   defmacro __using__(_) do
     quote do
-      import BaumeisterWeb.ButtonHelpers
+      import BaumeisterWeb.Web.ButtonHelpers
     end
   end
 

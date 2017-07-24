@@ -1,3 +1,3 @@
-defmodule BaumeisterWeb.BuildView do
+defmodule BaumeisterWeb.Web.BuildView do
   use BaumeisterWeb.Web, :view
 end

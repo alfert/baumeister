@@ -1,9 +1,9 @@
-defmodule BaumeisterWeb.BuildChannel do
+defmodule BaumeisterWeb.Web.BuildChannel do
   use BaumeisterWeb.Web, :channel
 
   alias Baumeister.BuildEvent
-  alias BaumeisterWeb.Project
-  alias BaumeisterWeb.Build
+  alias BaumeisterWeb.Web.Project
+  alias BaumeisterWeb.Web.Build
 
   @moduledoc """
   The Channel for build events.
@@ -70,13 +70,13 @@ defmodule BaumeisterWeb.BuildChannel do
         |> Project.changeset(%{last_build_id: build.id})
         |> IO.inspect()
         |> Repo.update()
-        BaumeisterWeb.Endpoint.broadcast("build:lobby", "build_event", event_to_map(ev))
+        BaumeisterWeb.Web.Endpoint.broadcast("build:lobby", "build_event", event_to_map(ev))
       {:error, build_changeset} ->
         {:error, build_changeset}
     end
   end
   def broadcast_event(ev = {_role, _action, _step}) do
-    BaumeisterWeb.Endpoint.broadcast("build:lobby", "old_build_event", event_to_map(ev))
+    BaumeisterWeb.Web.Endpoint.broadcast("build:lobby", "old_build_event", event_to_map(ev))
   end
 
   @doc """
