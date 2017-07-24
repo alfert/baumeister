@@ -4,9 +4,9 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
   """
   use BaumeisterWeb.Web.ModelCase
 
-  alias BaumeisterWeb.Web.Builds.Project
-  alias BaumeisterWeb.Web.Builds.Build
-  alias BaumeisterWeb.Web.Builds
+  alias BaumeisterWeb.Builds.Project
+  alias BaumeisterWeb.Builds.Build
+  alias BaumeisterWeb.Builds
   require Logger
 
   test "insert a project" do
