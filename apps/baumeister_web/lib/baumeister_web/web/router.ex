@@ -1,4 +1,4 @@
-defmodule BaumeisterWeb.Router do
+defmodule BaumeisterWeb.Web.Router do
   use BaumeisterWeb.Web, :router
 
   pipeline :browser do
@@ -13,7 +13,7 @@ defmodule BaumeisterWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", BaumeisterWeb do
+  scope "/", BaumeisterWeb.Web do
     pipe_through :browser # Use the default browser stack
 
     get "/", PageController, :index
