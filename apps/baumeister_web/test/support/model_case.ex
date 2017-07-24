@@ -1,4 +1,4 @@
-defmodule BaumeisterWeb.ModelCase do
+defmodule BaumeisterWeb.Web.ModelCase do
   @moduledoc """
   This module defines the test case to be used by
   model tests.
@@ -16,20 +16,20 @@ defmodule BaumeisterWeb.ModelCase do
 
   using do
     quote do
-      alias BaumeisterWeb.Repo
+      alias BaumeisterWeb.Web.Repo
 
       import Ecto
       import Ecto.Changeset
       import Ecto.Query
-      import BaumeisterWeb.ModelCase
+      import BaumeisterWeb.Web.ModelCase
     end
   end
 
   setup tags do
-    # :ok = Ecto.Adapters.SQL.Sandbox.checkout(BaumeisterWeb.Repo)
+    # :ok = Ecto.Adapters.SQL.Sandbox.checkout(BaumeisterWeb.Web.Repo)
 
     unless tags[:async] do
-      # Ecto.Adapters.SQL.Sandbox.mode(BaumeisterWeb.Repo, {:shared, self()})
+      # Ecto.Adapters.SQL.Sandbox.mode(BaumeisterWeb.Web.Repo, {:shared, self()})
     end
 
     :ok
@@ -60,7 +60,7 @@ defmodule BaumeisterWeb.ModelCase do
   def errors_on(struct, data) do
     struct
     |> struct.__struct__.changeset(data)
-    |> Ecto.Changeset.traverse_errors(&BaumeisterWeb.ErrorHelpers.translate_error/1)
+    |> Ecto.Changeset.traverse_errors(&BaumeisterWeb.Web.ErrorHelpers.translate_error/1)
     |> Enum.flat_map(fn {key, errors} -> for msg <- errors, do: {key, msg} end)
   end
 end
