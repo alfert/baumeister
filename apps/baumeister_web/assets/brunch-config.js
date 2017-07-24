@@ -43,7 +43,7 @@ exports.config = {
     watched: ["static", "css", "js", "vendor"],
 
     // Where to compile files to
-    public: "priv/static"
+    public: "../priv/static"
   },
 
   // Configure your plugins
