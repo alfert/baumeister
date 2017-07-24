@@ -8,7 +8,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   alias Baumeister.Observer.GitPlugin
   alias Baumeister.Observer.NoopPlugin
   alias Baumeister.Observer.Take
-  alias BaumeisterWeb.Project
+  alias BaumeisterWeb.Web.Project
 
   require Logger
 

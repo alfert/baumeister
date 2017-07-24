@@ -2,7 +2,7 @@ defmodule BaumeisterWeb.Web.ProjectController do
   use BaumeisterWeb.Web, :controller
 
   alias BaumeisterWeb.Web.Project
-  alias BaumeisterWeb.Web.ProjectBridge
+  alias BaumeisterWeb.ProjectBridge
 
   require Logger
 
