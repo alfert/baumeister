@@ -8,7 +8,7 @@ defmodule BaumeisterWeb.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.2",
+     elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -43,6 +43,8 @@ defmodule BaumeisterWeb.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:baumeister_coordinator, in_umbrella: true},
      {:gettext, "~> 0.11"},
+     {:phoenix_exceptional, "~> 1.0"},
+     {:dialyxir, "~> 0.5", only: [:dev, :test]},
      {:cowboy, "~> 1.0"}]
   end
 
