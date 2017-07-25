@@ -15,9 +15,7 @@ defmodule BaumeisterWeb.Builds.Project do
     field :delay, :integer, default: 0
 
     # these fields describe the last build results
-    field :last_build_id, :integer, default: nil
-    field :last_build_date, :utc_datetime
-    field :last_build_result, :integer
+    embeds_one :last_build, Build
 
     # this is the list of the builds. It must be loaded explicetely
     embeds_many :builds, Build
@@ -29,7 +27,7 @@ defmodule BaumeisterWeb.Builds.Project do
   """
   def changeset(struct, params \\ %{}) do
     struct
-    |> cast(params, [:name, :url, :plugins, :enabled, :delay, :last_build_id])
+    |> cast(params, [:name, :url, :plugins, :enabled, :delay])
     |> validate_required([:name, :url, :plugins, :enabled, :delay])
     |> unique_constraint(:name)
   end
