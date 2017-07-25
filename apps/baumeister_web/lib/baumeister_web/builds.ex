@@ -88,7 +88,8 @@ defmodule BaumeisterWeb.Builds do
   Converts the structs from lower abstraction into their counterparts
   of the Builds Context.
   """
-  def convert_up(p = %WP{}) do
+  @spec convert_up(WP.t|WB.t) :: Project.t | Build.t
+  defp convert_up(p = %WP{}) do
     fields = [:name, :url, :plugins, :enabled, :delay, :id, :updated_at, :inserted_at]
     |> Enum.map(fn f -> {f, Map.get(p, f)} end)
     new_p = struct!(%Project{}, fields)
@@ -99,12 +100,16 @@ defmodule BaumeisterWeb.Builds do
       %Project{new_p | last_build: last_build}
     end
   end
-  def convert_up(b = %WB{}) do
+  defp convert_up(b = %WB{}) do
     fields = [:number, :log, :coordinate, :config, :status, :id, :updated_at, :inserted_at]
     |> Enum.map(fn f -> {f, Map.get(b, f)} end)
     struct!(%Build{}, fields)
   end
 
+  @doc """
+  Returns all projects.
+  """
+  @spec list_projects() :: [Project.t]
   def list_projects() do
     # TODO: This does not work, we must also access the other Build
     # table. OR: We need to update the table during an update/insert of
@@ -112,11 +117,14 @@ defmodule BaumeisterWeb.Builds do
     Repo.all(BaumeisterWeb.Project)
   end
 
-  @spec builds_for_project(Project) :: [Build]
+  @doc """
+  Returns all builds belonging to the project.
+  """
+  @spec builds_for_project(Project.t) :: [Build.t]
   def builds_for_project(project) do
     q = from(b in Build,
         where: b.project_id == ^project.id,
-        order_by: [desc: b.build_id])
+        order_by: [desc: b.number])
     Repo.all(q)
   end
 
