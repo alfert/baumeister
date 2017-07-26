@@ -7,6 +7,8 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
   alias BaumeisterWeb.Builds.Project
   alias BaumeisterWeb.Builds.Build
   alias BaumeisterWeb.Builds
+  alias Baumeister.BuildEvent
+  alias Baumeister.Observer.NoopPlugin
   require Logger
 
   @valid_p_attrs %{name: "project_", plugins: "some content",
@@ -39,6 +41,29 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
     Logger.error "changeset = #{inspect changeset}"
     result = Builds.insert_project(changeset)
     assert {:error, _} = result
+  end
+
+  test "add a build with several states" do
+    changeset = Project.changeset(%Project{}, unique_project @valid_p_attrs)
+    {:ok, project} = Builds.insert_project(changeset)
+    coord = "/tmp"
+    |> NoopPlugin.make_coordinate()
+    |> Map.put(:project_name, project.name)
+
+    assert is_nil(project.last_build)
+    actions = [{:start, nil}, {:log, "log1"}, {:log, "log2"}, {:result, 0}]
+    actions |> Enum.each(fn {action, data} ->
+      be = BuildEvent.new(coord, 1)
+      result = Builds.create_build_from_event(be)
+      assert {:ok, _} = result
+      assert {:ok, %Build{}} = result
+      {:ok, b} = result
+      assert b.number == 1
+      assert b.project_id == project.id
+      p = Builds.get_project(b.project_id)
+      assert project.id == p.id
+      assert p.last_build == b
+    end)
   end
 
   test "Retrieve all projects" do

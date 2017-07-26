@@ -29,6 +29,8 @@ defmodule BaumeisterWeb.Builds do
   alias BaumeisterWeb.Web.Project, as: WP
   alias BaumeisterWeb.Web.Build, as: WB
   alias Ecto.Changeset
+  alias Ecto.Multi
+  alias Baumeister.BuildEvent
 
   @doc """
   Inserts the project into the database and the baumeister coordinator.
@@ -101,7 +103,8 @@ defmodule BaumeisterWeb.Builds do
     end
   end
   defp convert_up(b = %WB{}) do
-    fields = [:number, :log, :coordinate, :config, :status, :id, :updated_at, :inserted_at]
+    fields = [:number, :log, :coordinate, :config, :status, :id,
+      :updated_at, :inserted_at, :project_id]
     |> Enum.map(fn f -> {f, Map.get(b, f)} end)
     struct!(%Build{}, fields)
   end
@@ -127,5 +130,82 @@ defmodule BaumeisterWeb.Builds do
         order_by: [desc: b.number])
     Repo.all(q)
   end
+
+  def get_project(id) when is_integer(id) do
+    Repo.get!(WP, id)
+    |> convert_up()
+  end
+
+  @doc """
+  Creates a new build from the build event and stores into the database.
+  The project is updated accordingly. If the referenced project does
+  not exist, the call fails.
+  """
+  @spec create_build_from_event(BuildEvent.t) :: {:ok, any} | {:error, any}
+  def create_build_from_event(ev = %BuildEvent{build_counter: counter, coordinate: coord}) do
+    Logger.debug("create_build_from_event with ev=#{inspect ev}")
+    project = Repo.get_by!(WP, name: coord.project_name)
+    Logger.debug("Found project: #{inspect project}")
+    build_changeset = project
+    |> create_build(counter)
+    |> WB.changeset(summerize_build_event(ev))
+    Logger.error("build changeset: #{inspect build_changeset}")
+    project_changeset = WP.changeset(project, %{last_build_id: counter})
+    # db_action = Multi.new
+    # |> multi_insert_or_update(:build, build_changeset)
+    # |> Multi.update(:project, project_changeset)
+    # Repo.transaction(db_action)
+    {:ok, b} = Repo.insert_or_update(build_changeset)
+    {:ok, p} = Repo.update(project_changeset)
+    {:ok, convert_up b}
+  end
+
+  @doc """
+  Creates or retrieves an `Build` for the given `project` and the given
+  `build_counter`. If there already exists a build entity in the database,
+  it is returned otherwise a new build struct is created.
+  """
+  @spec create_build(WP.t, integer) :: Build.t
+  defp create_build(project = %WP{}, build_counter) do
+    case Repo.get_by(WB, [project_id: project.id, number: build_counter]) do
+      nil -> %WB{project_id: project.id, number: build_counter, id: nil}
+      build -> build
+    end
+  end
+
+
+  # more or less copied from https://github.com/elixir-ecto/ecto/pull/1951/files/86c01b5fb524cae3871e8f62e67ab83da0923406
+  # it should arrive in Ecto > 2.1.4
+  defp multi_insert_or_update(multi, name,
+      %Changeset{data: %{__meta__: %{state: :loaded}}} = changeset) do
+    Multi.insert(multi, name, changeset)
+  end
+  defp multi_insert_or_update(multi, name, %Changeset{} = changeset) do
+    Multi.update(multi, name, changeset)
+  end
+
+  @doc """
+  Transforms a build event to a build struct to used in a changeset.
+  """
+  @spec summerize_build_event(BuildEvent.t) :: %{atom => any}
+  defp summerize_build_event(build_event = %BuildEvent{coordinate: coord}) do
+    [coordinate: "#{inspect coord}",
+      status: status(build_event),
+      log: log(build_event)]
+    |> Enum.reject(fn {_k, v} -> v == nil end)
+    |> Enum.into(%{})
+  end
+
+  @doc """
+  Converts the status from the build event to the build struct
+  """
+  defp status(%BuildEvent{action: nil}), do: 0
+  defp status(%BuildEvent{action: :start}), do: 1
+  defp status(%BuildEvent{action: :result, data: :ok}), do: 2
+  defp status(%BuildEvent{action: :result}), do: 3
+  defp status(_), do: nil
+
+  defp log(%BuildEvent{action: :log, data: log_data}), do: log_data
+  defp log(_), do: nil
 
 end
