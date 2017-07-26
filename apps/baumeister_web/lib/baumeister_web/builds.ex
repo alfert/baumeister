@@ -10,11 +10,11 @@ defmodule BaumeisterWeb.Builds do
 
   * [x] Project as in Builds.Project with cached `last_build` values. This
     used for Showing a simple project list (`list_projects()`).
-  * [ ] Project with embedded Build-Schema.  Used for the list of all builds
+  * [x] Project with embedded Build-Schema.  Used for the list of all builds
     of a project. Read-only. Created by joining in-memory the builds of a
     project.
   * [ ] Build with a Log-Entry. Used for the detailed view of a single build.
-  * [ ] Create/Update Build of a project, used by BuildListener. Calculates
+  * [x] Create/Update Build of a project, used by BuildListener. Calculates
     the cached `last_build` values.
 
   """
@@ -114,10 +114,7 @@ defmodule BaumeisterWeb.Builds do
   """
   @spec list_projects() :: [Project.t]
   def list_projects() do
-    # TODO: This does not work, we must also access the other Build
-    # table. OR: We need to update the table during an update/insert of
-    # a build.
-    Repo.all(BaumeisterWeb.Project)
+    Repo.all(WP) |> Enum.map &convert_up/1
   end
 
   @doc """
@@ -149,14 +146,10 @@ defmodule BaumeisterWeb.Builds do
     build_changeset = project
     |> create_build(counter)
     |> WB.changeset(summerize_build_event(ev))
-    Logger.error("build changeset: #{inspect build_changeset}")
+    Logger.debug("build changeset: #{inspect build_changeset}")
     project_changeset = WP.changeset(project, %{last_build_id: counter})
-    # db_action = Multi.new
-    # |> multi_insert_or_update(:build, build_changeset)
-    # |> Multi.update(:project, project_changeset)
-    # Repo.transaction(db_action)
     {:ok, b} = Repo.insert_or_update(build_changeset)
-    {:ok, p} = Repo.update(project_changeset)
+    {:ok, _p} = Repo.update(project_changeset)
     {:ok, convert_up b}
   end
 
@@ -171,17 +164,6 @@ defmodule BaumeisterWeb.Builds do
       nil -> %WB{project_id: project.id, number: build_counter, id: nil}
       build -> build
     end
-  end
-
-
-  # more or less copied from https://github.com/elixir-ecto/ecto/pull/1951/files/86c01b5fb524cae3871e8f62e67ab83da0923406
-  # it should arrive in Ecto > 2.1.4
-  defp multi_insert_or_update(multi, name,
-      %Changeset{data: %{__meta__: %{state: :loaded}}} = changeset) do
-    Multi.insert(multi, name, changeset)
-  end
-  defp multi_insert_or_update(multi, name, %Changeset{} = changeset) do
-    Multi.update(multi, name, changeset)
   end
 
   @doc """
