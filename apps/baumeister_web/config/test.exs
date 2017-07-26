@@ -14,7 +14,7 @@ config :baumeister_web, BaumeisterWeb.Repo,
   adapter: EctoMnesia.Adapter
 config :ecto_mnesia,
     host: {:system, :atom, "MNESIA_HOST", Kernel.node()},
-    storage_type: {:system, :atom, "MNESIA_STORAGE_TYPE", :disc_copies}
+    storage_type: {:system, :atom, "MNESIA_STORAGE_TYPE", :ram_copies}
 
 config :mnesia,
   dir: Mix.Project.deps_path()
