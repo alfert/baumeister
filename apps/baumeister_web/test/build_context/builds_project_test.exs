@@ -61,6 +61,7 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
     actions = [{:start, nil}, {:log, "log1"}, {:log, "log2"}, {:result, 0}]
     actions |> Enum.each(fn {action, data} ->
       be = BuildEvent.new(coord, 1)
+      |> BuildEvent.action(action, data)
       result = Builds.create_build_from_event(be)
       assert {:ok, _} = result
       assert {:ok, %Build{}} = result
@@ -68,6 +69,7 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
       assert b.number == 1
       assert b.project_id == project.id
       p = Builds.get_project(b.project_id)
+      # Logger.debug "p is #{inspect p}, at be = #{inspect be}"
       assert project.id == p.id
       assert p.last_build == b
     end)

@@ -64,6 +64,7 @@ defmodule BaumeisterWeb.Web.BuildChannelTest do
 
     # check that the project is also updated
     p = Builds.get_project(project.id)
+    Logger.debug "p = #{inspect p}"
     assert p.last_build.id == build.id
   end
 end
