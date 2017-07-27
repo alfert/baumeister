@@ -18,6 +18,12 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
   @valid_b_attrs %{config: "some content", coordinate: "some content",
     log: "some content", number: 42}
 
+  setup do
+    Repo.delete_all(Build)
+    Repo.delete_all(Project)
+    :ok
+  end
+
   # creates a unique project name inside the attributes
   def unique_project(attributes) do
     count = "#{System.unique_integer([:positive])}"
@@ -26,7 +32,7 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
 
   test "insert a project" do
     changeset = Project.changeset(%Project{}, unique_project @valid_p_attrs)
-    # Logger.error "changeset = #{inspect changeset}"
+    # Logger.debug "changeset = #{inspect changeset}"
     result = Builds.insert_project(changeset)
     assert {:ok, _} = result
     assert {:ok, %Project{}} = result
@@ -38,7 +44,7 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
     b = Build.changeset(%Build{}, @valid_b_attrs)
     changeset = Project.changeset(%Project{}, unique_project @valid_p_attrs)
     |> put_embed(:last_build, b)
-    Logger.error "changeset = #{inspect changeset}"
+    Logger.debug "changeset = #{inspect changeset}"
     result = Builds.insert_project(changeset)
     assert {:error, _} = result
   end
@@ -68,6 +74,7 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
 
   test "Retrieve all projects" do
     ps = Builds.list_projects()
+    Logger.debug "ps is #{inspect ps}"
     assert ps == []
   end
 
