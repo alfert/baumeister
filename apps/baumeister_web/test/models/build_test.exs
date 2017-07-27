@@ -15,7 +15,7 @@ defmodule BaumeisterWeb.Web.BuildTest do
     changeset = Build.changeset(%Build{}, @valid_attrs)
     assert changeset.valid?
     {:ok, build} = Repo.insert(changeset)
-    assert build.id == 1
+    assert not is_nil(build.id)
   end
 
   test "changeset with valid attributes" do
