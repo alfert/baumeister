@@ -92,13 +92,16 @@ defmodule BaumeisterWeb.Builds do
   """
   @spec convert_up(WP.t|WB.t) :: Project.t | Build.t
   defp convert_up(p = %WP{}) do
-    fields = [:name, :url, :plugins, :enabled, :delay, :id, :updated_at, :inserted_at]
+    fields = [:name, :url, :plugins, :enabled, :delay, :id,
+      :updated_at, :inserted_at]
     |> Enum.map(fn f -> {f, Map.get(p, f)} end)
     new_p = struct!(%Project{}, fields)
     if is_nil(p.last_build_id) do
       new_p
     else
-      last_build = Repo.get(WB, p.last_build_id) |> convert_up
+      # Logger.debug "convert_up: load last_build #{p.last_build_id}"
+      last_build = Repo.get_by(WB, [number: p.last_build_id, project_id: p.id]) |> convert_up
+      # Logger.debug "last_build is #{inspect last_build}"
       %Project{new_p | last_build: last_build}
     end
   end
@@ -129,6 +132,11 @@ defmodule BaumeisterWeb.Builds do
     Repo.all(q)
   end
 
+
+  @doc """
+  Gets a project by its id.
+  """
+  @spec get_project(integer) :: Project
   def get_project(id) when is_integer(id) do
     Repo.get!(WP, id)
     |> convert_up()
