@@ -1,7 +1,7 @@
-defmodule BaumeisterWeb.BuildControllerTest do
-  use BaumeisterWeb.ConnCase
+defmodule BaumeisterWeb.Web.BuildControllerTest do
+  use BaumeisterWeb.Web.ConnCase
 
-  alias BaumeisterWeb.Build
+  alias BaumeisterWeb.Web.Build
   @valid_attrs %{config: "some content", coordinate: "some content",
     log: "some content", number: 42, project_id: 42}
   @invalid_attrs %{}

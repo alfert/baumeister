@@ -1,7 +1,7 @@
-defmodule BaumeisterWeb.ProjectTest do
-  use BaumeisterWeb.ModelCase
+defmodule BaumeisterWeb.Web.ProjectTest do
+  use BaumeisterWeb.Web.ModelCase
 
-  alias BaumeisterWeb.Project
+  alias BaumeisterWeb.Web.Project
 
   @valid_attrs %{name: "some content", plugins: "some content",
     url: "some content", enabled: false, delay: 5}

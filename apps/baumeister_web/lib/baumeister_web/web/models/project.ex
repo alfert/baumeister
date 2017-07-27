@@ -1,4 +1,4 @@
-defmodule BaumeisterWeb.Project do
+defmodule BaumeisterWeb.Web.Project do
   use BaumeisterWeb.Web, :model
 
   @moduledoc """
@@ -12,8 +12,8 @@ defmodule BaumeisterWeb.Project do
     field :enabled, :boolean, default: false
     field :delay, :integer, default: 0
 
-    has_many :builds, BaumeisterWeb.Build, [defaults: []]
-    # has_one :last_build, BaumeisterWeb.Build, [defaults: nil]
+    has_many :builds, BaumeisterWeb.Web.Build, [defaults: []]
+    # has_one :last_build, BaumeisterWeb.Web.Build, [defaults: nil]
     # has_one would introduce last_build_id, but requires preloading
     # which is not supported by MnesiaEcto.
     field :last_build_id, :integer, default: nil

@@ -1,4 +1,4 @@
-defmodule BaumeisterWeb.ChannelCase do
+defmodule BaumeisterWeb.Web.ChannelCase do
   @moduledoc """
   This module defines the test case to be used by
   channel tests.
@@ -26,15 +26,15 @@ defmodule BaumeisterWeb.ChannelCase do
       import Ecto.Query
 
       # The default endpoint for testing
-      @endpoint BaumeisterWeb.Endpoint
+      @endpoint BaumeisterWeb.Web.Endpoint
     end
   end
 
   setup tags do
-    # :ok = Ecto.Adapters.SQL.Sandbox.checkout(BaumeisterWeb.Repo)
+    # :ok = Ecto.Adapters.SQL.Sandbox.checkout(BaumeisterWeb.Web.Repo)
 
     unless tags[:async] do
-      # Ecto.Adapters.SQL.Sandbox.mode(BaumeisterWeb.Repo, {:shared, self()})
+      # Ecto.Adapters.SQL.Sandbox.mode(BaumeisterWeb.Web.Repo, {:shared, self()})
     end
 
     :ok

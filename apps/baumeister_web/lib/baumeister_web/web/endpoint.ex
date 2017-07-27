@@ -1,7 +1,7 @@
-defmodule BaumeisterWeb.Endpoint do
+defmodule BaumeisterWeb.Web.Endpoint do
   use Phoenix.Endpoint, otp_app: :baumeister_web
 
-  socket "/socket", BaumeisterWeb.UserSocket
+  socket "/socket", BaumeisterWeb.Web.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -38,5 +38,5 @@ defmodule BaumeisterWeb.Endpoint do
     key: "_baumeister_web_key",
     signing_salt: "1tM56qde"
 
-  plug BaumeisterWeb.Router
+  plug BaumeisterWeb.Web.Router
 end

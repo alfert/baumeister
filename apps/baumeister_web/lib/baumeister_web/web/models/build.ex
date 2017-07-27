@@ -1,7 +1,7 @@
-defmodule BaumeisterWeb.Build do
+defmodule BaumeisterWeb.Web.Build do
   use BaumeisterWeb.Web, :model
 
-  alias BaumeisterWeb.Project
+  alias BaumeisterWeb.Web.Project
   @moduledoc """
   The model and schema definition for the Build representation.
   """

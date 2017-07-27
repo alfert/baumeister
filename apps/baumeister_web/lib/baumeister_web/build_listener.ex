@@ -10,7 +10,7 @@ defmodule BaumeisterWeb.BuildListener do
   use GenStage
   require Logger
 
-  alias BaumeisterWeb.BuildChannel
+  alias BaumeisterWeb.Web.BuildChannel
 
   @doc """
   Starts the `BuildChannel` as consumer of the `EventCenter`.

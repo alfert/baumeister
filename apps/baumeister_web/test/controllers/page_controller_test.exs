@@ -1,5 +1,5 @@
-defmodule BaumeisterWeb.PageControllerTest do
-  use BaumeisterWeb.ConnCase
+defmodule BaumeisterWeb.Web.PageControllerTest do
+  use BaumeisterWeb.Web.ConnCase
 
   test "GET /", %{conn: conn} do
     conn = get conn, "/"

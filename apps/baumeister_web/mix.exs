@@ -8,7 +8,7 @@ defmodule BaumeisterWeb.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.2",
+     elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      compilers: [:phoenix, :gettext] ++ Mix.compilers,
      build_embedded: Mix.env == :prod,
@@ -28,14 +28,14 @@ defmodule BaumeisterWeb.Mixfile do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "web", "test/support"]
-  defp elixirc_paths(_),     do: ["lib", "web"]
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
 
   # Specifies your project dependencies.
   #
   # Type `mix help deps` for examples and options.
   defp deps do
-    [{:phoenix, "~> 1.2.1"},
+    [{:phoenix, "~> 1.3-rc"},
      {:phoenix_pubsub, "~> 1.0"},
      {:phoenix_ecto, "~> 3.0"},
      {:ecto_mnesia, "~> 0.9"},
@@ -43,6 +43,8 @@ defmodule BaumeisterWeb.Mixfile do
      {:phoenix_live_reload, "~> 1.0", only: :dev},
      {:baumeister_coordinator, in_umbrella: true},
      {:gettext, "~> 0.11"},
+     {:phoenix_exceptional, "~> 1.0"},
+     {:dialyxir, "~> 0.5", only: [:dev, :test]},
      {:cowboy, "~> 1.0"}]
   end
 

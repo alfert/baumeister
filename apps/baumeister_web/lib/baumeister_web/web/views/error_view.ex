@@ -1,4 +1,4 @@
-defmodule BaumeisterWeb.ErrorView do
+defmodule BaumeisterWeb.Web.ErrorView do
   use BaumeisterWeb.Web, :view
 
   def render("404.html", _assigns) do

@@ -1,10 +1,10 @@
-defmodule BaumeisterWeb.ErrorHelpers do
+defmodule BaumeisterWeb.Web.ErrorHelpers do
   @moduledoc """
   Conveniences for translating and building error messages.
   """
 
   use Phoenix.HTML
-  use BaumeisterWeb.ButtonHelpers
+  use BaumeisterWeb.Web.ButtonHelpers
 
   @doc """
   Generates tag for inlined form input errors.
@@ -38,9 +38,9 @@ defmodule BaumeisterWeb.ErrorHelpers do
     #     dgettext "errors", "is invalid"
     #
     if count = opts[:count] do
-      Gettext.dngettext(BaumeisterWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(BaumeisterWeb.Web.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(BaumeisterWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(BaumeisterWeb.Web.Gettext, "errors", msg, opts)
     end
   end
 end

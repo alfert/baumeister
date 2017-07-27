@@ -1,11 +1,11 @@
-defmodule BaumeisterWeb.UserSocket do
+defmodule BaumeisterWeb.Web.UserSocket do
   use Phoenix.Socket
 
   require Logger
 
   ## Channels
-  # channel "room:*", BaumeisterWeb.RoomChannel
-  channel "build:lobby", BaumeisterWeb.BuildChannel
+  # channel "room:*", BaumeisterWeb.Web.RoomChannel
+  channel "build:lobby", BaumeisterWeb.Web.BuildChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
@@ -34,7 +34,7 @@ defmodule BaumeisterWeb.UserSocket do
   # Would allow you to broadcast a "disconnect" event and terminate
   # all active sockets and channels for a given user:
   #
-  #     BaumeisterWeb.Endpoint.broadcast("users_socket:#{user.id}", "disconnect", %{})
+  #     BaumeisterWeb.Web.Endpoint.broadcast("users_socket:#{user.id}", "disconnect", %{})
   #
   # Returning `nil` makes this socket anonymous.
   def id(_socket), do: nil

@@ -28,20 +28,21 @@ defmodule BaumeisterWeb.Web do
 
   def controller do
     quote do
-      use Phoenix.Controller
+      use Phoenix.Controller, namespace: BaumeisterWeb.Web
 
       alias BaumeisterWeb.Repo
       import Ecto
       import Ecto.Query
 
-      import BaumeisterWeb.Router.Helpers
-      import BaumeisterWeb.Gettext
+      import BaumeisterWeb.Web.Router.Helpers
+      import BaumeisterWeb.Web.Gettext
     end
   end
 
   def view do
     quote do
-      use Phoenix.View, root: "web/templates"
+      use Phoenix.View, root: "lib/baumeister_web/web/templates",
+        namespace: BaumeisterWeb.Web
 
       # Import convenience functions from controllers
       import Phoenix.Controller, only: [get_csrf_token: 0, get_flash: 2, view_module: 1]
@@ -49,10 +50,10 @@ defmodule BaumeisterWeb.Web do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      import BaumeisterWeb.Router.Helpers
-      import BaumeisterWeb.ButtonHelpers
-      import BaumeisterWeb.ErrorHelpers
-      import BaumeisterWeb.Gettext
+      import BaumeisterWeb.Web.Router.Helpers
+      import BaumeisterWeb.Web.ButtonHelpers
+      import BaumeisterWeb.Web.ErrorHelpers
+      import BaumeisterWeb.Web.Gettext
     end
   end
 
@@ -69,7 +70,7 @@ defmodule BaumeisterWeb.Web do
       alias BaumeisterWeb.Repo
       import Ecto
       import Ecto.Query
-      import BaumeisterWeb.Gettext
+      import BaumeisterWeb.Web.Gettext
     end
   end
 
