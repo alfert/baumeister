@@ -50,8 +50,9 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
   end
 
   test "add a build with several states" do
-    changeset = Project.changeset(%Project{}, unique_project @valid_p_attrs)
-    {:ok, project} = Builds.insert_project(changeset)
+    {:ok, project} = %Project{}
+    |> Project.changeset(unique_project @valid_p_attrs)
+    |> Builds.insert_project()
     coord = "/tmp"
     |> NoopPlugin.make_coordinate()
     |> Map.put(:project_name, project.name)
@@ -70,6 +71,9 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
       assert project.id == p.id
       assert p.last_build == b
     end)
+    # How many builds were created?
+    bs = Builds.builds_for_project(project)
+    assert length(bs) == 1
   end
 
   test "Retrieve all projects" do
@@ -79,7 +83,9 @@ defmodule BaumeisterWeb.Web.Test.Builds.Project do
   end
 
   test "Retrieve all builds of project" do
-    p = %Project{}
+    {:ok, p} = %Project{}
+    |> Project.changeset(unique_project @valid_p_attrs)
+    |> Builds.insert_project()
     Logger.debug "p = #{inspect p}"
     bs = Builds.builds_for_project(p)
     assert bs == []
