@@ -8,6 +8,7 @@ defmodule BaumeisterWeb.Web.BuildChannel do
   """
 
   require Logger
+  alias BaumeisterWeb.Builds
 
   @doc """
   Join the channel. For now, there is only the `build:lobby` without

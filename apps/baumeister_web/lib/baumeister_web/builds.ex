@@ -108,6 +108,7 @@ defmodule BaumeisterWeb.Builds do
     |> Enum.map(fn f -> {f, Map.get(b, f)} end)
     struct!(%Build{}, fields)
   end
+  defp convert_up(nil), do: nil
 
   @doc """
   Returns all projects.
