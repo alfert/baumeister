@@ -1,5 +1,3 @@
-alias Experimental.GenStage
-
 defmodule Baumeister.EventLogger do
   @moduledoc """
   A simple event consumer, which is used for debugging and simple

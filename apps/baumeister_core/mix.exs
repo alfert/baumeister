@@ -8,7 +8,7 @@ defmodule Baumeister.Mixfile do
      config_path: "../../config/config.exs",
      deps_path: "../../deps",
      lockfile: "../../mix.lock",
-     elixir: "~> 1.3",
+     elixir: "~> 1.5",
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -53,14 +53,14 @@ defmodule Baumeister.Mixfile do
       {:propcheck, "~> 0.0.1", only: :test},
       {:yaml_elixir, "~> 1.3.0"},
       {:confex, "~> 1.5"},
-      {:gen_stage, "~> 0.10.0"},
+      {:gen_stage, "~> 0.12"},
       {:git_cli, "~> 0.2.2"},
       {:elixometer, "~> 1.2"},
       #lager 3.2.1 is needed for erl19 because of
       # https://github.com/basho/lager/pull/321
       {:lager, ">= 3.2.1", override: true},
-      {:credo, "~> 0.6.0", only: :dev},
-      {:dialyze, "~> 0.2.1", only: :dev},
+      {:credo, "~> 0.8", only: :dev},
+      {:dialyxir, "~> 0.5", only: [:dev, :test]},
       {:ex_doc, "~> 0.14.0", only: :dev},
       {:coverex, "~> 1.4.0", only: :test}
     ]

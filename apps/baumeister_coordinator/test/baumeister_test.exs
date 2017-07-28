@@ -13,8 +13,6 @@ defmodule Test.BM.CoordinatorTest do
   alias Baumeister.Test.TestListener
   alias Baumeister.Test.Utils
 
-  alias Experimental.GenStage
-
   require Logger
   # @moduletag capture_log: true
 

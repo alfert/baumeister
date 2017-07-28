@@ -2,8 +2,6 @@ defmodule Baumeister.Test.TestListener do
   @moduledoc """
   A simple listener for the Event Center
   """
-  alias Experimental.GenStage
-
   use GenStage
 
   def start(), do: GenStage.start_link(__MODULE__, :ok)
