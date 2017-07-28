@@ -4,7 +4,6 @@ defmodule BaumeisterTest do
 
   alias Baumeister.Test.TestListener
   alias Baumeister.Test.Utils
-  alias Experimental.GenStage
   alias Baumeister.EventCenter
   alias Baumeister.Worker
   alias Baumeister.Observer.Take

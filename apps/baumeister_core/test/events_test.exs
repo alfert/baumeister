@@ -2,7 +2,6 @@ defmodule EventsTest do
   use ExUnit.Case
   require Logger
 
-  alias Experimental.GenStage
   alias Baumeister.EventCenter
   alias Baumeister.EventLogger
 

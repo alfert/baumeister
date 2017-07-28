@@ -1,5 +1,3 @@
-alias Experimental.GenStage
-
 defmodule Baumeister.EventCenter do
   @moduledoc """
   This module implements the services required for sending, receiving

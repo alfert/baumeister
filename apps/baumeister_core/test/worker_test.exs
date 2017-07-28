@@ -3,8 +3,6 @@ defmodule Baumeister.WorkerTest do
 
   require Logger
 
-  alias Experimental.GenStage
-
   alias Baumeister.Coordinator
   alias Baumeister.Worker
   alias Baumeister.BaumeisterFile

@@ -1,4 +1,3 @@
-alias Experimental.GenStage
 defmodule BaumeisterWeb.BuildListener do
   @moduledoc """
   This is a GenStage consumer for build events. It subscribes to the
