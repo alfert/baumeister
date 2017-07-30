@@ -33,7 +33,7 @@ defmodule Baumeister.BaumeisterFile do
     iex> Baumeister.BaumeisterFile.parse!("command: hey")
     %Baumeister.BaumeisterFile{command: "hey"}
   """
-  @spec parse!(String.t) :: BaumeisterFile.t
+  @spec parse!(String.t) :: t
   def parse!(contents) do
     map = YamlElixir.read_from_string(contents)
     # {map, _bindings} = Code.eval_string(contents, [], [])

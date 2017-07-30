@@ -7,18 +7,6 @@ defmodule Baumeister.Coordinator do
   which are able to execute the BaumeisterFile.
   """
 
-  @typedoc """
-  * `workers` is mapping from process ids to Worker Specifications. It holds
-  all registered workers.
-  * `monitors` is mapping from monitor references to process ids, to detect
-  aborting worker processes.
-  """
-  @type t :: %__MODULE__{
-    workers: %{required(pid) => WorkerSpec.t},
-    monitors: %{required(reference) => pid}
-  }
-  defstruct workers: %{}, monitors: %{}
-
   defmodule WorkerSpec do
     @moduledoc """
     Data about a worker
@@ -38,14 +26,27 @@ defmodule Baumeister.Coordinator do
       capabilities: %{}
  end
 
-  use GenServer
-  require Logger
-  use Elixometer
 
-  alias Baumeister.EventCenter
-  alias Baumeister.Worker
-  alias Baumeister.BaumeisterFile
-  alias Baumeister.Observer.Coordinate
+ use GenServer
+ require Logger
+ use Elixometer
+
+ alias Baumeister.EventCenter
+ alias Baumeister.Worker
+ alias Baumeister.BaumeisterFile
+ alias Baumeister.Observer.Coordinate
+ alias Baumeister.Coordinator.WorkerSpec
+  @typedoc """
+  * `workers` is mapping from process ids to Worker Specifications. It holds
+  all registered workers.
+  * `monitors` is mapping from monitor references to process ids, to detect
+  aborting worker processes.
+  """
+  @type t :: %__MODULE__{
+    workers: %{required(pid) => WorkerSpec.t},
+    monitors: %{required(reference) => pid}
+  }
+  defstruct workers: %{}, monitors: %{}
 
   # Metrics
   @nb_of_workers "baumeister.nb_of_registered_workers"
