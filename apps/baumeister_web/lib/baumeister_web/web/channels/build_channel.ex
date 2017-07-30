@@ -17,10 +17,9 @@ defmodule BaumeisterWeb.Web.BuildChannel do
   """
   @impl Phoenix.Channel
   def join("build:lobby", payload, socket) do
-    if authorized?(payload) do
-      {:ok, socket}
-    else
-      {:error, %{reason: "unauthorized"}}
+    case authorized?(payload) do
+      true -> {:ok, socket}
+      _    -> {:error, %{reason: "unauthorized"}}
     end
   end
 
@@ -44,6 +43,7 @@ defmodule BaumeisterWeb.Web.BuildChannel do
   end
 
   # Add authorization logic here as required.
+  @spec authorized?(any) :: boolean
   defp authorized?(_payload) do
     true
   end
