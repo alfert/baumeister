@@ -14,7 +14,7 @@ defmodule BaumeisterWeb.Release.Tasks do
 
     # ensure the database directory
     dir = "#{Confex.get(:mnesia, :dir)}"
-    dir = if Path.relative(dir), do: Path.expand(dir)
+    dir = if (:relative == Path.type(dir)), do: Path.expand(dir)
     Logger.info "Create the mnesia dir at: #{dir}"
     File.mkdir_p!(dir)
 
@@ -28,7 +28,7 @@ defmodule BaumeisterWeb.Release.Tasks do
       Logger.info "Create Schema with storage up"
       case EctoMnesia.Storage.storage_up(conf) do
         :ok -> Logger.info "Schema created"
-        {:ok, :already_created} -> Logger.info "Schema was already created"
+        # {:ok, :already_created} -> Logger.info "Schema was already created"
         {:error, :already_up} -> Logger.error "Mnesia was already up -> continue!"
       end
       # stop mnesia for restarting later when the application starts
