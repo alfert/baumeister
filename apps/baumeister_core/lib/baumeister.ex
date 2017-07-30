@@ -154,8 +154,10 @@ defmodule Baumeister do
   """
   @spec delete(String.t) :: :ok | :error
   def delete(project_name) do
-    unless :error == disable(project_name), do:
-      Config.remove(project_name)
+    case disable(project_name) do
+      :error -> :error
+      _      -> Config.remove(project_name)
+    end
   end
 
   @doc """
