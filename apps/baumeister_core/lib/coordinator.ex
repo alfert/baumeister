@@ -36,6 +36,8 @@ defmodule Baumeister.Coordinator do
  alias Baumeister.BaumeisterFile
  alias Baumeister.Observer.Coordinate
  alias Baumeister.Coordinator.WorkerSpec
+ alias Baumeister.LogEvent
+
   @typedoc """
   * `workers` is mapping from process ids to Worker Specifications. It holds
   all registered workers.
@@ -132,13 +134,15 @@ defmodule Baumeister.Coordinator do
   @doc false
   def handle_call({:register, worker, capa}, from, state) do
     Logger.debug "Register worker #{inspect worker}"
-    EventCenter.sync_notify({:coordinator, :register, worker})
+    %LogEvent{role: :coordinator, action: :register, data: worker}
+    |> EventCenter.sync_notify()
     new_state = do_register(worker, state)
     Baumeister.Coordinator.handle_call({:update_capabilities, worker, capa}, from, new_state)
   end
   def handle_call({:unregister, worker}, _from, state) do
     Logger.debug "Unregister worker #{inspect worker}"
-    EventCenter.sync_notify({:coordinator, :runegister, worker})
+    %LogEvent{role: :coordinator, action: :unregister, data: worker}
+    |> EventCenter.sync_notify()
     worker
     |> do_unregister(state)
     |> reply(:ok)
@@ -244,9 +248,8 @@ defmodule Baumeister.Coordinator do
   def match_workers(workers, baumeisterfile) do
     workers
     |> Map.to_list
-    |> Enum.filter_map(
-      fn {_pid, w} -> match_worker?(w.capabilities, baumeisterfile) end,
-      fn {pid, _w} -> pid end)
+    |> Stream.filter(fn {_pid, w} -> match_worker?(w.capabilities, baumeisterfile) end)
+    |> Enum.map(fn {pid, _w} -> pid end)
   end
 
   @doc """

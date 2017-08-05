@@ -22,6 +22,7 @@ defmodule Baumeister.Worker do
   alias Baumeister.EventCenter
   alias Baumeister.Observer.Coordinate
   alias Baumeister.BuildEvent
+  alias Baumeister.LogEvent
 
   @typedoc """
   The capabilities are a map of keys of type `atom` to any value.
@@ -142,16 +143,14 @@ defmodule Baumeister.Worker do
 
     {state, workspace} = workspace_path(state)
     {:ok, exec_pid} = Task.start_link(fn ->
-      EventCenter.sync_notify({:worker_job, :spawned, self()})
+      %LogEvent{role: :worker_job, action: :spawned, data: self()}
+      |> EventCenter.sync_notify()
       {out, rc} = execute_bmf(coordinate, bmf, workspace)
       build_event = case rc do
         0 -> build_event |> BuildEvent.action(:result, :ok) |> send_event
-            # EventCenter.sync_notify({:worker, :execute, {:ok, coordinate}})
         _ -> build_event |> BuildEvent.action(:result, rc) |> send_event
-            # EventCenter.sync_notify({:worker, :execute, {:error, coordinate}})
       end
       build_event |> BuildEvent.action(:log, out) |> send_event
-      # EventCenter.sync_notify({:worker, :execute, {:log, coordinate, out}})
       send_exec_return(from, out, rc, ref)
     end)
     new_state = %__MODULE__{state | processes: Map.put(processes, exec_pid, coordinate)}
@@ -159,16 +158,16 @@ defmodule Baumeister.Worker do
   end
   def handle_call(:connect, _from, state = %__MODULE__{}) do
     Logger.debug("Worker #{inspect self()} connects to Coordinator")
-    EventCenter.sync_notify({:worker, :start, self()})
+    %LogEvent{role: :worker, action: :start, data: self()}
+    |> EventCenter.sync_notify()
     :ok = Coordinator.register(self(), detect_capabilities())
-    # :ok = Coordinator.update_capabilities(self(), detect_capabilities())
     ref = Process.monitor(GenServer.whereis(Coordinator.name))
     Logger.debug("Worker #{inspect self()} has properly connected to Coordinator")
     {:reply, :ok, %__MODULE__{state | coordinator_ref: ref}}
   end
 
   defp send_exec_return({pid, _from_ref} , out, rc, ref) do
-  send(pid, {:executed, {out, rc, ref}})
+    send(pid, {:executed, {out, rc, ref}})
   end
 
   defp send_event(%BuildEvent{} = be) do
@@ -206,7 +205,8 @@ defmodule Baumeister.Worker do
              state
       coordinate ->
              if reason != :normal, do:
-              EventCenter.sync_notify({:worker, :crashed, {reason, coordinate}})
+              %LogEvent{role: :worker, action: :crashed, data: {reason, coordinate}}
+              |> EventCenter.sync_notify()
              %__MODULE__{state | processes: Map.delete(processes, pid)}
     end
     {:noreply, new_state}
@@ -217,7 +217,9 @@ defmodule Baumeister.Worker do
   end
 
   def terminate(reason, _state) do
-    if EventCenter.is_running(), do: EventCenter.sync_notify({:worker, :terminate, reason})
+    if EventCenter.is_running(), do:
+      %LogEvent{role: :worker, action: :terminate, data: reason}
+      |> EventCenter.sync_notify()  
     :ok
   end
 
