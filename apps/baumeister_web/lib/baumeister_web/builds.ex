@@ -30,6 +30,7 @@ defmodule BaumeisterWeb.Builds do
   alias BaumeisterWeb.Web.Build, as: WB
   alias Ecto.Changeset
   alias Baumeister.BuildEvent
+  alias Baumeister.LogEvent
 
   @doc """
   Inserts the project into the database and the baumeister coordinator.
@@ -161,6 +162,9 @@ defmodule BaumeisterWeb.Builds do
     {:ok, b} = Repo.insert_or_update(build_changeset)
     {:ok, _p} = Repo.update(project_changeset)
     {:ok, convert_up_build b}
+  end
+  def create_build_from_event(_ev = %LogEvent{}) do
+    {:error, :not_a_build_event}
   end
 
   @doc """
