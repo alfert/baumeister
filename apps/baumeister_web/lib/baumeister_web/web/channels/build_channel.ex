@@ -2,6 +2,7 @@ defmodule BaumeisterWeb.Web.BuildChannel do
   use BaumeisterWeb.Web, :channel
 
   alias Baumeister.BuildEvent
+  alias Baumeister.LogEvent
 
   @moduledoc """
   The Channel for build events.
@@ -17,10 +18,9 @@ defmodule BaumeisterWeb.Web.BuildChannel do
   """
   @impl Phoenix.Channel
   def join("build:lobby", payload, socket) do
-    if authorized?(payload) do
-      {:ok, socket}
-    else
-      {:error, %{reason: "unauthorized"}}
+    case authorized?(payload) do
+      true -> {:ok, socket}
+      _    -> {:error, %{reason: "unauthorized"}}
     end
   end
 
@@ -44,6 +44,7 @@ defmodule BaumeisterWeb.Web.BuildChannel do
   end
 
   # Add authorization logic here as required.
+  @spec authorized?(any) :: boolean
   defp authorized?(_payload) do
     true
   end
@@ -51,7 +52,8 @@ defmodule BaumeisterWeb.Web.BuildChannel do
   @doc """
   Broadcast an event. Currently, we use the default topic `build:lobby`.
   """
-  def broadcast_event(ev = %BuildEvent{}) do
+  @spec broadcast_event(BuildEvent.t | LogEvent.t) :: :ok | {:error, any}
+  def broadcast_event(%BuildEvent{} = ev) do
     case Builds.create_build_from_event(ev) do
       {:ok, _} ->
         BaumeisterWeb.Web.Endpoint.broadcast("build:lobby",
@@ -59,6 +61,9 @@ defmodule BaumeisterWeb.Web.BuildChannel do
       {:error, build_changeset} ->
         {:error, build_changeset}
     end
+  end
+  def broadcast_event(%LogEvent{} = _log_ev) do
+    :ok
   end
 
   @doc """

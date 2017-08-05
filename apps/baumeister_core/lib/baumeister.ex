@@ -60,6 +60,15 @@ defmodule Baumeister do
     end
   end
 
+  defmodule LogEvent do
+    @moduledoc """
+    Defines the event structure of observers and working for events unrelated
+    to a build execution.
+    """
+    @type t :: %__MODULE__{}
+
+    defstruct role: :nil, action: nil, data: nil
+  end
 
   # Storing some information about projects in the in-memory configuration store.
   defstruct name: "", url: "", plugins: [], enabled: false, observer: nil,
@@ -154,8 +163,10 @@ defmodule Baumeister do
   """
   @spec delete(String.t) :: :ok | :error
   def delete(project_name) do
-    unless :error == disable(project_name), do:
-      Config.remove(project_name)
+    case disable(project_name) do
+      :error -> :error
+      _      -> Config.remove(project_name)
+    end
   end
 
   @doc """

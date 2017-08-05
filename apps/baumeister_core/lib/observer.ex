@@ -16,6 +16,7 @@ defmodule Baumeister.Observer do
   alias Baumeister.EventCenter
   alias Baumeister.BaumeisterFile
   alias Baumeister.Observer
+  alias Baumeister.LogEvent
 
   defmodule Coordinate do
     @moduledoc """
@@ -252,14 +253,16 @@ defmodule Baumeister.Observer do
     parent_pid = self()
     {:ok, pid} = Task.Supervisor.start_child(Baumeister.ObserverTaskSupervisor,
       fn ->
-        EventCenter.sync_notify({:observer, :start_observer, name})
+        %LogEvent{role: :observer, action: :start_observer, data: name}
+        |> EventCenter.sync_notify()
         obs_state = s.init_fun.(state)
         exec_plugin(obs_state, s.observer_fun, name, parent_pid)
       end)
     {:noreply, %__MODULE__{s | observer_pid: pid}}
   end
   def handle_cast({:execute, coordinate, baumeister_file}, state) do
-    EventCenter.sync_notify({:observer, :execute, coordinate})
+    %LogEvent{role: :observer, action: :execute, data: coordinate}
+    |> EventCenter.sync_notify()
     # job = BaumeisterFile.parse!(baumeister_file)
     # Baumeister.execute(coordinate, job)
     state.executor_fun.(coordinate, baumeister_file)
@@ -278,7 +281,8 @@ defmodule Baumeister.Observer do
   """
   @spec exec_plugin(plugin_state_map, (plugin_state_map -> observer_return_t), any, pid) :: :ok
   def exec_plugin(state, observer_fun, observer_name, observer) do
-    EventCenter.sync_notify({:observer, :exec_observer, observer_name})
+    %LogEvent{role: :observer, action: :exec_observer, data: observer_name}
+    |> EventCenter.sync_notify()
     case observer_fun.(state) do
       {:ok, new_s} ->
           # Logger.debug("exec_plugin: new_s = #{inspect new_s}")
@@ -290,9 +294,13 @@ defmodule Baumeister.Observer do
           end)
           plug_state = Map.drop(new_s, [:"$result"])
           exec_plugin(plug_state, observer_fun, observer_name, observer)
-      {:error, _reason, _new_s} -> EventCenter.sync_notify{:observer, :failed_observer, observer_name}
+      {:error, _reason, _new_s} ->
+          %LogEvent{role: :observer, action: :failed_observer, data: observer_name}
+          |> EventCenter.sync_notify()
           Observer.stop(observer, :error)
-      {:stop, _new_s} -> EventCenter.sync_notify{:observer, :stopped_observer, observer_name}
+      {:stop, _new_s} ->
+          %LogEvent{role: :observer, action: :stopped_observer, data: observer_name}
+          |> EventCenter.sync_notify()
           Observer.stop(observer, :stop)
     end
     :ok

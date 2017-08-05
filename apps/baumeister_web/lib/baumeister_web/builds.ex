@@ -29,8 +29,8 @@ defmodule BaumeisterWeb.Builds do
   alias BaumeisterWeb.Web.Project, as: WP
   alias BaumeisterWeb.Web.Build, as: WB
   alias Ecto.Changeset
-  alias Ecto.Multi
   alias Baumeister.BuildEvent
+  alias Baumeister.LogEvent
 
   @doc """
   Inserts the project into the database and the baumeister coordinator.
@@ -52,7 +52,7 @@ defmodule BaumeisterWeb.Builds do
         case ProjectBridge.add_project_to_coordinator(project) do
           :ok -> enabled = project.enabled
                  ^enabled = ProjectBridge.set_status(project)
-                 {:ok, convert_up project}
+                 {:ok, convert_up_project project}
           {:error, msg} ->
             Logger.error("Error inserting project into core: #{inspect changeset}")
             Repo.delete!(project)
@@ -90,8 +90,8 @@ defmodule BaumeisterWeb.Builds do
   Converts the structs from lower abstraction into their counterparts
   of the Builds Context.
   """
-  @spec convert_up(WP.t|WB.t) :: Project.t | Build.t
-  defp convert_up(p = %WP{}) do
+  @spec convert_up_project(WP.t) :: Project.t
+  defp convert_up_project(p = %WP{}) do
     fields = [:name, :url, :plugins, :enabled, :delay, :id,
       :updated_at, :inserted_at]
     |> Enum.map(fn f -> {f, Map.get(p, f)} end)
@@ -100,25 +100,27 @@ defmodule BaumeisterWeb.Builds do
       new_p
     else
       # Logger.debug "convert_up: load last_build #{p.last_build_id}"
-      last_build = Repo.get_by(WB, [number: p.last_build_id, project_id: p.id]) |> convert_up
+      last_build = Repo.get_by(WB, [number: p.last_build_id, project_id: p.id]) |> convert_up_build
       # Logger.debug "last_build is #{inspect last_build}"
       %Project{new_p | last_build: last_build}
     end
   end
-  defp convert_up(b = %WB{}) do
+
+  @spec convert_up_project(WB.t) :: Build.t
+  defp convert_up_build(b = %WB{}) do
     fields = [:number, :log, :coordinate, :config, :status, :id,
       :updated_at, :inserted_at, :project_id]
     |> Enum.map(fn f -> {f, Map.get(b, f)} end)
     struct!(%Build{}, fields)
   end
-  defp convert_up(nil), do: nil
+
 
   @doc """
   Returns all projects.
   """
   @spec list_projects() :: [Project.t]
   def list_projects() do
-    Repo.all(WP) |> Enum.map &convert_up/1
+    Repo.all(WP) |> Enum.map(&convert_up_project/1)
   end
 
   @doc """
@@ -139,7 +141,7 @@ defmodule BaumeisterWeb.Builds do
   @spec get_project(integer) :: Project
   def get_project(id) when is_integer(id) do
     Repo.get!(WP, id)
-    |> convert_up()
+    |> convert_up_project()
   end
 
   @doc """
@@ -159,7 +161,10 @@ defmodule BaumeisterWeb.Builds do
     project_changeset = WP.changeset(project, %{last_build_id: counter})
     {:ok, b} = Repo.insert_or_update(build_changeset)
     {:ok, _p} = Repo.update(project_changeset)
-    {:ok, convert_up b}
+    {:ok, convert_up_build b}
+  end
+  def create_build_from_event(_ev = %LogEvent{}) do
+    {:error, :not_a_build_event}
   end
 
   @doc """
@@ -171,6 +176,7 @@ defmodule BaumeisterWeb.Builds do
   defp create_build(project = %WP{}, build_counter) do
     case Repo.get_by(WB, [project_id: project.id, number: build_counter]) do
       nil -> %WB{project_id: project.id, number: build_counter, id: nil}
+            |> convert_up_build()
       build -> build
     end
   end

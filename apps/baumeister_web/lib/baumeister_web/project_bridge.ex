@@ -23,7 +23,7 @@ defmodule BaumeisterWeb.ProjectBridge do
   end
 
   @doc "Enables or disables the project under control of the coordinator"
-  @spec set_status(Project.t) :: :ok
+  @spec set_status(Project.t) :: boolean
   def set_status(%Project{enabled: true, name: name}) do
     Logger.debug "Enable project #{name}"
     Baumeister.enable(name)
@@ -72,9 +72,12 @@ defmodule BaumeisterWeb.ProjectBridge do
   @spec delete_project_from_coordinator!(Project.t) :: :ok | no_return
   def delete_project_from_coordinator!(project) do
     case Baumeister.delete(project.name) do
-      :error -> Logger.error("Project #{inspect project.name} not available in Baumeister")
+      :error ->
+        Logger.error("Project #{inspect project.name} not available in Baumeister")
         :ok
-      :ok -> set_status(project)
+      :ok ->
+        set_status(project)
+        :ok
     end
   end
 

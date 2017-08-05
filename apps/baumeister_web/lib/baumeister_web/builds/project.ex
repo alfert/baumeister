@@ -22,6 +22,8 @@ defmodule BaumeisterWeb.Builds.Project do
     timestamps()
   end
 
+  @type t :: %__MODULE__{}
+  
   @doc """
   Builds a changeset based on the `struct` and `params`.
   """

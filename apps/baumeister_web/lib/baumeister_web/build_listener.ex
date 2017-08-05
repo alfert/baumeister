@@ -10,6 +10,7 @@ defmodule BaumeisterWeb.BuildListener do
   require Logger
 
   alias BaumeisterWeb.Web.BuildChannel
+  alias BaumeisterWeb.Builds
 
   @doc """
   Starts the `BuildChannel` as consumer of the `EventCenter`.
@@ -56,7 +57,12 @@ defmodule BaumeisterWeb.BuildListener do
   @impl GenStage
   def handle_events(events, _from, _state) do
     Logger.debug("Build Listener received #{inspect Enum.count(events)} events")
-    Enum.each(events, fn ev -> BuildChannel.broadcast_event(ev) end)
+    Enum.each(events, fn ev ->
+      with {:ok, _project} <- Builds.create_build_from_event(ev) do
+        # broadcast the event only, it is properly stored in the database
+        BuildChannel.broadcast_event(ev)
+      end
+    end)
     {:noreply, [], nil}
   end
 
